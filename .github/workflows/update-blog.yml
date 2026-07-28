@@ -13,11 +13,14 @@ jobs:
   update-blog:
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v5
 
       - uses: gautamkrishnar/blog-post-workflow@v1
+        # latest release 1.9.6 on v1 major
         with:
           feed_list: "https://blog.ooooo.space/feed.xml"
-          max_post_count: "5"
-          template: "- [$title]($url) - $date"
+          max_post_count: "6"
+          template: "- [$title]($url) — $date"
           date_format: "yyyy-mm-dd"
+          # 与 README 中 BLOG-POST-LIST 标记对齐
+          comment_tag_name: "BLOG-POST-LIST"
