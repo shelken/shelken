@@ -32,6 +32,8 @@ LABEL = PAL["surface0"]
 LOGO = PAL["text"]
 GAP = 6
 HEIGHT = 28
+# profile 内容区约 800–900px；超出则换行，避免整条被 max-width 等比压矮
+MAX_ROW_WIDTH = 860
 
 GROUPS: list[tuple[str, str, list[tuple[str, str, str | None]]]] = [
     (
@@ -194,25 +196,34 @@ def parse_svg(svg: str) -> tuple[float, float, str]:
 def compose(items: list[tuple[str, str, str | None]]) -> str:
     parts: list[str] = []
     x = 0.0
-    height = float(HEIGHT)
+    y = 0.0
+    row_h = float(HEIGHT)
+    max_w = 0.0
     for label, key, logo in items:
         url = badge_url(label, PAL[key], logo)
         try:
             raw = fetch(url)
-        except urllib.error.URLError as e:
+        except Exception as e:
             raise SystemExit(f"fetch failed {label}: {e}") from e
         w, h, inner = parse_svg(raw)
-        height = max(height, h)
-        # nested svg keeps badge internal coords; position via x
+        row_h = max(row_h, h)
+        # 本枚放不下则换行（保持单枚原始高度，不被整图压扁）
+        if x > 0 and x + w > MAX_ROW_WIDTH:
+            max_w = max(max_w, x - GAP)
+            y += row_h + GAP
+            x = 0.0
+            row_h = h
         parts.append(
-            f'<svg x="{x:.2f}" y="0" width="{w}" height="{h}" xmlns="http://www.w3.org/2000/svg">{inner}</svg>'
+            f'<svg x="{x:.2f}" y="{y:.2f}" width="{w}" height="{h}" '
+            f'xmlns="http://www.w3.org/2000/svg">{inner}</svg>'
         )
         x += w + GAP
-    total_w = x - GAP if items else 0
+    max_w = max(max_w, x - GAP if items else 0)
+    total_h = y + row_h
     body = "\n".join(parts)
     return (
         f'<?xml version="1.0" encoding="UTF-8"?>\n'
-        f'<svg xmlns="http://www.w3.org/2000/svg" width="{total_w:.2f}" height="{height}" '
+        f'<svg xmlns="http://www.w3.org/2000/svg" width="{max_w:.2f}" height="{total_h:.2f}" '
         f'role="img" aria-label="tech badges">\n{body}\n</svg>\n'
     )
 
@@ -224,7 +235,8 @@ def patch_readme(built: list[tuple[str, str]]) -> None:
         lines.append(f"**{title}**")
         lines.append("")
         # 单图横条：profile/仓库都不会竖排；无 table 边框
-        lines.append(f'<img alt="{title}" src="{rel}" height="{HEIGHT}" />')
+        # 不写 height：由 intrinsic 比例缩放，多行条也不会被压成一条细线
+        lines.append(f'<img alt="{title}" src="{rel}" />')
         lines.append("")
     block = "\n".join(lines).rstrip() + "\n"
 

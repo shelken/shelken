@@ -63,34 +63,34 @@
 
 **Languages**
 
-<img alt="Languages" src="./usage/badges/languages.svg" height="28" />
+<img alt="Languages" src="./usage/badges/languages.svg" />
 
 **Java / backend**
 
-<img alt="Java / backend" src="./usage/badges/java-backend.svg" height="28" />
+<img alt="Java / backend" src="./usage/badges/java-backend.svg" />
 
 **Cloud native / GitOps**
 
-<img alt="Cloud native / GitOps" src="./usage/badges/cloud-gitops.svg" height="28" />
+<img alt="Cloud native / GitOps" src="./usage/badges/cloud-gitops.svg" />
 
 **IaC / secrets**
 
-<img alt="IaC / secrets" src="./usage/badges/iac-secrets.svg" height="28" />
+<img alt="IaC / secrets" src="./usage/badges/iac-secrets.svg" />
 
 **Network / security**
 
-<img alt="Network / security" src="./usage/badges/network-security.svg" height="28" />
+<img alt="Network / security" src="./usage/badges/network-security.svg" />
 
 **Observability**
 
-<img alt="Observability" src="./usage/badges/observability.svg" height="28" />
+<img alt="Observability" src="./usage/badges/observability.svg" />
 
 **Automation / vision**
 
-<img alt="Automation / vision" src="./usage/badges/automation-vision.svg" height="28" />
+<img alt="Automation / vision" src="./usage/badges/automation-vision.svg" />
 
 **macOS / Agent**
 
-<img alt="macOS / Agent" src="./usage/badges/macos-agent.svg" height="28" />
+<img alt="macOS / Agent" src="./usage/badges/macos-agent.svg" />
 
 More on [blog.ooooo.space](https://blog.ooooo.space/) · [repositories](https://github.com/shelken?tab=repositories)
