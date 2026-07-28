@@ -42,6 +42,10 @@ sync-usage client="all" name="mac":
 migrate-usage:
 	{{ python }} {{ root }}/scripts/pi_usage.py migrate
 
+# 合成 Tech stack 横向 badge SVG（usage/badges/*.svg）并更新 README
+build-badges:
+	{{ python }} {{ root }}/scripts/build_badges.py
+
 # ── 预览 ──────────────────────────────────────────────
 
 # GitHub API 预览 README（默认 :6450，Ctrl-C 停）
