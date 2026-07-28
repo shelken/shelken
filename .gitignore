@@ -1,0 +1,74 @@
+# OS
+.DS_Store
+.AppleDouble
+.LSOverride
+Thumbs.db
+Desktop.ini
+
+# Editors / IDEs
+.idea/
+.vscode/
+*.swp
+*.swo
+*~
+.project
+.settings/
+
+# Env / secrets
+.env
+.env.*
+!.env.example
+*.pem
+*.key
+
+# Python
+__pycache__/
+*.py[cod]
+*$py.class
+*.egg-info/
+.eggs/
+dist/
+build/
+.venv/
+venv/
+.env/
+.pytest_cache/
+.mypy_cache/
+.ruff_cache/
+.coverage
+htmlcov/
+.tox/
+.nox/
+
+# Node (if any local tool touches)
+node_modules/
+npm-debug.log*
+yarn-error.log*
+.pnpm-store/
+
+# Mise / direnv local
+.direnv/
+.mise.local.toml
+mise.local.toml
+
+# Logs / temp
+*.log
+logs/
+tmp/
+temp/
+*.tmp
+*.bak
+*.orig
+.cache/
+
+# Pre-commit / tooling local
+.pre-commit-cache/
+
+.scratch
+preview.html
+.readme-preview.html
+
+# ccusage 原始 JSON：含 totalCost/cost/costUSD 等费用字段，不进公开仓
+usage/data/
+
+.playwright-cli
