@@ -47,7 +47,6 @@
 ### Recent blog posts
 
 <!-- BLOG-POST-LIST:START -->
-
 - [在 iOS 上同时使用代理和内网](https://blog.ooooo.space/p/%E5%9C%A8-ios-%E4%B8%8A%E5%90%8C%E6%97%B6%E4%BD%BF%E7%94%A8%E4%BB%A3%E7%90%86%E5%92%8C%E5%86%85%E7%BD%91/) — 2026-06-24
 - [gh/glab 命令快速上手](https://blog.ooooo.space/p/gh_glab/) — 2024-01-19
 - [简单地使用开源的输入法 rime](https://blog.ooooo.space/p/%E7%AE%80%E5%8D%95%E5%9C%B0%E4%BD%BF%E7%94%A8%E5%BC%80%E6%BA%90%E7%9A%84%E8%BE%93%E5%85%A5%E6%B3%95-rime/) — 2023-11-19
