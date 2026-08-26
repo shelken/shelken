@@ -1,7 +1,7 @@
 <p align="center">
   <samp>
     <a href="https://blog.ooooo.space/">blog</a> ·
-    <a href="https://x.com/shelken">x</a> ·
+    <a href="https://x.com/shelkeni">x</a> ·
     <a href="https://memos.ooooo.space/">memos</a>
   </samp>
 </p>
