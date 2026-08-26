@@ -46,7 +46,16 @@
 
 ### Recent blog posts
 
-<!-- BLOG-POST-LIST:START -->- [在 iOS 上同时使用代理和内网](https://blog.ooooo.space/p/%E5%9C%A8-ios-%E4%B8%8A%E5%90%8C%E6%97%B6%E4%BD%BF%E7%94%A8%E4%BB%A3%E7%90%86%E5%92%8C%E5%86%85%E7%BD%91/) — 2026-06-24- [gh/glab 命令快速上手](https://blog.ooooo.space/p/gh_glab/) — 2024-01-19- [简单地使用开源的输入法 rime](https://blog.ooooo.space/p/%E7%AE%80%E5%8D%95%E5%9C%B0%E4%BD%BF%E7%94%A8%E5%BC%80%E6%BA%90%E7%9A%84%E8%BE%93%E5%85%A5%E6%B3%95-rime/) — 2023-11-19- [在不用Tailscale的情况下使用Tailscale](https://blog.ooooo.space/p/%E5%9C%A8%E4%B8%8D%E7%94%A8tailscale%E7%9A%84%E6%83%85%E5%86%B5%E4%B8%8B%E4%BD%BF%E7%94%A8tailscale/) — 2023-04-05- [Asciinema的初次使用](https://blog.ooooo.space/p/asciinema%E7%9A%84%E5%88%9D%E6%AC%A1%E4%BD%BF%E7%94%A8/) — 2023-03-04- [解决字幕组命名不规范问题：使用Episode-ReName工具](https://blog.ooooo.space/p/%E8%A7%A3%E5%86%B3%E5%AD%97%E5%B9%95%E7%BB%84%E5%91%BD%E5%90%8D%E4%B8%8D%E8%A7%84%E8%8C%83%E9%97%AE%E9%A2%98%E4%BD%BF%E7%94%A8episode-rename%E5%B7%A5%E5%85%B7/) — 2022-05-15<!-- BLOG-POST-LIST:END -->
+<!-- BLOG-POST-LIST:START -->
+
+- [在 iOS 上同时使用代理和内网](https://blog.ooooo.space/p/%E5%9C%A8-ios-%E4%B8%8A%E5%90%8C%E6%97%B6%E4%BD%BF%E7%94%A8%E4%BB%A3%E7%90%86%E5%92%8C%E5%86%85%E7%BD%91/) — 2026-06-24
+- [gh/glab 命令快速上手](https://blog.ooooo.space/p/gh_glab/) — 2024-01-19
+- [简单地使用开源的输入法 rime](https://blog.ooooo.space/p/%E7%AE%80%E5%8D%95%E5%9C%B0%E4%BD%BF%E7%94%A8%E5%BC%80%E6%BA%90%E7%9A%84%E8%BE%93%E5%85%A5%E6%B3%95-rime/) — 2023-11-19
+- [在不用Tailscale的情况下使用Tailscale](https://blog.ooooo.space/p/%E5%9C%A8%E4%B8%8D%E7%94%A8tailscale%E7%9A%84%E6%83%85%E5%86%B5%E4%B8%8B%E4%BD%BF%E7%94%A8tailscale/) — 2023-04-05
+- [Asciinema的初次使用](https://blog.ooooo.space/p/asciinema%E7%9A%84%E5%88%9D%E6%AC%A1%E4%BD%BF%E7%94%A8/) — 2023-03-04
+- [解决字幕组命名不规范问题：使用Episode-ReName工具](https://blog.ooooo.space/p/%E8%A7%A3%E5%86%B3%E5%AD%97%E5%B9%95%E7%BB%84%E5%91%BD%E5%90%8D%E4%B8%8D%E8%A7%84%E8%8C%83%E9%97%AE%E9%A2%98%E4%BD%BF%E7%94%A8episode-rename%E5%B7%A5%E5%85%B7/) — 2022-05-15
+
+<!-- BLOG-POST-LIST:END -->
 
 [更多文章 →](https://blog.ooooo.space/)
 

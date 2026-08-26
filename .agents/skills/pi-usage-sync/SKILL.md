@@ -26,7 +26,7 @@ usage/
 1. **Export all**
 
    ```bash
-   python3 scripts/pi_usage.py export --client all --name mac
+   python3 scripts/pi_usage.py export --client all --name mio
    # 或 mise run export-usage
    ```
 
@@ -59,4 +59,3 @@ usage/
 - Codex JSON 用 `models` 映射为 `modelBreakdowns`
 - Pi 多机：不同 `--name` → `pi-{name}.json`，render 合并
 - 强调色 Macchiato：pi pink / claude peach / codex blue / opencode teal
-- Detail: `docs/user-guide/01-pi-usage-sync.md`

@@ -1,9 +1,9 @@
 #!/usr/bin/env python3
 """多客户端用量：ccusage 导出 JSON，渲染 usage/*.svg，挂到 README。
 
-  python3 scripts/pi_usage.py export [--client pi|claude|codex|opencode|all] [--name mac]
+  python3 scripts/pi_usage.py export [--client pi|claude|codex|opencode|all] [--name mio]
   python3 scripts/pi_usage.py render
-  python3 scripts/pi_usage.py sync [--client all] [--name mac] [--commit] [--push]
+  python3 scripts/pi_usage.py sync [--client all] [--name mio] [--commit] [--push]
 """
 
 from __future__ import annotations
@@ -29,7 +29,6 @@ TOP = 5
 
 # 客户端：pi 为主；claude/codex/opencode 为历史三图
 CLIENTS = ("pi", "claude", "codex", "opencode")
-HISTORICAL = ("claude", "codex", "opencode")
 
 # Catppuccin Macchiato 强调色（与 nix-config 多样性一致）
 ACCENT = {
@@ -89,7 +88,7 @@ def run_ccusage(client: str) -> dict:
 
 def data_path(client: str, name: str | None = None) -> Path:
     if client == "pi":
-        device = name or "mac"
+        device = name or "mio"
         if not re.fullmatch(r"[A-Za-z0-9_-]+", device):
             die(f"非法 name: {device}")
         return DATA_DIR / f"pi-{device}.json"
@@ -100,7 +99,7 @@ def svg_path(client: str) -> Path:
     return USAGE_DIR / f"{client}.svg"
 
 
-def export_client(client: str, name: str = "mac") -> Path | None:
+def export_client(client: str, name: str = "mio") -> Path | None:
     ensure_dirs()
     data = run_ccusage(client)
     daily = data.get("daily") or []
@@ -114,7 +113,7 @@ def export_client(client: str, name: str = "mac") -> Path | None:
     return out
 
 
-def export_all(name: str = "mac") -> list[Path]:
+def export_all(name: str = "mio") -> list[Path]:
     paths: list[Path] = []
     for c in CLIENTS:
         p = export_client(c, name)
@@ -445,7 +444,7 @@ def migrate_legacy() -> None:
     ensure_dirs()
     legacy_json = ROOT / "mac-cc.json"
     if legacy_json.is_file():
-        dest = DATA_DIR / "pi-mac.json"
+        dest = DATA_DIR / "pi-mio.json"
         if not dest.is_file():
             dest.write_text(legacy_json.read_text(encoding="utf-8"), encoding="utf-8")
             print(f"✓ migrate {legacy_json.name} → {dest.relative_to(ROOT)}")
@@ -458,17 +457,18 @@ def migrate_legacy() -> None:
         print(f"✓ removed {legacy_svg.name}")
 
 
-def git_commit(paths: list[Path], message: str) -> None:
-    rels = []
-    for p in paths:
-        if p.is_file() or p.is_dir():
-            rels.append(str(p.relative_to(ROOT)) if p.is_file() else str(p.relative_to(ROOT)))
-    # 也加 usage/ 与 README
+def git_pull() -> None:
     subprocess.run(
-        ["git", "add", "--", "usage", "README.md", *[str(p.relative_to(ROOT)) for p in paths if p.is_file()]],
+        ["git", "pull", "--rebase", "--autostash"],
         cwd=ROOT,
         check=True,
     )
+    print("✓ pulled")
+
+
+def git_commit(paths: list[Path], message: str) -> None:
+    rels = [str(p.relative_to(ROOT)) for p in paths if p.exists()]
+    subprocess.run(["git", "add", "--", *rels], cwd=ROOT, check=True)
     if subprocess.run(["git", "diff", "--staged", "--quiet"], cwd=ROOT).returncode == 0:
         print("无变更，跳过 commit")
         return
@@ -492,14 +492,14 @@ def main() -> None:
         choices=[*CLIENTS, "all"],
         help="pi|claude|codex|opencode|all",
     )
-    e.add_argument("--name", default="mac", help="pi 设备名 → pi-{name}.json")
+    e.add_argument("--name", default="mio", help="Pi 数据源 ID → pi-{name}.json")
 
     sub.add_parser("render", help="生成 usage/*.svg 并更新 README")
     sub.add_parser("migrate", help="根目录旧 mac-cc.json / pi-usage.svg 迁入 usage/")
 
     s = sub.add_parser("sync", help="导出 + 渲染")
     s.add_argument("--client", default="all", choices=[*CLIENTS, "all"])
-    s.add_argument("--name", default="mac")
+    s.add_argument("--name", default="mio")
     s.add_argument("--commit", action="store_true")
     s.add_argument("--push", action="store_true")
 
@@ -517,6 +517,8 @@ def main() -> None:
         migrate_legacy()
         render()
     elif args.cmd == "sync":
+        if args.push:
+            git_pull()
         migrate_legacy()
         if args.client == "all":
             export_all(args.name)

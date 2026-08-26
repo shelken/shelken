@@ -13,11 +13,11 @@ default:
 # ── 用量 ──────────────────────────────────────────────
 
 # 导出全部客户端 JSON → usage/data/
-export-usage client="all" name="mac":
+export-usage client="all" name="mio":
 	{{ python }} {{ root }}/scripts/pi_usage.py export --client {{ client }} --name {{ name }}
 
 # 仅导出 Pi
-export-pi name="mac":
+export-pi name="mio":
 	just export-usage client=pi name={{ name }}
 
 # 仅导出 Claude / Codex / OpenCode
@@ -35,7 +35,7 @@ render-usage:
 	{{ python }} {{ root }}/scripts/pi_usage.py render
 
 # 导出 + 渲染（全客户端）
-sync-usage client="all" name="mac":
+sync-usage client="all" name="mio":
 	{{ python }} {{ root }}/scripts/pi_usage.py sync --client {{ client }} --name {{ name }}
 
 # 根目录旧 mac-cc.json / pi-usage.svg 迁入 usage/
