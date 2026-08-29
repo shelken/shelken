@@ -11,6 +11,7 @@ from __future__ import annotations
 import argparse
 import json
 import re
+import shlex
 import shutil
 import subprocess
 import sys
@@ -457,27 +458,41 @@ def migrate_legacy() -> None:
         print(f"✓ removed {legacy_svg.name}")
 
 
+def run_git(args: list[str], ok_codes: tuple[int, ...] = (0,)) -> subprocess.CompletedProcess[str]:
+    cmd = ["git", *args]
+    proc = subprocess.run(cmd, cwd=ROOT, capture_output=True, text=True)
+    if proc.returncode not in ok_codes:
+        details = []
+        if proc.stdout.strip():
+            details.append(f"stdout:\n{proc.stdout.strip()}")
+        if proc.stderr.strip():
+            details.append(f"stderr:\n{proc.stderr.strip()}")
+        output = "\n".join(details) or "命令没有输出"
+        die(
+            f"Git 命令失败（退出码 {proc.returncode}）\n"
+            f"命令: {shlex.join(cmd)}\n{output}"
+        )
+    return proc
+
+
 def git_pull() -> None:
-    subprocess.run(
-        ["git", "pull", "--rebase", "--autostash"],
-        cwd=ROOT,
-        check=True,
-    )
+    run_git(["pull", "--rebase", "--autostash"])
     print("✓ pulled")
 
 
 def git_commit(paths: list[Path], message: str) -> None:
     rels = [str(p.relative_to(ROOT)) for p in paths if p.exists()]
-    subprocess.run(["git", "add", "--", *rels], cwd=ROOT, check=True)
-    if subprocess.run(["git", "diff", "--staged", "--quiet"], cwd=ROOT).returncode == 0:
+    run_git(["add", "--", *rels])
+    diff = run_git(["diff", "--staged", "--quiet"], ok_codes=(0, 1))
+    if diff.returncode == 0:
         print("无变更，跳过 commit")
         return
-    subprocess.run(["git", "commit", "-m", message], cwd=ROOT, check=True)
+    run_git(["commit", "-m", message])
     print("✓ committed")
 
 
 def git_push() -> None:
-    subprocess.run(["git", "push"], cwd=ROOT, check=True)
+    run_git(["push"])
     print("✓ pushed")
 
 
