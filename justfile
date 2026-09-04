@@ -14,33 +14,45 @@ default:
 
 # 导出全部客户端 JSON → usage/data/
 export-usage client="all" name="mio":
-	{{ python }} {{ root }}/scripts/pi_usage.py export --client {{ client }} --name {{ name }}
+	{{ python }} {{ root }}/scripts/harness_usage.py export --client {{ client }} --name {{ name }}
+
+# 仅导出 OMP
+export-omp name="mio":
+	just export-usage omp {{ name }}
 
 # 仅导出 Pi
 export-pi name="mio":
-	just export-usage client=pi name={{ name }}
+	just export-usage pi {{ name }}
 
 # 仅导出 Claude / Codex / OpenCode
 export-claude:
-	just export-usage client=claude
+	just export-usage claude
 
 export-codex:
-	just export-usage client=codex
+	just export-usage codex
 
 export-opencode:
-	just export-usage client=opencode
+	just export-usage opencode
 
-# 渲染 usage/*.svg + 更新 README PI-USAGE 块
+# 渲染 usage/*.svg + 更新 README HARNESS-USAGE 块
 render-usage:
-	{{ python }} {{ root }}/scripts/pi_usage.py render
+	{{ python }} {{ root }}/scripts/harness_usage.py render
 
-# 导出 + 渲染（全客户端）
+# 导出 + 渲染（本地同步，不提交推送）
 sync-usage client="all" name="mio":
-	{{ python }} {{ root }}/scripts/pi_usage.py sync --client {{ client }} --name {{ name }}
+	{{ python }} {{ root }}/scripts/harness_usage.py sync --client {{ client }} --name {{ name }}
+
+# 导出 + 渲染 + 提交推送（供外部自动化与定时任务调用，解耦底层脚本实现）
+sync-push client="all" name="mio":
+	{{ python }} {{ root }}/scripts/harness_usage.py sync --client {{ client }} --name {{ name }} --push
+
+# 自动化定时同步入口（语义化别名，供 nix-config tasks 无感调用）
+cron-sync:
+	just sync-push all mio
 
 # 根目录旧 mac-cc.json / pi-usage.svg 迁入 usage/
 migrate-usage:
-	{{ python }} {{ root }}/scripts/pi_usage.py migrate
+	{{ python }} {{ root }}/scripts/harness_usage.py migrate
 
 # 合成 Tech stack 横向 badge SVG（usage/badges/*.svg）并更新 README
 build-badges:

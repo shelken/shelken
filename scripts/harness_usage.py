@@ -1,15 +1,16 @@
 #!/usr/bin/env python3
-"""多客户端用量：ccusage 导出 JSON，渲染 usage/*.svg，挂到 README。
+"""多 Harness 用量：ccusage 导出 JSON，渲染 usage/*.svg，挂到 README。
 
-  python3 scripts/pi_usage.py export [--client pi|claude|codex|opencode|all] [--name mio]
-  python3 scripts/pi_usage.py render
-  python3 scripts/pi_usage.py sync [--client all] [--name mio] [--commit] [--push]
+  python3 scripts/harness_usage.py export [--client omp|pi|claude|codex|opencode|all] [--name mio]
+  python3 scripts/harness_usage.py render
+  python3 scripts/harness_usage.py sync [--client all] [--name mio] [--commit] [--push]
 """
 
 from __future__ import annotations
 
 import argparse
 import json
+import os
 import re
 import shlex
 import shutil
@@ -24,22 +25,26 @@ ROOT = Path(__file__).resolve().parent.parent
 USAGE_DIR = ROOT / "usage"
 DATA_DIR = USAGE_DIR / "data"
 README = ROOT / "README.md"
-START = "<!-- PI-USAGE:START -->"
-END = "<!-- PI-USAGE:END -->"
+START = "<!-- HARNESS-USAGE:START -->"
+END = "<!-- HARNESS-USAGE:END -->"
+LEGACY_STARTS = ("<!-- AGENT-USAGE:START -->", "<!-- PI-USAGE:START -->")
+LEGACY_ENDS = ("<!-- AGENT-USAGE:END -->", "<!-- PI-USAGE:END -->")
 TOP = 5
 
-# 客户端：pi 为主；claude/codex/opencode 为历史三图
-CLIENTS = ("pi", "claude", "codex", "opencode")
+# 客户端：omp 为当前主力；pi/claude/codex/opencode 为历史卡片
+CLIENTS = ("omp", "pi", "claude", "codex", "opencode")
 
 # Catppuccin Macchiato 强调色（与 nix-config 多样性一致）
 ACCENT = {
+    "omp": "#c6a0f6",  # mauve
     "pi": "#f5bde6",  # pink
     "claude": "#f5a97f",  # peach
     "codex": "#8aadf4",  # blue
     "opencode": "#8bd5ca",  # teal
 }
 TITLE = {
-    "pi": "最近Vibe统计 · Pi",
+    "omp": "最近Vibe统计 · OMP",
+    "pi": "历史 · Pi",
     "claude": "历史 · Claude Code",
     "codex": "历史 · Codex",
     "opencode": "历史 · OpenCode",
@@ -56,15 +61,19 @@ def ensure_dirs() -> None:
     USAGE_DIR.mkdir(parents=True, exist_ok=True)
 
 
-def ccusage_cmd(client: str) -> list[str]:
+def ccusage_cmd(client: str, omp_path: Path | None = None) -> list[str]:
     if client not in CLIENTS:
         die(f"未知 client: {client}")
-    if shutil.which("ccusage"):
-        return ["ccusage", client, "daily", "--json", "--offline"]
-    if shutil.which("bunx"):
-        return ["bunx", "ccusage", client, "daily", "--json", "--offline"]
-    die("需要 ccusage 或 bunx")
+    base = ["ccusage"] if shutil.which("ccusage") else (["bunx", "ccusage"] if shutil.which("bunx") else None)
+    if not base:
+        die("需要 ccusage 或 bunx")
 
+    if client == "omp":
+        omp_dir = omp_path or Path(os.environ.get("OMP_SESSIONS_DIR") or (Path.home() / ".omp" / "agent" / "sessions"))
+        if not omp_dir.is_dir():
+            die(f"OMP 会话目录不存在: {omp_dir}")
+        return [*base, "pi", "daily", "--pi-path", str(omp_dir), "--json", "--offline"]
+    return [*base, client, "daily", "--json", "--offline"]
 
 def run_ccusage(client: str) -> dict:
     cmd = ccusage_cmd(client)
@@ -88,11 +97,11 @@ def run_ccusage(client: str) -> dict:
 
 
 def data_path(client: str, name: str | None = None) -> Path:
-    if client == "pi":
+    if client in ("omp", "pi"):
         device = name or "mio"
         if not re.fullmatch(r"[A-Za-z0-9_-]+", device):
             die(f"非法 name: {device}")
-        return DATA_DIR / f"pi-{device}.json"
+        return DATA_DIR / f"{client}-{device}.json"
     return DATA_DIR / f"{client}.json"
 
 
@@ -166,11 +175,80 @@ def normalize_day(d: dict) -> dict:
     return out
 
 
+def merge_daily_records(days: list[dict]) -> list[dict]:
+    """按 date 深度合并同日数据（支持多设备数据合并），消除重复日、均值失真问题。"""
+    by_date: dict[str, dict] = {}
+    for d in days:
+        dt = d["date"]
+        if dt not in by_date:
+            by_date[dt] = {
+                "date": dt,
+                "inputTokens": 0,
+                "outputTokens": 0,
+                "cacheReadTokens": 0,
+                "cacheCreationTokens": 0,
+                "totalTokens": 0,
+                "totalCost": 0.0,
+                "_models": defaultdict(lambda: {
+                    "inputTokens": 0,
+                    "outputTokens": 0,
+                    "cacheReadTokens": 0,
+                    "cacheCreationTokens": 0,
+                    "cost": 0.0,
+                }),
+            }
+        target = by_date[dt]
+        target["inputTokens"] += int(d.get("inputTokens") or 0)
+        target["outputTokens"] += int(d.get("outputTokens") or 0)
+        target["cacheReadTokens"] += int(d.get("cacheReadTokens") or 0)
+        target["cacheCreationTokens"] += int(d.get("cacheCreationTokens") or 0)
+        target["totalTokens"] += int(d.get("totalTokens") or 0)
+        target["totalCost"] += float(d.get("totalCost") or d.get("cost") or 0.0)
+
+        for m in d.get("modelBreakdowns") or []:
+            m_name = m.get("modelName") or "unknown"
+            m_target = target["_models"][m_name]
+            m_target["inputTokens"] += int(m.get("inputTokens") or 0)
+            m_target["outputTokens"] += int(m.get("outputTokens") or 0)
+            m_target["cacheReadTokens"] += int(m.get("cacheReadTokens") or 0)
+            m_target["cacheCreationTokens"] += int(m.get("cacheCreationTokens") or 0)
+            m_target["cost"] += float(m.get("cost") or 0.0)
+
+    merged: list[dict] = []
+    for dt in sorted(by_date.keys()):
+        item = by_date[dt]
+        model_dict = item.pop("_models")
+        breakdowns = []
+        for m_name, m_stats in model_dict.items():
+            breakdowns.append({
+                "modelName": m_name,
+                "inputTokens": m_stats["inputTokens"],
+                "outputTokens": m_stats["outputTokens"],
+                "cacheReadTokens": m_stats["cacheReadTokens"],
+                "cacheCreationTokens": m_stats["cacheCreationTokens"],
+                "cost": m_stats["cost"],
+            })
+        breakdowns.sort(
+            key=lambda x: x["inputTokens"] + x["outputTokens"] + x["cacheReadTokens"] + x["cacheCreationTokens"],
+            reverse=True,
+        )
+        item["modelBreakdowns"] = breakdowns
+        item["modelsUsed"] = [b["modelName"] for b in breakdowns]
+        merged.append(item)
+    return merged
+
+
 def load_client_days(client: str) -> list[dict]:
     ensure_dirs()
-    if client == "pi":
+    if client == "omp":
+        files = sorted(DATA_DIR.glob("omp-*.json"))
+        fallback = DATA_DIR / "omp.json"
+        if fallback.is_file() and fallback not in files:
+            files.append(fallback)
+        if not files:
+            die("没有 usage/data/omp-*.json，先 export --client omp")
+    elif client == "pi":
         files = sorted(DATA_DIR.glob("pi-*.json"))
-        # 兼容旧根目录 mac-cc.json
         legacy = ROOT / "mac-cc.json"
         if legacy.is_file():
             files.append(legacy)
@@ -190,7 +268,7 @@ def load_client_days(client: str) -> list[dict]:
             die(f"{f.name}: missing daily[]")
         for d in daily:
             days.append(normalize_day(d))
-    return days
+    return merge_daily_records(days)
 
 
 def parse_day(s: str) -> date:
@@ -213,7 +291,7 @@ def day_tokens(d: dict) -> int:
 
 
 def clean_name(name: str) -> str:
-    return re.sub(r"^\[pi\]\s*", "", name, flags=re.I).strip()
+    return re.sub(r"^\[(?:pi|omp)\]\s*", "", name, flags=re.I).strip()
 
 
 def filter_last_n(days: list[dict], n: int) -> list[dict]:
@@ -280,18 +358,32 @@ def build_svg(days: list[dict], *, client: str) -> str:
     total = sum_tokens(days)
     t7 = sum_tokens(d7)
     t40 = sum_tokens(d40)
-    rank7 = rank_models(d7, TOP)
-    rank40 = rank_models(d40, TOP)
 
+    # 全量 All-Time 模型聚合（大小写不敏感归一化，精准反映各客户端生命周期主力模型）
+    model_totals: dict[str, int] = defaultdict(int)
+    display_names: dict[str, str] = {}
+    for d in days:
+        for m in d.get("modelBreakdowns") or []:
+            raw_name = clean_name(str(m.get("modelName") or "?"))
+            lower = raw_name.lower()
+            tok = model_tokens(m)
+            model_totals[lower] += tok
+            if lower not in display_names or (raw_name.islower() and not display_names[lower].islower()):
+                display_names[lower] = raw_name
+
+    sorted_models = sorted(
+        [(display_names[k], v) for k, v in model_totals.items()],
+        key=lambda x: x[1],
+        reverse=True,
+    )
     dates = sorted(d["date"] for d in days)
     fr, to = (dates[0], dates[-1]) if dates else ("—", "—")
+    date_str = fr if fr == to else f"{fr} · {to}"
+
     n_days = len(days) or 1
     active = sum(1 for d in days if day_tokens(d) > 0)
     avg_day = total // n_days
     peak_tok = max((day_tokens(d) for d in days), default=0)
-    top_model = rank40[0][0] if rank40 else (rank7[0][0] if rank7 else "—")
-    if len(top_model) > 14:
-        top_model = top_model[:13] + "…"
 
     inp = _sum_field(days, "inputTokens")
     out = _sum_field(days, "outputTokens")
@@ -306,11 +398,10 @@ def build_svg(days: list[dict], *, client: str) -> str:
     LBL = "#a5adcb"
     SUB = "#a5adcb"
     FOOT = "#6e738d"
-    FONT = "'Segoe UI',Ubuntu,sans-serif"
+    BAR_BG = "#24273a"
+    FONT = "-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,Ubuntu,sans-serif"
 
     W, H = 846, 225
-    cols = [30, 235, 465, 665]
-    dividers = [215, 445, 645]
 
     def text(x, y, body, *, fill, size, weight="400", anchor=None, spacing=None) -> str:
         attrs = (
@@ -321,61 +412,83 @@ def build_svg(days: list[dict], *, client: str) -> str:
             attrs += f' text-anchor="{anchor}"'
         if spacing:
             attrs += f' letter-spacing="{spacing}"'
-        return f"<text {attrs}>{escape(body)}</text>"
+        return f"<text {attrs}>{escape(str(body))}</text>"
 
-    def row(x: int, y: int, label: str, value: str, w_end: int) -> str:
-        return text(x, y, label, fill=LBL, size=13) + text(
-            w_end, y, value, fill=A, size=14, weight="700", anchor="end"
-        )
-
-    parts: list[str] = [
-        f'<rect width="{W - 1}" height="{H - 1}" x="0.5" y="0.5" rx="4.5" '
+    parts = [
+        f'<rect width="{W - 1}" height="{H - 1}" x="0.5" y="0.5" rx="6" '
         f'fill="{BG}" stroke="{STROKE}" stroke-width="1"/>',
-        text(30, 38, title, fill=A, size=18, weight="600"),
-        text(W - 30, 38, "@shelken", fill=USER, size=14, weight="600", anchor="end"),
-        text(W - 30, 53, f"{fr} · {to}", fill=FOOT, size=11, anchor="end"),
+        # 顶部标题栏
+        text(30, 36, title, fill=A, size=17, weight="700"),
+        text(W - 30, 35, "@shelken", fill=USER, size=13, weight="600", anchor="end"),
+        text(W - 30, 50, date_str, fill=FOOT, size=11, anchor="end"),
+        # 竖向列分割线
+        f'<line x1="250" y1="62" x2="250" y2="202" stroke="{STROKE}" stroke-width="1"/>',
+        f'<line x1="510" y1="62" x2="510" y2="202" stroke="{STROKE}" stroke-width="1"/>',
     ]
-    for x in dividers:
-        parts.append(
-            f'<line x1="{x}" y1="62" x2="{x}" y2="178" stroke="{STROKE}" stroke-width="1"/>'
-        )
 
+    # 第一列：ALL-TIME & ACTIVITY（x: 30 ~ 230）
+    col1_x = 30
     parts += [
-        text(cols[0], 72, "ALL-TIME", fill=FOOT, size=11, weight="600", spacing="1.5"),
-        text(cols[0], 135, fmt_tokens(total), fill=A, size=44, weight="800"),
-        text(cols[0], 160, f"tokens · {cache_pct}% cache-hit", fill=SUB, size=13),
-        text(cols[1], 72, "PERIOD", fill=FOOT, size=11, weight="600", spacing="1.5"),
-        row(cols[1], 98, "7 days", fmt_tokens(t7), 430),
-        row(cols[1], 123, "40 days", fmt_tokens(t40), 430),
-        row(cols[1], 148, "Since", fr, 430),
-        row(cols[1], 173, "Until", to, 430),
-        text(cols[2], 72, "TOKEN MIX", fill=FOOT, size=11, weight="600", spacing="1.5"),
-        row(cols[2], 98, "Output", fmt_tokens(out), 630),
-        row(cols[2], 123, "Input", fmt_tokens(inp), 630),
-        row(cols[2], 148, "Cache read", fmt_tokens(cr), 630),
-        row(cols[2], 173, "Cache write", fmt_tokens(cw), 630),
-        text(cols[3], 72, "ACTIVITY", fill=FOOT, size=11, weight="600", spacing="1.5"),
-        row(cols[3], 98, "Active days", str(active), 816),
-        row(cols[3], 123, "Avg / day", fmt_tokens(avg_day), 816),
-        row(cols[3], 148, "Peak day", fmt_tokens(peak_tok), 816),
-        row(cols[3], 173, "Top model", top_model, 816),
+        text(col1_x, 74, "ALL-TIME", fill=FOOT, size=10, weight="700", spacing="1.2"),
+        text(col1_x, 112, fmt_tokens(total), fill=A, size=38, weight="800"),
+        text(col1_x, 132, f"tokens · {cache_pct}% cache-hit", fill=SUB, size=12),
+        f'<line x1="{col1_x}" y1="144" x2="230" y2="144" stroke="{STROKE}" stroke-dasharray="3 3"/>',
+        text(col1_x, 163, "Active days", fill=LBL, size=12),
+        text(230, 163, str(active), fill=A, size=12, weight="700", anchor="end"),
+        text(col1_x, 182, "Avg / day", fill=LBL, size=12),
+        text(230, 182, fmt_tokens(avg_day), fill=A, size=12, weight="700", anchor="end"),
+        text(col1_x, 201, "Peak day", fill=LBL, size=12),
+        text(230, 201, fmt_tokens(peak_tok), fill=A, size=12, weight="700", anchor="end"),
     ]
 
-    def short_rank(rows: list[tuple[str, int]], n: int = 2) -> str:
-        if not rows:
-            return "n/a"
-        bits = []
-        for name, tok in rows[:n]:
-            nm = name if len(name) <= 12 else name[:11] + "…"
-            bits.append(f"{nm} {fmt_tokens(tok)}")
-        return " · ".join(bits)
-
-    foot = f"7d {short_rank(rank7)}   ·   40d {short_rank(rank40)}"
+    # 第二列：TOKEN MIX & PERIOD（x: 275 ~ 490）
+    col2_x = 275
+    col2_val = 490
     parts += [
-        text(30, 205, "MODELS", fill=FOOT, size=11, weight="600", spacing="1.5"),
-        text(100, 205, foot, fill=LBL, size=13),
+        text(col2_x, 74, "TOKEN MIX & PERIOD", fill=FOOT, size=10, weight="700", spacing="1.2"),
+        text(col2_x, 96, "Output", fill=LBL, size=12),
+        text(col2_val, 96, fmt_tokens(out), fill=A, size=12, weight="700", anchor="end"),
+        text(col2_x, 113, "Input", fill=LBL, size=12),
+        text(col2_val, 113, fmt_tokens(inp), fill=A, size=12, weight="700", anchor="end"),
+        text(col2_x, 130, "Cache read", fill=LBL, size=12),
+        text(col2_val, 130, fmt_tokens(cr), fill=A, size=12, weight="700", anchor="end"),
+        text(col2_x, 147, "Cache write", fill=LBL, size=12),
+        text(col2_val, 147, fmt_tokens(cw), fill=A, size=12, weight="700", anchor="end"),
+        f'<line x1="{col2_x}" y1="157" x2="{col2_val}" y2="157" stroke="{STROKE}" stroke-dasharray="3 3"/>',
+        text(col2_x, 179, "Recent 7d", fill=LBL, size=12),
+        text(col2_val, 179, fmt_tokens(t7), fill=A, size=12, weight="700", anchor="end"),
+        text(col2_x, 199, "Recent 40d", fill=LBL, size=12),
+        text(col2_val, 199, fmt_tokens(t40), fill=A, size=12, weight="700", anchor="end"),
     ]
 
+    # 第三列：TOP MODELS（x: 535 ~ 816，宽 281px 独立榜单）
+    col3_x = 535
+    parts += [
+        text(col3_x, 74, "TOP MODELS", fill=FOOT, size=10, weight="700", spacing="1.2"),
+    ]
+
+    top_models = sorted_models[:4]
+    max_model_tokens = top_models[0][1] if top_models else 1
+
+    if not top_models:
+        parts.append(text(col3_x, 120, "No model breakdown available", fill=FOOT, size=12))
+    else:
+        bar_x = 718
+        bar_w = 42
+        spacing_y = 26 if len(top_models) == 4 else (32 if len(top_models) == 3 else 36)
+        y_pos = 97 if len(top_models) == 4 else (102 if len(top_models) == 3 else 108)
+        for name, tok in top_models:
+            display_name = name if len(name) <= 25 else name[:24] + "…"
+            ratio = tok / max_model_tokens if max_model_tokens > 0 else 0
+            fill_w = max(2, int(bar_w * ratio))
+
+            parts += [
+                text(col3_x, y_pos, display_name, fill=USER, size=12, weight="500"),
+                f'<rect x="{bar_x}" y="{y_pos - 8}" width="{bar_w}" height="6" rx="3" fill="{BAR_BG}"/>',
+                f'<rect x="{bar_x}" y="{y_pos - 8}" width="{fill_w}" height="6" rx="3" fill="{A}"/>',
+                text(816, y_pos, fmt_tokens(tok), fill=A, size=12, weight="700", anchor="end"),
+            ]
+            y_pos += spacing_y
     return (
         '<?xml version="1.0" encoding="UTF-8"?>\n'
         f'<svg width="{W}" height="{H}" viewBox="0 0 {W} {H}" '
@@ -404,10 +517,19 @@ def patch_readme(rendered: list[str]) -> None:
     block = "\n".join(lines)
 
     text = README.read_text(encoding="utf-8")
-    if START not in text or END not in text:
-        die(f"README.md 缺少 {START} / {END}")
-    i = text.index(START)
-    j = text.index(END) + len(END)
+    if START in text and END in text:
+        i = text.index(START)
+        j = text.index(END) + len(END)
+    else:
+        found = False
+        for l_start, l_end in zip(LEGACY_STARTS, LEGACY_ENDS):
+            if l_start in text and l_end in text:
+                i = text.index(l_start)
+                j = text.index(l_end) + len(l_end)
+                found = True
+                break
+        if not found:
+            die(f"README.md 缺少 {START} / {END}")
     README.write_text(text[:i] + block + text[j:], encoding="utf-8")
 
 
@@ -418,8 +540,6 @@ def render() -> list[str]:
         try:
             days = load_client_days(c)
         except SystemExit as e:
-            if c == "pi":
-                raise
             print(f"⚠ skip {c}: exit {e.code}")
             continue
         if not days:
@@ -497,7 +617,7 @@ def git_push() -> None:
 
 
 def main() -> None:
-    p = argparse.ArgumentParser(description="多客户端用量导出与 SVG 渲染")
+    p = argparse.ArgumentParser(description="多 Harness 编码助手用量导出与 SVG 渲染")
     sub = p.add_subparsers(dest="cmd", required=True)
 
     e = sub.add_parser("export", help="导出 usage/data/*.json")
@@ -505,16 +625,16 @@ def main() -> None:
         "--client",
         default="all",
         choices=[*CLIENTS, "all"],
-        help="pi|claude|codex|opencode|all",
+        help="omp|pi|claude|codex|opencode|all",
     )
-    e.add_argument("--name", default="mio", help="Pi 数据源 ID → pi-{name}.json")
+    e.add_argument("--name", default="mio", help="设备数据源 ID → {client}-{name}.json")
 
     sub.add_parser("render", help="生成 usage/*.svg 并更新 README")
     sub.add_parser("migrate", help="根目录旧 mac-cc.json / pi-usage.svg 迁入 usage/")
 
     s = sub.add_parser("sync", help="导出 + 渲染")
     s.add_argument("--client", default="all", choices=[*CLIENTS, "all"])
-    s.add_argument("--name", default="mio")
+    s.add_argument("--name", default="mio", help="设备数据源 ID → {client}-{name}.json")
     s.add_argument("--commit", action="store_true")
     s.add_argument("--push", action="store_true")
 

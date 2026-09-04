@@ -10,11 +10,15 @@
 
 ## 最近Vibe统计
 
-<!-- PI-USAGE:START -->
+<!-- HARNESS-USAGE:START -->
 
-**最近Vibe统计 · Pi**
+**最近Vibe统计 · OMP**
 
-<a href="./usage/pi.svg"><img class="usage-card" width="100%" src="./usage/pi.svg" alt="最近Vibe统计 · Pi" /></a>
+<a href="./usage/omp.svg"><img class="usage-card" width="100%" src="./usage/omp.svg" alt="最近Vibe统计 · OMP" /></a>
+
+**历史 · Pi**
+
+<a href="./usage/pi.svg"><img class="usage-card" width="100%" src="./usage/pi.svg" alt="历史 · Pi" /></a>
 
 **历史 · Claude Code**
 
@@ -28,7 +32,7 @@
 
 <a href="./usage/opencode.svg"><img class="usage-card" width="100%" src="./usage/opencode.svg" alt="历史 · OpenCode" /></a>
 
-<!-- PI-USAGE:END -->
+<!-- HARNESS-USAGE:END -->
 
 ---
 

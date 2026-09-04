@@ -36,7 +36,7 @@ def render_markdown(md: str, *, context: str | None = None) -> str:
 
 
 def build_html(article: str, *, dark: bool) -> str:
-    # Catppuccin Macchiato（与 badge / pi-usage.svg 一致）
+    # Catppuccin Macchiato（与 badge / agent-usage 一致）
     # crust / base / text / pink / surface0
     bg = "#181926" if dark else "#eff1f5"  # crust / latte base
     surface = "#24273a" if dark else "#e6e9ef"
