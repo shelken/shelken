@@ -11,6 +11,8 @@ import {
   normalizeDay,
   mergeDailyRecords,
   buildClientSvg,
+  buildHistorySvg,
+  USAGE_CONFIG,
   type DailyRecord,
   type ModelBreakdown,
 } from "../scripts/harness-usage";
@@ -236,5 +238,79 @@ describe("buildClientSvg", () => {
     expect(svg).toContain("@shelken");
     expect(svg).toContain("ALL-TIME");
     expect(svg).toContain("gpt-5.6-sol");
+  });
+});
+describe("buildHistorySvg", () => {
+  it("generates 2x2 quadrant SVG with 4 historical clients", () => {
+    const mockData = {
+      omp: [],
+      pi: [
+        {
+          date: "2026-08-01",
+          totalTokens: 10_000_000,
+          inputTokens: 1_000_000,
+          outputTokens: 500_000,
+          cacheReadTokens: 8_500_000,
+          cacheCreationTokens: 0,
+          totalCost: 1.0,
+          modelBreakdowns: [{ modelName: "[pi] gpt-5.6-sol", inputTokens: 1000, outputTokens: 500, cacheReadTokens: 8500, cacheCreationTokens: 0, cost: 0.1 }],
+        },
+      ],
+      codex: [
+        {
+          date: "2026-05-01",
+          totalTokens: 5_000_000,
+          inputTokens: 1_000_000,
+          outputTokens: 500_000,
+          cacheReadTokens: 3_500_000,
+          cacheCreationTokens: 0,
+          totalCost: 0.5,
+          modelBreakdowns: [{ modelName: "gpt-5.2-codex", inputTokens: 1000, outputTokens: 500, cacheReadTokens: 3500, cacheCreationTokens: 0, cost: 0.1 }],
+        },
+      ],
+      opencode: [
+        {
+          date: "2026-03-01",
+          totalTokens: 2_000_000,
+          inputTokens: 500_000,
+          outputTokens: 200_000,
+          cacheReadTokens: 1_300_000,
+          cacheCreationTokens: 0,
+          totalCost: 0.2,
+          modelBreakdowns: [{ modelName: "deepseek-v3.2", inputTokens: 500, outputTokens: 200, cacheReadTokens: 1300, cacheCreationTokens: 0, cost: 0.05 }],
+        },
+      ],
+      claude: [
+        {
+          date: "2026-02-01",
+          totalTokens: 500_000,
+          inputTokens: 100_000,
+          outputTokens: 50_000,
+          cacheReadTokens: 350_000,
+          cacheCreationTokens: 0,
+          totalCost: 0.05,
+          modelBreakdowns: [{ modelName: "claude-3-5-sonnet", inputTokens: 100, outputTokens: 50, cacheReadTokens: 350, cacheCreationTokens: 0, cost: 0.02 }],
+        },
+      ],
+    };
+
+    const svg = buildHistorySvg(mockData as any);
+    expect(svg.startsWith('<?xml version="1.0" encoding="UTF-8"?>')).toBeTrue();
+    expect(svg.trim().endsWith("</svg>")).toBeTrue();
+    expect(svg).toContain(`viewBox="0 0 ${USAGE_CONFIG.historyCard.width} ${USAGE_CONFIG.historyCard.height}"`);
+    expect(svg).toContain(USAGE_CONFIG.historyCard.title);
+    expect(svg).toContain("@shelken");
+    expect(svg).toContain("Active days");
+    expect(svg).toContain("Avg / day");
+    expect(svg).toContain("Peak day");
+    expect(svg).toContain("TOP MODELS");
+    expect(svg).toContain("Pi");
+    expect(svg).toContain("Codex");
+    expect(svg).toContain("OpenCode");
+    expect(svg).toContain("Claude Code");
+    expect(svg).toContain("gpt-5.6-sol");
+    expect(svg).toContain("gpt-5.2-codex");
+    expect(svg).toContain("deepseek-v3.2");
+    expect(svg).toContain("claude-3-5-sonnet");
   });
 });

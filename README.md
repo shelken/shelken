@@ -18,13 +18,7 @@
 
 <a href="./usage/omp.svg"><img class="usage-card" width="100%" src="./usage/omp.svg" alt="OMP" /></a>
 
-<a href="./usage/pi.svg"><img class="usage-card" width="100%" src="./usage/pi.svg" alt="Pi" /></a>
-
-<a href="./usage/claude.svg"><img class="usage-card" width="100%" src="./usage/claude.svg" alt="Claude Code" /></a>
-
-<a href="./usage/codex.svg"><img class="usage-card" width="100%" src="./usage/codex.svg" alt="Codex" /></a>
-
-<a href="./usage/opencode.svg"><img class="usage-card" width="100%" src="./usage/opencode.svg" alt="OpenCode" /></a>
+<a href="./usage/history.svg"><img class="usage-card" width="100%" src="./usage/history.svg" alt="History" /></a>
 
 <!-- HARNESS-USAGE:END -->
 

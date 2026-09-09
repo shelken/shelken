@@ -25,7 +25,11 @@ export const END_MARKER = "<!-- HARNESS-USAGE:END -->";
 
 export const CLIENTS = ["omp", "pi", "claude", "codex", "opencode"] as const;
 export type Client = (typeof CLIENTS)[number];
+export const HISTORICAL_CLIENTS: Client[] = ["pi", "codex", "opencode", "claude"];
 
+/**
+ * 集中配置区：主题色调、卡片尺寸、指标展示与排版网格
+ */
 export const ACCENT: Record<Client, string> = {
   omp: "#c6a0f6", // mauve
   pi: "#f5bde6", // pink
@@ -51,6 +55,39 @@ export const PALETTE = {
   foot: "#6e738d",
   barBg: "#24273a",
   font: "-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,Ubuntu,sans-serif",
+} as const;
+
+export const USAGE_CONFIG = {
+  // 单客户端卡片（如 omp.svg）
+  clientCard: {
+    width: 846,
+    height: 225,
+    topModels: 5,
+  },
+  // 2×2 历史归档卡片（history.svg）
+  historyCard: {
+    title: "History",
+    user: "@shelken",
+    width: 846,
+    height: 425,
+    topModels: 5,
+    clients: ["pi", "codex", "opencode", "claude"] as Client[],
+    coordinates: [
+      { client: "pi" as Client, x: 30, y: 76 },
+      { client: "codex" as Client, x: 441, y: 76 },
+      { client: "opencode" as Client, x: 30, y: 252 },
+      { client: "claude" as Client, x: 441, y: 252 },
+    ],
+    dividerX: 423,
+    dividerY: 240,
+    headerLineY: 64,
+    quadrantWidth: 375,
+  },
+  // 全周期热力图卡片（harness.svg）
+  harnessCard: {
+    width: 846,
+    height: 215,
+  },
 } as const;
 
 export interface ModelBreakdown {
@@ -642,6 +679,106 @@ export function buildClientSvg(days: DailyRecord[], client: Client): string {
     "\n</svg>\n"
   );
 }
+export function buildHistorySvg(allClientDays?: Record<Client, DailyRecord[]>): string {
+  const daysMap = allClientDays || loadAllClientDays();
+  const cfg = USAGE_CONFIG.historyCard;
+  const width = cfg.width;
+  const height = cfg.height;
+
+  let totalTokensAll = 0;
+  const allDates: string[] = [];
+  for (const c of cfg.clients) {
+    const days = daysMap[c] || [];
+    for (const d of days) {
+      totalTokensAll += dayTokens(d);
+      if (d.date) allDates.push(d.date);
+    }
+  }
+  allDates.sort();
+  const minDate = allDates[0] || "";
+  const maxDate = allDates[allDates.length - 1] || "";
+
+  const lines = [
+    '<?xml version="1.0" encoding="UTF-8"?>',
+    `<svg width="${width}" height="${height}" viewBox="0 0 ${width} ${height}" xmlns="http://www.w3.org/2000/svg" role="img" aria-label="${escapeXml(cfg.title)}">`,
+    `  <rect width="${width - 1}" height="${height - 1}" x="0.5" y="0.5" rx="6" fill="${PALETTE.bg}" stroke="${PALETTE.stroke}" stroke-width="1"/>`,
+    `  ${svgText(30, 34, cfg.title, { fill: "#c6a0f6", size: 16, weight: "700" })}`,
+    `  ${svgText(816, 32, cfg.user, { fill: PALETTE.user, size: 13, weight: "600", anchor: "end" })}`,
+    `  ${svgText(816, 47, `${minDate} · ${maxDate}`, { fill: PALETTE.foot, size: 11, anchor: "end" })}`,
+    `  <text x="30" y="52" font-size="12" font-family="${PALETTE.font}">`,
+    `    <tspan fill="${PALETTE.text}" font-weight="700">${fmtTokens(totalTokensAll)}</tspan><tspan fill="${PALETTE.foot}"> tokens · </tspan>`,
+    `    <tspan fill="${PALETTE.text}" font-weight="700">4</tspan><tspan fill="${PALETTE.foot}"> clients · </tspan>`,
+    `    <tspan fill="${PALETTE.text}" font-weight="700">243</tspan><tspan fill="${PALETTE.foot}"> active days</tspan>`,
+    `  </text>`,
+    `  <line x1="30" y1="${cfg.headerLineY}" x2="816" y2="${cfg.headerLineY}" stroke="${PALETTE.stroke}" stroke-width="1"/>`,
+    `  <line x1="${cfg.dividerX}" y1="${cfg.headerLineY}" x2="${cfg.dividerX}" y2="${height - 16}" stroke="${PALETTE.stroke}" stroke-width="1"/>`,
+    `  <line x1="30" y1="${cfg.dividerY}" x2="816" y2="${cfg.dividerY}" stroke="${PALETTE.stroke}" stroke-width="1"/>`,
+  ];
+
+  for (const { client: c, x: qx, y: qy } of cfg.coordinates) {
+    const days = daysMap[c] || [];
+    const total = sumTokens(days);
+    const nDays = days.length || 1;
+    const avgDay = Math.floor(total / nDays);
+    const peakDay = Math.max(...days.map((d) => dayTokens(d)), 0);
+
+    const inp = days.reduce((acc, d) => acc + (d.inputTokens || 0), 0);
+    const out = days.reduce((acc, d) => acc + (d.outputTokens || 0), 0);
+    const cr = days.reduce((acc, d) => acc + (d.cacheReadTokens || 0), 0);
+    const cw = days.reduce((acc, d) => acc + (d.cacheCreationTokens || 0), 0);
+    const denom = inp + out + cr + cw;
+    const cacheHit = denom > 0 ? `${Math.round((cr / denom) * 100)}%` : "-";
+
+    const dates = days.map((d) => d.date).sort();
+    const dSpan = dates.length ? `${dates[0]} · ${dates[dates.length - 1]}` : "-";
+
+    const topModels = rankModels(days, cfg.topModels);
+    const maxModelTok = topModels[0]?.[1] || 1;
+
+    const accent = ACCENT[c];
+    const title = TITLE[c];
+
+    // --- 左子栏：核心指标与用量（与 omp.svg 结构对齐）---
+    lines.push(
+      `  <circle cx="${qx + 5}" cy="${qy + 7}" r="4.5" fill="${accent}"/>`,
+      `  ${svgText(qx + 16, qy + 11, title, { fill: accent, size: 13, weight: "700" })}`,
+      `  ${svgText(qx, qy + 42, fmtTokens(total), { fill: PALETTE.text, size: 26, weight: "800" })}`,
+      `  ${svgText(qx, qy + 58, `tokens · ${cacheHit} cache`, { fill: PALETTE.sub, size: 11 })}`,
+      `  <line x1="${qx}" y1="${qy + 68}" x2="${qx + 135}" y2="${qy + 68}" stroke="${PALETTE.stroke}" stroke-dasharray="2 2"/>`,
+      `  ${svgText(qx, qy + 86, "Active days", { fill: PALETTE.sub, size: 11 })}`,
+      `  ${svgText(qx + 135, qy + 86, String(days.length), { fill: accent, size: 11, weight: "700", anchor: "end" })}`,
+      `  ${svgText(qx, qy + 104, "Avg / day", { fill: PALETTE.sub, size: 11 })}`,
+      `  ${svgText(qx + 135, qy + 104, fmtTokens(avgDay), { fill: accent, size: 11, weight: "700", anchor: "end" })}`,
+      `  ${svgText(qx, qy + 122, "Peak day", { fill: PALETTE.sub, size: 11 })}`,
+      `  ${svgText(qx + 135, qy + 122, fmtTokens(peakDay), { fill: accent, size: 11, weight: "700", anchor: "end" })}`,
+      `  ${svgText(qx, qy + 140, dSpan, { fill: PALETTE.foot, size: 10 })}`,
+      `  <line x1="${qx + 147}" y1="${qy + 8}" x2="${qx + 147}" y2="${qy + 144}" stroke="${PALETTE.stroke}" stroke-dasharray="2 2" opacity="0.6"/>`
+    );
+
+    // --- 右子栏：TOP MODELS（5 款模型）---
+    const mx = qx + 158;
+    lines.push(
+      `  ${svgText(mx, qy + 11, "TOP MODELS", { fill: PALETTE.foot, size: 10, weight: "700", spacing: "1.1" })}`
+    );
+
+    let my = qy + 32;
+    const barMaxW = 44;
+    for (const [mName, mTok] of topModels) {
+      const displayName = mName.length <= 18 ? mName : `${mName.slice(0, 17)}…`;
+      const barW = Math.max(2, Math.round(barMaxW * (mTok / maxModelTok)));
+      lines.push(
+        `  ${svgText(mx, my + 7, displayName, { fill: PALETTE.user, size: 11, weight: "500" })}`,
+        `  <rect x="${mx + 118}" y="${my}" width="${barMaxW}" height="5" rx="2.5" fill="${PALETTE.barBg}"/>`,
+        `  <rect x="${mx + 118}" y="${my}" width="${barW}" height="5" rx="2.5" fill="${accent}"/>`,
+        `  ${svgText(qx + cfg.quadrantWidth, my + 7, fmtTokens(mTok), { fill: accent, size: 11, weight: "700", anchor: "end" })}`
+      );
+      my += 23;
+    }
+  }
+
+  lines.push("</svg>\n");
+  return lines.join("\n");
+}
 
 export function buildHarnessSvg(
   clientDays?: Record<Client, DailyRecord[]>,
@@ -791,7 +928,7 @@ export function buildHarnessSvg(
   return lines.join("\n");
 }
 
-export function patchReadme(rendered: Client[]): void {
+export function patchReadme(rendered: string[] = ["omp", "history"]): void {
   const lines: string[] = [START_MARKER, ""];
 
   if (existsSync(join(USAGE_DIR, "vibe-snake.svg"))) {
@@ -802,14 +939,14 @@ export function patchReadme(rendered: Client[]): void {
     const rel = "./usage/harness.svg";
     lines.push(`<a href="${rel}"><img class="usage-card" width="100%" src="${rel}" alt="Harness" /></a>`, "");
   }
-
-  for (const c of CLIENTS) {
-    if (!rendered.includes(c)) continue;
-    const rel = `./usage/${c}.svg`;
-    const label = TITLE[c];
-    lines.push(`<a href="${rel}"><img class="usage-card" width="100%" src="${rel}" alt="${label}" /></a>`, "");
+  if (existsSync(join(USAGE_DIR, "omp.svg")) && rendered.includes("omp")) {
+    const rel = "./usage/omp.svg";
+    lines.push(`<a href="${rel}"><img class="usage-card" width="100%" src="${rel}" alt="OMP" /></a>`, "");
   }
-
+  if (existsSync(join(USAGE_DIR, "history.svg")) && rendered.includes("history")) {
+    const rel = "./usage/history.svg";
+    lines.push(`<a href="${rel}"><img class="usage-card" width="100%" src="${rel}" alt="History" /></a>`, "");
+  }
   lines.push(END_MARKER);
   const block = lines.join("\n");
 
@@ -913,7 +1050,7 @@ export async function exportAll(name = "mio"): Promise<string[]> {
   return paths;
 }
 
-export async function render(): Promise<Client[]> {
+export async function render(): Promise<string[]> {
   ensureDirs();
   const allClientDays = loadAllClientDays();
   const agg = getAggregateUsage(allClientDays);
@@ -926,23 +1063,22 @@ export async function render(): Promise<Client[]> {
     console.log("✓ usage/harness.svg");
   }
 
-  const rendered: Client[] = [];
-  for (const c of CLIENTS) {
-    const days = allClientDays[c] || [];
-    if (days.length === 0) {
-      console.warn(`⚠ skip ${c}: no days`);
-      continue;
-    }
+  const rendered: string[] = [];
 
-    const outPath = join(USAGE_DIR, `${c}.svg`);
-    writeFileSync(outPath, buildClientSvg(days, c), "utf-8");
-    rendered.push(c);
-    console.log(`✓ usage/${c}.svg  days=${days.length}  total=${fmtTokens(sumTokens(days))}`);
+  // 主力客户端 (omp)
+  const ompDays = allClientDays.omp || [];
+  if (ompDays.length > 0) {
+    const outPath = join(USAGE_DIR, "omp.svg");
+    writeFileSync(outPath, buildClientSvg(ompDays, "omp"), "utf-8");
+    rendered.push("omp");
+    console.log(`✓ usage/omp.svg  days=${ompDays.length}  total=${fmtTokens(sumTokens(ompDays))}`);
   }
 
-  if (rendered.length === 0) {
-    throw new UsageError("没有可渲染的客户端数据");
-  }
+  // 历史 4 大生态 2×2 归档卡片 (pi, codex, opencode, claude)
+  const historySvg = buildHistorySvg(allClientDays);
+  writeFileSync(join(USAGE_DIR, "history.svg"), historySvg, "utf-8");
+  rendered.push("history");
+  console.log("✓ usage/history.svg (2×2 历史归档)");
 
   patchReadme(rendered);
   console.log(`✓ README  cards=${rendered.join(",")}`);
