@@ -7,57 +7,29 @@ root := justfile_directory()
 bun := "bun"
 export PATH := root + "/node_modules/.bin:" + env_var("PATH")
 
-# 默认：列出全部 recipe
+# 默认：列出常用 recipe
 default:
 	@just --list
 
-# ── 用量 ──────────────────────────────────────────────
+# ── 用量与卡片 ──────────────────────────────────────────
 
-# 导出全部客户端 JSON → usage/data/
-export-usage client="all" name="mio":
-	{{ bun }} {{ root }}/scripts/harness-usage.ts export --client {{ client }} --name {{ name }}
-
-# 仅导出 OMP
-export-omp name="mio":
-	just export-usage omp {{ name }}
-
-# 仅导出 Pi
-export-pi name="mio":
-	just export-usage pi {{ name }}
-
-# 仅导出 Claude / Codex / OpenCode
-export-claude:
-	just export-usage claude
-
-export-codex:
-	just export-usage codex
-
-export-opencode:
-	just export-usage opencode
-
-# 渲染 assets/usage/*.svg + 更新 README HARNESS-USAGE 块
-render-usage:
-	{{ bun }} {{ root }}/scripts/harness-usage.ts render
-
-# 检查并更新 ccusage 依赖（跟踪 Issue #1 修复）
-update-ccusage:
-	{{ bun }} update ccusage
-	@echo -n "当前 ccusage 版本: " && {{ root }}/node_modules/.bin/ccusage --version
-
-# 导出 + 渲染（本地同步，不提交推送）
+# 本地同步用量（导出 + 渲染，不提交推送）
 sync-usage client="all" name="mio":
 	{{ bun }} {{ root }}/scripts/harness-usage.ts sync --client {{ client }} --name {{ name }}
 
-# 导出 + 渲染 + 提交推送（供外部自动化与定时任务调用，解耦底层脚本实现）
+# 自动化同步入口（导出 + 渲染 + 提交推送，供定时任务无感调用）
 sync-push client="all" name="mio":
 	{{ bun }} {{ root }}/scripts/harness-usage.ts sync --client {{ client }} --name {{ name }} --push
 
-# 自动化定时同步入口（语义化别名，供 nix-config tasks 无感调用）
-cron-sync:
-	just sync-push all mio
+# 仅导出客户端 JSON 数据 → usage/data/
+export-usage client="all" name="mio":
+	{{ bun }} {{ root }}/scripts/harness-usage.ts export --client {{ client }} --name {{ name }}
 
+# 仅渲染 assets/usage/*.svg + 更新 README
+render-usage:
+	{{ bun }} {{ root }}/scripts/harness-usage.ts render
 
-# 用本地 Vibe (Token) 数据渲染动态贪吃蛇 SVG
+# 仅渲染动态贪吃蛇 SVG (assets/usage/vibe-snake.svg)
 render-snake:
 	{{ bun }} {{ root }}/scripts/vibe-snake.ts
 
@@ -65,49 +37,12 @@ render-snake:
 build-badges:
 	{{ bun }} {{ root }}/scripts/build-badges.ts
 
-# ── 预览 ──────────────────────────────────────────────
+# ── 预览与测试 ──────────────────────────────────────────
 
-# GitHub API 预览 README（默认 :6450，Ctrl-C 停）
-preview port="6450":
-	{{ bun }} {{ root }}/scripts/gh-preview.ts --port {{ port }}
-
-# 只写 .readme-preview.html，不启 HTTP
-preview-once:
-	{{ bun }} {{ root }}/scripts/gh-preview.ts --once
-
-# 预览并打开浏览器
-preview-open port="6450":
-	{{ bun }} {{ root }}/scripts/gh-preview.ts --port {{ port }} --open
-
-# ── 仓库 ──────────────────────────────────────────────
-
-# 状态
-status:
-	git -C {{ root }} status -sb
-
-# 看 diff
-diff:
-	git -C {{ root }} diff --stat
-	git -C {{ root }} diff
-
-# 提交（需自行传 message）
-commit msg:
-	git -C {{ root }} add -A
-	git -C {{ root }} commit -m "{{ msg }}"
-
-# 提交用量卡更新
-commit-usage:
-	git -C {{ root }} add assets README.md
-	git -C {{ root }} status -sb
-	git -C {{ root }} diff --staged --quiet && echo "无变更" || \
-		git -C {{ root }} commit -m "chore: update usage cards"
-
-# ── 一键 ──────────────────────────────────────────────
-
-# 全量同步用量并预览
-all: sync-usage
-	@echo "→ just preview"
+# GitHub API 预览 README（支持 --open, --once, --port 等参数，Ctrl-C 退出）
+preview *args:
+	{{ bun }} {{ root }}/scripts/gh-preview.ts {{ args }}
 
 # 运行测试 (bun test)
-test:
-	{{ bun }} test
+test *args:
+	{{ bun }} test {{ args }}
