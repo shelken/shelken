@@ -998,9 +998,10 @@ export function patchReadme(rendered: string[] = ["omp", "history"]): void {
 }
 
 export function ccusageCmd(client: Client): string[] {
-  const hasCcusage = Bun.which("ccusage");
-  const base = hasCcusage ? ["ccusage"] : ["bunx", "ccusage"];
-
+  const localBin = join(ROOT, "node_modules", ".bin", "ccusage");
+  const hasLocal = existsSync(localBin);
+  const hasGlobal = Bun.which("ccusage");
+  const base = hasLocal ? [localBin] : hasGlobal ? ["ccusage"] : ["bunx", "ccusage"];
   if (client === "omp") {
     const home = homedir();
     const candidateDirs = [
@@ -1079,12 +1080,8 @@ export async function exportClient(client: Client, name = "mio"): Promise<string
 }
 
 export async function exportAll(name = "mio"): Promise<string[]> {
-  const paths: string[] = [];
-  for (const c of CLIENTS) {
-    const p = await exportClient(c, name);
-    if (p) paths.push(p);
-  }
-  return paths;
+  const results = await Promise.all(CLIENTS.map((c) => exportClient(c, name)));
+  return results.filter((p): p is string => Boolean(p));
 }
 
 export async function render(): Promise<string[]> {

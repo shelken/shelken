@@ -2,5 +2,8 @@
   "dependencies": {
     "generate-snake-animation": "^3.5.0",
     "yaml": "^2.9.0"
+  },
+  "devDependencies": {
+    "ccusage": "^20.0.20"
   }
 }

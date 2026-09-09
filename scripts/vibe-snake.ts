@@ -122,7 +122,19 @@ export async function renderVibeSnake(options?: {
     }
     return origFetch(url, opts as RequestInit);
   };
+  const origLog = console.log;
   try {
+    console.log = (...args: unknown[]) => {
+      const msg = String(args[0] || "");
+      if (
+        msg.includes("fetching user contribution") ||
+        msg.includes("computing best route") ||
+        msg.includes("creating svg")
+      ) {
+        return;
+      }
+      origLog(...args);
+    };
     const outputs = [
       {
         format: "svg",
@@ -186,6 +198,7 @@ export async function renderVibeSnake(options?: {
     }
     return null;
   } finally {
+    console.log = origLog;
     globalThis.fetch = origFetch;
   }
 }

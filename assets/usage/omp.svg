@@ -7,7 +7,7 @@
 <line x1="250" y1="62" x2="250" y2="214" stroke="#363a4f" stroke-width="1"/>
 <line x1="510" y1="62" x2="510" y2="214" stroke="#363a4f" stroke-width="1"/>
 <text x="30" y="74" fill="#6e738d" font-size="10" font-weight="700" font-family="-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,Ubuntu,sans-serif" letter-spacing="1.2">ALL-TIME</text>
-<text x="30" y="112" fill="#c6a0f6" font-size="38" font-weight="800" font-family="-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,Ubuntu,sans-serif">863M</text>
+<text x="30" y="112" fill="#c6a0f6" font-size="38" font-weight="800" font-family="-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,Ubuntu,sans-serif">885M</text>
 <rect x="30" y="122" width="144" height="18" rx="4" fill="#24273a"/>
 <text x="38" y="135" fill="#a5adcb" font-size="11" font-weight="400" font-family="-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,Ubuntu,sans-serif">tokens · </text>
 <text x="79" y="135" fill="#c6a0f6" font-size="11" font-weight="700" font-family="-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,Ubuntu,sans-serif">95% cache-hit</text>
@@ -15,7 +15,7 @@
 <text x="30" y="168" fill="#a5adcb" font-size="12" font-weight="400" font-family="-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,Ubuntu,sans-serif">Active days</text>
 <text x="230" y="168" fill="#c6a0f6" font-size="12" font-weight="700" font-family="-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,Ubuntu,sans-serif" text-anchor="end">6</text>
 <text x="30" y="187" fill="#a5adcb" font-size="12" font-weight="400" font-family="-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,Ubuntu,sans-serif">Avg / day</text>
-<text x="230" y="187" fill="#c6a0f6" font-size="12" font-weight="700" font-family="-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,Ubuntu,sans-serif" text-anchor="end">144M</text>
+<text x="230" y="187" fill="#c6a0f6" font-size="12" font-weight="700" font-family="-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,Ubuntu,sans-serif" text-anchor="end">148M</text>
 <text x="30" y="206" fill="#a5adcb" font-size="12" font-weight="400" font-family="-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,Ubuntu,sans-serif">Peak day</text>
 <text x="230" y="206" fill="#c6a0f6" font-size="12" font-weight="700" font-family="-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,Ubuntu,sans-serif" text-anchor="end">352M</text>
 <text x="275" y="74" fill="#6e738d" font-size="10" font-weight="700" font-family="-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,Ubuntu,sans-serif" letter-spacing="1.2">TOKEN COMPOSITION</text>
@@ -28,32 +28,32 @@
 <circle cx="417" cy="102" r="3" fill="#a6da95"/>
 <text x="424" y="105" fill="#a5adcb" font-size="10" font-weight="400" font-family="-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,Ubuntu,sans-serif">Out 1%</text>
 <text x="275" y="124" fill="#a5adcb" font-size="12" font-weight="400" font-family="-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,Ubuntu,sans-serif">Output</text>
-<text x="490" y="124" fill="#c6a0f6" font-size="12" font-weight="700" font-family="-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,Ubuntu,sans-serif" text-anchor="end">5.1M</text>
+<text x="490" y="124" fill="#c6a0f6" font-size="12" font-weight="700" font-family="-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,Ubuntu,sans-serif" text-anchor="end">5.2M</text>
 <text x="275" y="141" fill="#a5adcb" font-size="12" font-weight="400" font-family="-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,Ubuntu,sans-serif">Input</text>
-<text x="490" y="141" fill="#c6a0f6" font-size="12" font-weight="700" font-family="-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,Ubuntu,sans-serif" text-anchor="end">45.6M</text>
+<text x="490" y="141" fill="#c6a0f6" font-size="12" font-weight="700" font-family="-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,Ubuntu,sans-serif" text-anchor="end">46.7M</text>
 <text x="275" y="158" fill="#a5adcb" font-size="12" font-weight="400" font-family="-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,Ubuntu,sans-serif">Cache read</text>
-<text x="490" y="158" fill="#c6a0f6" font-size="12" font-weight="700" font-family="-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,Ubuntu,sans-serif" text-anchor="end">812M</text>
+<text x="490" y="158" fill="#c6a0f6" font-size="12" font-weight="700" font-family="-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,Ubuntu,sans-serif" text-anchor="end">833M</text>
 <line x1="275" y1="168" x2="490" y2="168" stroke="#363a4f" stroke-dasharray="3 3"/>
 <text x="275" y="187" fill="#a5adcb" font-size="12" font-weight="400" font-family="-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,Ubuntu,sans-serif">Recent 7d</text>
-<text x="490" y="187" fill="#c6a0f6" font-size="12" font-weight="700" font-family="-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,Ubuntu,sans-serif" text-anchor="end">863M</text>
+<text x="490" y="187" fill="#c6a0f6" font-size="12" font-weight="700" font-family="-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,Ubuntu,sans-serif" text-anchor="end">885M</text>
 <text x="275" y="206" fill="#a5adcb" font-size="12" font-weight="400" font-family="-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,Ubuntu,sans-serif">Recent 40d</text>
-<text x="490" y="206" fill="#c6a0f6" font-size="12" font-weight="700" font-family="-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,Ubuntu,sans-serif" text-anchor="end">863M</text>
+<text x="490" y="206" fill="#c6a0f6" font-size="12" font-weight="700" font-family="-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,Ubuntu,sans-serif" text-anchor="end">885M</text>
 <text x="535" y="74" fill="#6e738d" font-size="10" font-weight="700" font-family="-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,Ubuntu,sans-serif" letter-spacing="1.2">TOP 5 MODELS</text>
 <text x="535" y="98" fill="#b8c0e0" font-size="12" font-weight="500" font-family="-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,Ubuntu,sans-serif">gemini-3.8-flash</text>
 <rect x="705" y="90" width="55" height="6" rx="3" fill="#24273a"/>
 <rect x="705" y="90" width="55" height="6" rx="3" fill="#c6a0f6"/>
-<text x="816" y="98" fill="#c6a0f6" font-size="12" font-weight="700" font-family="-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,Ubuntu,sans-serif" text-anchor="end">473M</text>
+<text x="816" y="98" fill="#c6a0f6" font-size="12" font-weight="700" font-family="-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,Ubuntu,sans-serif" text-anchor="end">495M</text>
 <text x="535" y="125" fill="#b8c0e0" font-size="12" font-weight="500" font-family="-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,Ubuntu,sans-serif">deepseek-v4-flash</text>
 <rect x="705" y="117" width="55" height="6" rx="3" fill="#24273a"/>
-<rect x="705" y="117" width="17" height="6" rx="3" fill="#c6a0f6"/>
+<rect x="705" y="117" width="16" height="6" rx="3" fill="#c6a0f6"/>
 <text x="816" y="125" fill="#c6a0f6" font-size="12" font-weight="700" font-family="-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,Ubuntu,sans-serif" text-anchor="end">150M</text>
 <text x="535" y="152" fill="#b8c0e0" font-size="12" font-weight="500" font-family="-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,Ubuntu,sans-serif">gemini-3.8-flash-high</text>
 <rect x="705" y="144" width="55" height="6" rx="3" fill="#24273a"/>
-<rect x="705" y="144" width="17" height="6" rx="3" fill="#c6a0f6"/>
+<rect x="705" y="144" width="16" height="6" rx="3" fill="#c6a0f6"/>
 <text x="816" y="152" fill="#c6a0f6" font-size="12" font-weight="700" font-family="-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,Ubuntu,sans-serif" text-anchor="end">147M</text>
 <text x="535" y="179" fill="#b8c0e0" font-size="12" font-weight="500" font-family="-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,Ubuntu,sans-serif">gpt-5.6-sol</text>
 <rect x="705" y="171" width="55" height="6" rx="3" fill="#24273a"/>
-<rect x="705" y="171" width="8" height="6" rx="3" fill="#c6a0f6"/>
+<rect x="705" y="171" width="7" height="6" rx="3" fill="#c6a0f6"/>
 <text x="816" y="179" fill="#c6a0f6" font-size="12" font-weight="700" font-family="-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,Ubuntu,sans-serif" text-anchor="end">70.8M</text>
 <text x="535" y="206" fill="#b8c0e0" font-size="12" font-weight="500" font-family="-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,Ubuntu,sans-serif">muse-spark-1.3-contr…</text>
 <rect x="705" y="198" width="55" height="6" rx="3" fill="#24273a"/>
