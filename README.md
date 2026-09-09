@@ -12,13 +12,13 @@
 
 <!-- HARNESS-USAGE:START -->
 
-<a href="./assets/usage/vibe-snake.svg"><img class="usage-card" width="100%" src="./assets/usage/vibe-snake.svg" alt="Vibe Activity" /></a>
+<a href="https://raw.githubusercontent.com/shelken/shelken/assets/assets/usage/vibe-snake.svg"><img class="usage-card" width="100%" src="https://raw.githubusercontent.com/shelken/shelken/assets/assets/usage/vibe-snake.svg" alt="Vibe Activity" /></a>
 
-<a href="./assets/usage/harness.svg"><img class="usage-card" width="100%" src="./assets/usage/harness.svg" alt="Harness" /></a>
+<a href="https://raw.githubusercontent.com/shelken/shelken/assets/assets/usage/harness.svg"><img class="usage-card" width="100%" src="https://raw.githubusercontent.com/shelken/shelken/assets/assets/usage/harness.svg" alt="Harness" /></a>
 
-<a href="./assets/usage/omp.svg"><img class="usage-card" width="100%" src="./assets/usage/omp.svg" alt="OMP" /></a>
+<a href="https://raw.githubusercontent.com/shelken/shelken/assets/assets/usage/omp.svg"><img class="usage-card" width="100%" src="https://raw.githubusercontent.com/shelken/shelken/assets/assets/usage/omp.svg" alt="OMP" /></a>
 
-<a href="./assets/usage/history.svg"><img class="usage-card" width="100%" src="./assets/usage/history.svg" alt="History" /></a>
+<a href="https://raw.githubusercontent.com/shelken/shelken/assets/assets/usage/history.svg"><img class="usage-card" width="100%" src="https://raw.githubusercontent.com/shelken/shelken/assets/assets/usage/history.svg" alt="History" /></a>
 
 <!-- HARNESS-USAGE:END -->
 

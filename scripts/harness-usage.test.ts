@@ -21,6 +21,15 @@ import {
   buildHistorySvg,
   buildHarnessSvg,
 } from "./usage/cards";
+import { readFileSync } from "node:fs";
+import {
+  USAGE_ASSETS_BRANCH,
+  USAGE_ASSETS_RAW_BASE,
+  pushUsageAssets,
+  runGit,
+  README_PATH,
+} from "./harness-usage";
+import { rewriteForLocalPreview } from "./gh-preview";
 
 describe("UsageStore - 跨节点与多数据源标准化及深度合并", () => {
   it("标准化多客户端格式差异（字典 models vs 数组 modelBreakdowns）", () => {
@@ -359,5 +368,54 @@ describe("Card Visualizers - SVG 渲染适配器", () => {
     expect(svg).toContain("Fri");
     expect(svg).toContain("Intensity:");
     expect(svg).toContain("2026-09-01");
+  });
+});
+
+describe("Orphan Branch & Local Preview - 孤儿分支契约与本地预览回退", () => {
+  it("README 中的 usage 卡片链接必须严格指向孤儿分支 raw 基础路径", () => {
+    expect(USAGE_ASSETS_BRANCH).toBe("assets");
+    expect(USAGE_ASSETS_RAW_BASE).toBe("https://raw.githubusercontent.com/shelken/shelken/assets/assets/usage");
+
+    const readme = readFileSync(README_PATH, "utf-8");
+    expect(readme).toContain(`${USAGE_ASSETS_RAW_BASE}/vibe-snake.svg`);
+    expect(readme).toContain(`${USAGE_ASSETS_RAW_BASE}/harness.svg`);
+    expect(readme).toContain(`${USAGE_ASSETS_RAW_BASE}/omp.svg`);
+    expect(readme).toContain(`${USAGE_ASSETS_RAW_BASE}/history.svg`);
+    expect(readme).not.toContain('src="./assets/usage/');
+  });
+
+  it("pushUsageAssets 在 commitOnly 模式下生成无父级节点的纯净孤儿提交", async () => {
+    const testBranch = `test-orphan-${Date.now()}`;
+    try {
+      const commitSha = await pushUsageAssets({
+        branch: testBranch,
+        commitOnly: true,
+        msg: "test: generate orphan commit",
+      });
+
+      expect(commitSha).toBeDefined();
+      expect(commitSha.length).toBe(40);
+
+      const parents = await runGit(["rev-parse", `${commitSha}^@`]);
+      expect(parents.trim()).toBe("");
+
+      const showStat = await runGit(["show", "--stat", "--oneline", commitSha]);
+      expect(showStat).toContain("assets/usage/harness.svg");
+      expect(showStat).toContain("assets/usage/omp.svg");
+      expect(showStat).not.toContain("README.md");
+      expect(showStat).not.toContain("package.json");
+    } finally {
+      await runGit(["update-ref", "-d", `refs/heads/${testBranch}`]);
+    }
+  });
+
+  it("rewriteForLocalPreview 正确将孤儿分支远端 URL 映射为本地静态文件路由", () => {
+    const remoteHtml = `<p><img src="${USAGE_ASSETS_RAW_BASE}/harness.svg" alt="Harness" /></p>`;
+    const localMapped = rewriteForLocalPreview(remoteHtml);
+    expect(localMapped).toBe('<p><img src="/assets/usage/harness.svg" alt="Harness" /></p>');
+
+    const nonexistentHtml = `<p><img src="${USAGE_ASSETS_RAW_BASE}/nonexistent.svg" alt="None" /></p>`;
+    const unmapped = rewriteForLocalPreview(nonexistentHtml);
+    expect(unmapped).toBe(nonexistentHtml);
   });
 });

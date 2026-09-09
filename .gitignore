@@ -72,3 +72,6 @@ preview.html
 usage/data/
 
 .playwright-cli
+
+# Usage cards 生成产物由 sync-push 推送至独立孤儿分支 assets，不进 main 历史
+assets/usage/

@@ -8,8 +8,8 @@
  *   bun scripts/harness-usage.ts sync [--client all] [--name mio] [--commit] [--push]
  */
 
-import { existsSync, mkdirSync, readFileSync, writeFileSync } from "node:fs";
-import { homedir } from "node:os";
+import { existsSync, mkdirSync, readFileSync, rmSync, writeFileSync } from "node:fs";
+import { homedir, tmpdir } from "node:os";
 import { dirname, join, resolve } from "node:path";
 import { fileURLToPath } from "node:url";
 
@@ -103,6 +103,10 @@ export const README_PATH = join(ROOT, "README.md");
 export const START_MARKER = "<!-- HARNESS-USAGE:START -->";
 export const END_MARKER = "<!-- HARNESS-USAGE:END -->";
 
+export const USAGE_ASSETS_BRANCH = "assets";
+export const USAGE_ASSETS_RAW_BASE =
+  "https://raw.githubusercontent.com/shelken/shelken/assets/assets/usage";
+
 export function die(msg: string, code = 1): never {
   console.error(msg);
   process.exit(code);
@@ -117,20 +121,20 @@ export function patchReadme(rendered: string[] = ["omp", "history"]): void {
   const lines: string[] = [START_MARKER, ""];
 
   if (existsSync(join(CARDS_DIR, "vibe-snake.svg"))) {
-    const rel = "./assets/usage/vibe-snake.svg";
-    lines.push(`<a href="${rel}"><img class="usage-card" width="100%" src="${rel}" alt="Vibe Activity" /></a>`, "");
+    const url = `${USAGE_ASSETS_RAW_BASE}/vibe-snake.svg`;
+    lines.push(`<a href="${url}"><img class="usage-card" width="100%" src="${url}" alt="Vibe Activity" /></a>`, "");
   }
   if (existsSync(join(CARDS_DIR, "harness.svg"))) {
-    const rel = "./assets/usage/harness.svg";
-    lines.push(`<a href="${rel}"><img class="usage-card" width="100%" src="${rel}" alt="Harness" /></a>`, "");
+    const url = `${USAGE_ASSETS_RAW_BASE}/harness.svg`;
+    lines.push(`<a href="${url}"><img class="usage-card" width="100%" src="${url}" alt="Harness" /></a>`, "");
   }
   if (existsSync(join(CARDS_DIR, "omp.svg")) && rendered.includes("omp")) {
-    const rel = "./assets/usage/omp.svg";
-    lines.push(`<a href="${rel}"><img class="usage-card" width="100%" src="${rel}" alt="OMP" /></a>`, "");
+    const url = `${USAGE_ASSETS_RAW_BASE}/omp.svg`;
+    lines.push(`<a href="${url}"><img class="usage-card" width="100%" src="${url}" alt="OMP" /></a>`, "");
   }
   if (existsSync(join(CARDS_DIR, "history.svg")) && rendered.includes("history")) {
-    const rel = "./assets/usage/history.svg";
-    lines.push(`<a href="${rel}"><img class="usage-card" width="100%" src="${rel}" alt="History" /></a>`, "");
+    const url = `${USAGE_ASSETS_RAW_BASE}/history.svg`;
+    lines.push(`<a href="${url}"><img class="usage-card" width="100%" src="${url}" alt="History" /></a>`, "");
   }
   lines.push(END_MARKER);
   const block = lines.join("\n");
@@ -334,6 +338,60 @@ export async function gitPush(): Promise<void> {
   console.log("✓ pushed");
 }
 
+export async function pushUsageAssets(options?: {
+  branch?: string;
+  remote?: string;
+  commitOnly?: boolean;
+  msg?: string;
+}): Promise<string> {
+  const branch = options?.branch || USAGE_ASSETS_BRANCH;
+  const remote = options?.remote || "origin";
+  const commitOnly = options?.commitOnly ?? false;
+  const msg = options?.msg || "chore: sync usage cards";
+
+  const tmpIndex = join(
+    tmpdir(),
+    `git_index_assets_${Date.now()}_${Math.random().toString(36).slice(2)}`
+  );
+
+  const runGitEnv = async (args: string[], env: Record<string, string>, okCodes = [0]) => {
+    const proc = Bun.spawn(["git", ...args], {
+      cwd: ROOT,
+      env: { ...process.env, ...env },
+      stdout: "pipe",
+      stderr: "pipe",
+    });
+    const code = await proc.exited;
+    const stdout = (await new Response(proc.stdout).text()).trim();
+    const stderr = (await new Response(proc.stderr).text()).trim();
+    if (!okCodes.includes(code)) {
+      throw new UsageError(`Git 命令失败（退出码 ${code}）\n命令: git ${args.join(" ")}\n${stderr || stdout}`);
+    }
+    return stdout;
+  };
+
+  try {
+    await runGitEnv(["add", "-f", "--", "assets/usage"], { GIT_INDEX_FILE: tmpIndex });
+    const treeSha = await runGitEnv(["write-tree"], { GIT_INDEX_FILE: tmpIndex });
+    const commitSha = await runGitEnv(["commit-tree", treeSha, "-m", msg], { GIT_INDEX_FILE: tmpIndex });
+
+    await runGit(["update-ref", `refs/heads/${branch}`, commitSha]);
+
+    if (!commitOnly) {
+      await runGit(["push", remote, `${commitSha}:refs/heads/${branch}`, "--force"]);
+      console.log(`✓ pushed assets/usage to orphan branch "${branch}" (commit ${commitSha.slice(0, 7)})`);
+    } else {
+      console.log(`✓ committed assets/usage to orphan branch "${branch}" (commit ${commitSha.slice(0, 7)})`);
+    }
+
+    return commitSha;
+  } finally {
+    if (existsSync(tmpIndex)) {
+      rmSync(tmpIndex, { force: true });
+    }
+  }
+}
+
 function parseOption(args: string[], flag: string, defaultValue?: string): string {
   const idx = args.indexOf(flag);
   if (idx === -1) {
@@ -397,11 +455,20 @@ export async function main(): Promise<void> {
       }
       await render();
 
-      if (isCommit) {
-        await gitCommit([CARDS_DIR, README_PATH], `chore: update usage cards (${client})`);
-      }
-      if (isPush) {
-        await gitPush();
+      if (isCommit || isPush) {
+        await pushUsageAssets({
+          branch: USAGE_ASSETS_BRANCH,
+          commitOnly: !isPush,
+          msg: `chore: update usage cards (${client})`,
+        });
+
+        const hasReadmeDiff = await runGit(["status", "--porcelain", "--", README_PATH]);
+        if (hasReadmeDiff) {
+          await gitCommit([README_PATH], `docs: update usage card references in README`);
+          if (isPush) {
+            await gitPush();
+          }
+        }
       }
     } else {
       die(`未知命令: ${cmd}`);

@@ -146,11 +146,29 @@ ${article}
 `;
 }
 
+/**
+ * 将指向孤儿分支 (assets) 的远程 raw 图片链接映射为本地服务路由（若本地文件存在）。
+ * 保证本地运行 preview 时秒开、防断网且所见即所得。
+ */
+export function rewriteForLocalPreview(html: string): string {
+  return html.replaceAll(
+    /https:\/\/raw\.githubusercontent\.com\/[^/]+\/[^/]+\/[^/]+\/(assets\/usage\/[^"'\s>]+)/g,
+    (match, relPath) => {
+      const localFile = join(ROOT, relPath);
+      if (existsSync(localFile)) {
+        return `/${relPath}`;
+      }
+      return match;
+    }
+  );
+}
+
 export async function writePreview(outPath: string, dark: boolean, context?: string | null): Promise<void> {
   const mdPath = join(ROOT, "README.md");
   const md = readFileSync(mdPath, "utf-8");
   const article = await renderMarkdown(md, context);
-  writeFileSync(outPath, buildHtml(article, dark), "utf-8");
+  const previewArticle = rewriteForLocalPreview(article);
+  writeFileSync(outPath, buildHtml(previewArticle, dark), "utf-8");
 }
 
 function openBrowser(url: string): void {
