@@ -8,8 +8,7 @@ description: >
 
 # Harness usage sync（OMP + Pi + 历史三客户端）
 
-Entrypoint: `scripts/harness_usage.py`
-
+Entrypoint: `scripts/harness-usage.ts`
 目录：
 
 ```
@@ -28,7 +27,7 @@ usage/
 1. **Export all**
 
    ```bash
-   python3 scripts/harness_usage.py export --client all --name mio
+   bun scripts/harness-usage.ts export --client all --name mio
    # 或 just export-usage
    ```
 
@@ -37,9 +36,9 @@ usage/
 2. **Render** SVG + README
 
    ```bash
-   python3 scripts/harness_usage.py render
+   bun scripts/harness-usage.ts render
    # 或 sync：export + render
-   python3 scripts/harness_usage.py sync --client all
+   bun scripts/harness-usage.ts sync --client all
    ```
 
    **Done when:**

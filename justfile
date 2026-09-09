@@ -4,7 +4,7 @@
 set shell := ["bash", "-euo", "pipefail", "-c"]
 
 root := justfile_directory()
-python := "python3"
+bun := "bun"
 
 # 默认：列出全部 recipe
 default:
@@ -14,7 +14,7 @@ default:
 
 # 导出全部客户端 JSON → usage/data/
 export-usage client="all" name="mio":
-	{{ python }} {{ root }}/scripts/harness_usage.py export --client {{ client }} --name {{ name }}
+	{{ bun }} {{ root }}/scripts/harness-usage.ts export --client {{ client }} --name {{ name }}
 
 # 仅导出 OMP
 export-omp name="mio":
@@ -36,15 +36,15 @@ export-opencode:
 
 # 渲染 usage/*.svg + 更新 README HARNESS-USAGE 块
 render-usage:
-	{{ python }} {{ root }}/scripts/harness_usage.py render
+	{{ bun }} {{ root }}/scripts/harness-usage.ts render
 
 # 导出 + 渲染（本地同步，不提交推送）
 sync-usage client="all" name="mio":
-	{{ python }} {{ root }}/scripts/harness_usage.py sync --client {{ client }} --name {{ name }}
+	{{ bun }} {{ root }}/scripts/harness-usage.ts sync --client {{ client }} --name {{ name }}
 
 # 导出 + 渲染 + 提交推送（供外部自动化与定时任务调用，解耦底层脚本实现）
 sync-push client="all" name="mio":
-	{{ python }} {{ root }}/scripts/harness_usage.py sync --client {{ client }} --name {{ name }} --push
+	{{ bun }} {{ root }}/scripts/harness-usage.ts sync --client {{ client }} --name {{ name }} --push
 
 # 自动化定时同步入口（语义化别名，供 nix-config tasks 无感调用）
 cron-sync:
@@ -53,28 +53,29 @@ cron-sync:
 
 # 用本地 Vibe (Token) 数据渲染动态贪吃蛇 SVG
 render-snake:
-	bun {{ root }}/scripts/vibe_snake.mjs
+	{{ bun }} {{ root }}/scripts/vibe-snake.ts
+
 # 根目录旧 mac-cc.json / pi-usage.svg 迁入 usage/
 migrate-usage:
-	{{ python }} {{ root }}/scripts/harness_usage.py migrate
+	{{ bun }} {{ root }}/scripts/harness-usage.ts migrate
 
 # 合成 Tech stack 横向 badge SVG（usage/badges/*.svg）并更新 README
 build-badges:
-	{{ python }} {{ root }}/scripts/build_badges.py
+	{{ bun }} {{ root }}/scripts/build-badges.ts
 
 # ── 预览 ──────────────────────────────────────────────
 
 # GitHub API 预览 README（默认 :6450，Ctrl-C 停）
 preview port="6450":
-	{{ python }} {{ root }}/scripts/gh_preview.py --port {{ port }}
+	{{ bun }} {{ root }}/scripts/gh-preview.ts --port {{ port }}
 
 # 只写 .readme-preview.html，不启 HTTP
 preview-once:
-	{{ python }} {{ root }}/scripts/gh_preview.py --once
+	{{ bun }} {{ root }}/scripts/gh-preview.ts --once
 
 # 预览并打开浏览器
 preview-open port="6450":
-	{{ python }} {{ root }}/scripts/gh_preview.py --port {{ port }} --open
+	{{ bun }} {{ root }}/scripts/gh-preview.ts --port {{ port }} --open
 
 # ── 仓库 ──────────────────────────────────────────────
 
@@ -104,3 +105,7 @@ commit-usage:
 # 全量同步用量并预览
 all: sync-usage
 	@echo "→ just preview"
+
+# 运行测试 (bun test)
+test:
+	{{ bun }} test
