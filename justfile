@@ -39,6 +39,11 @@ export-opencode:
 render-usage:
 	{{ bun }} {{ root }}/scripts/harness-usage.ts render
 
+# 检查并更新 ccusage 依赖（跟踪 Issue #1 修复）
+update-ccusage:
+	{{ bun }} update ccusage
+	@echo -n "当前 ccusage 版本: " && {{ root }}/node_modules/.bin/ccusage --version
+
 # 导出 + 渲染（本地同步，不提交推送）
 sync-usage client="all" name="mio":
 	{{ bun }} {{ root }}/scripts/harness-usage.ts sync --client {{ client }} --name {{ name }}
