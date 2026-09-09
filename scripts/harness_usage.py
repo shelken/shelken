@@ -43,11 +43,11 @@ ACCENT = {
     "opencode": "#8bd5ca",  # teal
 }
 TITLE = {
-    "omp": "最近Vibe统计 · OMP",
-    "pi": "历史 · Pi",
-    "claude": "历史 · Claude Code",
-    "codex": "历史 · Codex",
-    "opencode": "历史 · OpenCode",
+    "omp": "OMP",
+    "pi": "Pi",
+    "claude": "Claude Code",
+    "codex": "Codex",
+    "opencode": "OpenCode",
 }
 
 
@@ -498,17 +498,193 @@ def build_svg(days: list[dict], *, client: str) -> str:
     )
 
 
+def build_harness_svg() -> str:
+    """生成全周期 Harness 活跃图谱 SVG。"""
+    daily_tokens: dict[str, int] = defaultdict(int)
+    client_daily_tokens: dict[str, dict[str, int]] = defaultdict(lambda: defaultdict(int))
+
+    for c in CLIENTS:
+        try:
+            days = load_client_days(c)
+        except SystemExit:
+            continue
+        for d in days:
+            dt = d.get("date")
+            if not dt:
+                continue
+            tok = day_tokens(d)
+            daily_tokens[dt] += tok
+            client_daily_tokens[dt][c] += tok
+
+    if not daily_tokens:
+        return ""
+
+    all_dates = sorted(daily_tokens.keys())
+    latest_date = parse_day(all_dates[-1])
+    w_offset = (latest_date.weekday() + 1) % 7
+    start_date = latest_date - timedelta(days=52 * 7 + w_offset)
+
+    total_tokens = sum(daily_tokens.values())
+    active_days = len([d for d, v in daily_tokens.items() if v > 0])
+
+    first_record = parse_day(all_dates[0])
+    max_streak = 0
+    cur_streak = 0
+    temp_streak = 0
+    cur = first_record
+    while cur <= latest_date:
+        if daily_tokens.get(cur.isoformat(), 0) > 0:
+            temp_streak += 1
+            if temp_streak > max_streak:
+                max_streak = temp_streak
+        else:
+            temp_streak = 0
+        cur += timedelta(days=1)
+
+    cur = latest_date
+    while cur >= first_record:
+        if daily_tokens.get(cur.isoformat(), 0) > 0:
+            cur_streak += 1
+            cur -= timedelta(days=1)
+        else:
+            break
+
+    months_labels: list[tuple[int, str]] = []
+    months_seen: dict[str, int] = {}
+    cur = start_date
+    w_idx = 0
+    while cur <= latest_date:
+        d_w = (cur.weekday() + 1) % 7
+        if cur.day == 1 or cur == start_date:
+            m_str = cur.strftime("%b")
+            if m_str not in months_seen or (w_idx - months_seen[m_str] >= 3):
+                months_labels.append((w_idx, m_str))
+                months_seen[m_str] = w_idx
+        if d_w == 6:
+            w_idx += 1
+        cur += timedelta(days=1)
+
+    card_title = "Harness"
+    lines = [
+        '<?xml version="1.0" encoding="UTF-8"?>',
+        f'<svg width="846" height="215" viewBox="0 0 846 215" xmlns="http://www.w3.org/2000/svg" role="img" aria-label="{escape(card_title)}">',
+        '  <rect width="845" height="214" x="0.5" y="0.5" rx="6" fill="#181926" stroke="#363a4f" stroke-width="1"/>',
+        f'  <text x="30" y="33" fill="#c6a0f6" font-size="16" font-weight="700" font-family="-apple-system,BlinkMacSystemFont,\'Segoe UI\',Roboto,sans-serif">{card_title}</text>',
+        '  <text x="816" y="32" fill="#b8c0e0" font-size="13" font-weight="600" font-family="-apple-system,BlinkMacSystemFont,\'Segoe UI\',Roboto,sans-serif" text-anchor="end">@shelken</text>',
+        f'  <text x="816" y="47" fill="#6e738d" font-size="11" font-weight="400" font-family="-apple-system,BlinkMacSystemFont,\'Segoe UI\',Roboto,sans-serif" text-anchor="end">{start_date.isoformat()} · {latest_date.isoformat()}</text>',
+        '  <text x="30" y="52" font-size="12" font-family="-apple-system,BlinkMacSystemFont,\'Segoe UI\',Roboto,sans-serif">',
+        f'    <tspan fill="#cad3f5" font-weight="700">{fmt_tokens(total_tokens)}</tspan><tspan fill="#6e738d"> tokens · </tspan>',
+        f'    <tspan fill="#cad3f5" font-weight="700">{active_days}</tspan><tspan fill="#6e738d"> active days · </tspan>',
+        f'    <tspan fill="#c6a0f6" font-weight="700">{cur_streak}d</tspan><tspan fill="#6e738d"> streak (max {max_streak}d)</tspan>',
+        '  </text>',
+    ]
+
+    for w, m in months_labels:
+        x = 52 + w * 14
+        lines.append(f'  <text x="{x}" y="70" fill="#6e738d" font-size="10" font-weight="500" font-family="-apple-system,BlinkMacSystemFont,\'Segoe UI\',Roboto,sans-serif">{m}</text>')
+
+    lines.append('  <text x="30" y="99" fill="#6e738d" font-size="10" font-weight="500" font-family="-apple-system,BlinkMacSystemFont,\'Segoe UI\',Roboto,sans-serif">Mon</text>')
+    lines.append('  <text x="30" y="127" fill="#6e738d" font-size="10" font-weight="500" font-family="-apple-system,BlinkMacSystemFont,\'Segoe UI\',Roboto,sans-serif">Wed</text>')
+    lines.append('  <text x="30" y="155" fill="#6e738d" font-size="10" font-weight="500" font-family="-apple-system,BlinkMacSystemFont,\'Segoe UI\',Roboto,sans-serif">Fri</text>')
+
+    avg_tokens = total_tokens / active_days if active_days > 0 else 1
+
+    cur = start_date
+    w_idx = 0
+    while cur <= latest_date:
+        d_w = (cur.weekday() + 1) % 7
+        iso = cur.isoformat()
+        tok = daily_tokens.get(iso, 0)
+        x = 52 + w_idx * 14
+        y = 78 + d_w * 14
+
+        if tok <= 0:
+            lines.append(f'  <rect x="{x}" y="{y}" width="11" height="11" rx="2" fill="#24273a"><title>{iso}: Inactive</title></rect>')
+        else:
+            ratio = tok / avg_tokens
+            if ratio < 0.4:
+                tier_name = "Light (< 0.5× avg)"
+                opacity = 0.35
+            elif ratio < 1.0:
+                tier_name = "Moderate (~1× avg)"
+                opacity = 0.60
+            elif ratio < 1.8:
+                tier_name = "Elevated (~1.5× avg)"
+                opacity = 0.85
+            else:
+                tier_name = "Peak (> 2× avg)"
+                opacity = 1.0
+
+            top_client = max(client_daily_tokens[iso].items(), key=lambda item: item[1])[0] if client_daily_tokens[iso] else "omp"
+            client_label = TITLE.get(top_client, top_client)
+            tip = f"{iso}: {tier_name} · {client_label}"
+            base_color = ACCENT.get(top_client, "#c6a0f6")
+            lines.append(f'  <rect x="{x}" y="{y}" width="11" height="11" rx="2" fill="{base_color}" fill-opacity="{opacity}"><title>{escape(tip)}</title></rect>')
+
+        if d_w == 6:
+            w_idx += 1
+        cur += timedelta(days=1)
+
+    lines.extend([
+        '  <text x="30" y="198" fill="#6e738d" font-size="11" font-family="-apple-system,BlinkMacSystemFont,\'Segoe UI\',Roboto,sans-serif">Harness:</text>',
+        '  <circle cx="102" cy="194" r="4.5" fill="#c6a0f6"/>',
+        '  <text x="112" y="198" fill="#cad3f5" font-size="11" font-family="-apple-system,BlinkMacSystemFont,\'Segoe UI\',Roboto,sans-serif">OMP</text>',
+        '  <circle cx="160" cy="194" r="4.5" fill="#f5bde6"/>',
+        '  <text x="170" y="198" fill="#cad3f5" font-size="11" font-family="-apple-system,BlinkMacSystemFont,\'Segoe UI\',Roboto,sans-serif">Pi</text>',
+        '  <circle cx="200" cy="194" r="4.5" fill="#f5a97f"/>',
+        '  <text x="210" y="198" fill="#cad3f5" font-size="11" font-family="-apple-system,BlinkMacSystemFont,\'Segoe UI\',Roboto,sans-serif">Claude</text>',
+        '  <circle cx="265" cy="194" r="4.5" fill="#8aadf4"/>',
+        '  <text x="275" y="198" fill="#cad3f5" font-size="11" font-family="-apple-system,BlinkMacSystemFont,\'Segoe UI\',Roboto,sans-serif">Codex</text>',
+        '  <circle cx="330" cy="194" r="4.5" fill="#8bd5ca"/>',
+        '  <text x="340" y="198" fill="#cad3f5" font-size="11" font-family="-apple-system,BlinkMacSystemFont,\'Segoe UI\',Roboto,sans-serif">OpenCode</text>',
+        '  <text x="636" y="198" fill="#6e738d" font-size="11" font-family="-apple-system,BlinkMacSystemFont,\'Segoe UI\',Roboto,sans-serif">Intensity:</text>',
+        '  <text x="690" y="198" fill="#6e738d" font-size="10" font-family="-apple-system,BlinkMacSystemFont,\'Segoe UI\',Roboto,sans-serif">&lt; 0.5×</text>',
+        '  <rect x="726" y="189" width="11" height="11" rx="2" fill="#c6a0f6" fill-opacity="0.35"/>',
+        '  <rect x="740" y="189" width="11" height="11" rx="2" fill="#c6a0f6" fill-opacity="0.60"/>',
+        '  <rect x="754" y="189" width="11" height="11" rx="2" fill="#c6a0f6" fill-opacity="0.85"/>',
+        '  <rect x="768" y="189" width="11" height="11" rx="2" fill="#c6a0f6" fill-opacity="1.0"/>',
+        '  <text x="784" y="198" fill="#6e738d" font-size="10" font-family="-apple-system,BlinkMacSystemFont,\'Segoe UI\',Roboto,sans-serif">&gt; 2× avg</text>',
+        '</svg>',
+    ])
+    return "\n".join(lines) + "\n"
+
+
+def render_vibe_snake() -> Path | None:
+    """调用 scripts/vibe_snake.mjs 生成动态贪吃蛇 SVG。"""
+    script = ROOT / "scripts" / "vibe_snake.mjs"
+    bun = shutil.which("bun")
+    if not script.is_file() or not bun:
+        return None
+    proc = subprocess.run([bun, str(script)], capture_output=True, text=True)
+    if proc.returncode != 0:
+        print(f"⚠ render_vibe_snake 失败: {proc.stderr or proc.stdout}")
+        return None
+    out = USAGE_DIR / "vibe-snake.svg"
+    if out.is_file():
+        print(f"✓ {out.relative_to(ROOT)}")
+        return out
+    return None
+
 def patch_readme(rendered: list[str]) -> None:
     """rendered: 已成功写出的 client 名，按 CLIENTS 顺序。"""
     lines = [START, ""]
+    if (USAGE_DIR / "vibe-snake.svg").is_file():
+        rel = "./usage/vibe-snake.svg"
+        lines.append(
+            f'<a href="{rel}"><img class="usage-card" width="100%" src="{rel}" alt="Vibe Activity" /></a>'
+        )
+        lines.append("")
+    if (USAGE_DIR / "harness.svg").is_file():
+        rel = "./usage/harness.svg"
+        lines.append(
+            f'<a href="{rel}"><img class="usage-card" width="100%" src="{rel}" alt="Harness" /></a>'
+        )
+        lines.append("")
     for c in CLIENTS:
         if c not in rendered:
             continue
         rel = f"./usage/{c}.svg"
         label = TITLE[c]
-        lines.append(f"**{label}**")
-        lines.append("")
-        # width=100%：GitHub 与本地预览都全宽；class 供预览 CSS 识别
         lines.append(
             f'<a href="{rel}"><img class="usage-card" width="100%" src="{rel}" alt="{label}" /></a>'
         )
@@ -536,6 +712,12 @@ def patch_readme(rendered: list[str]) -> None:
 def render() -> list[str]:
     ensure_dirs()
     rendered: list[str] = []
+    render_vibe_snake()
+    harness_svg = build_harness_svg()
+    if harness_svg:
+        (USAGE_DIR / "harness.svg").write_text(harness_svg, encoding="utf-8")
+        print("✓ usage/harness.svg")
+
     for c in CLIENTS:
         try:
             days = load_client_days(c)

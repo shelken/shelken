@@ -8,29 +8,23 @@
 
 ---
 
-## 最近Vibe统计
+### Activity
 
 <!-- HARNESS-USAGE:START -->
 
-**最近Vibe统计 · OMP**
+<a href="./usage/vibe-snake.svg"><img class="usage-card" width="100%" src="./usage/vibe-snake.svg" alt="Vibe Activity" /></a>
 
-<a href="./usage/omp.svg"><img class="usage-card" width="100%" src="./usage/omp.svg" alt="最近Vibe统计 · OMP" /></a>
+<a href="./usage/harness.svg"><img class="usage-card" width="100%" src="./usage/harness.svg" alt="Harness" /></a>
 
-**历史 · Pi**
+<a href="./usage/omp.svg"><img class="usage-card" width="100%" src="./usage/omp.svg" alt="OMP" /></a>
 
-<a href="./usage/pi.svg"><img class="usage-card" width="100%" src="./usage/pi.svg" alt="历史 · Pi" /></a>
+<a href="./usage/pi.svg"><img class="usage-card" width="100%" src="./usage/pi.svg" alt="Pi" /></a>
 
-**历史 · Claude Code**
+<a href="./usage/claude.svg"><img class="usage-card" width="100%" src="./usage/claude.svg" alt="Claude Code" /></a>
 
-<a href="./usage/claude.svg"><img class="usage-card" width="100%" src="./usage/claude.svg" alt="历史 · Claude Code" /></a>
+<a href="./usage/codex.svg"><img class="usage-card" width="100%" src="./usage/codex.svg" alt="Codex" /></a>
 
-**历史 · Codex**
-
-<a href="./usage/codex.svg"><img class="usage-card" width="100%" src="./usage/codex.svg" alt="历史 · Codex" /></a>
-
-**历史 · OpenCode**
-
-<a href="./usage/opencode.svg"><img class="usage-card" width="100%" src="./usage/opencode.svg" alt="历史 · OpenCode" /></a>
+<a href="./usage/opencode.svg"><img class="usage-card" width="100%" src="./usage/opencode.svg" alt="OpenCode" /></a>
 
 <!-- HARNESS-USAGE:END -->
 

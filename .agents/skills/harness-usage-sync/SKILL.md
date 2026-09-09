@@ -19,6 +19,7 @@ usage/
   data/claude.json
   data/codex.json
   data/opencode.json
+  vibe-snake.svg / harness.svg
   omp.svg / pi.svg / claude.svg / codex.svg / opencode.svg
 ```
 
@@ -42,12 +43,11 @@ usage/
    ```
 
    **Done when:**
-   - `usage/omp.svg` 标题「最近Vibe统计 · OMP」
-   - `usage/pi.svg` 标题「历史 · Pi」
-   - `usage/{claude,codex,opencode}.svg` 标题「历史 · …」
+   - `usage/vibe-snake.svg` 动态贪吃蛇
+   - `usage/harness.svg` 全周期 Harness 图谱
+   - `usage/{omp,pi,claude,codex,opencode}.svg` 各客户端卡片
    - 全部 / 7d / 40d + 模型排行；**无费用**
-   - README `HARNESS-USAGE` 嵌入五个 `./usage/*.svg`
-
+   - README `HARNESS-USAGE` 嵌入上述 `./usage/*.svg`
 3. **Preview**（GitHub API，非 grip）
 
    ```bash

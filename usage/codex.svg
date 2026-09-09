@@ -1,7 +1,7 @@
 <?xml version="1.0" encoding="UTF-8"?>
-<svg width="846" height="225" viewBox="0 0 846 225" xmlns="http://www.w3.org/2000/svg" role="img" aria-label="历史 · Codex">
+<svg width="846" height="225" viewBox="0 0 846 225" xmlns="http://www.w3.org/2000/svg" role="img" aria-label="Codex">
 <rect width="845" height="224" x="0.5" y="0.5" rx="6" fill="#181926" stroke="#363a4f" stroke-width="1"/>
-<text x="30" y="36" fill="#8aadf4" font-size="17" font-weight="700" font-family="-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,Ubuntu,sans-serif">历史 · Codex</text>
+<text x="30" y="36" fill="#8aadf4" font-size="17" font-weight="700" font-family="-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,Ubuntu,sans-serif">Codex</text>
 <text x="816" y="35" fill="#b8c0e0" font-size="13" font-weight="600" font-family="-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,Ubuntu,sans-serif" text-anchor="end">@shelken</text>
 <text x="816" y="50" fill="#6e738d" font-size="11" font-weight="400" font-family="-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,Ubuntu,sans-serif" text-anchor="end">2026-01-08 · 2026-05-27</text>
 <line x1="250" y1="62" x2="250" y2="202" stroke="#363a4f" stroke-width="1"/>

@@ -50,6 +50,10 @@ sync-push client="all" name="mio":
 cron-sync:
 	just sync-push all mio
 
+
+# 用本地 Vibe (Token) 数据渲染动态贪吃蛇 SVG
+render-snake:
+	bun {{ root }}/scripts/vibe_snake.mjs
 # 根目录旧 mac-cc.json / pi-usage.svg 迁入 usage/
 migrate-usage:
 	{{ python }} {{ root }}/scripts/harness_usage.py migrate
