@@ -15,7 +15,7 @@ import {
   USAGE_CONFIG,
   type DailyRecord,
   type ModelBreakdown,
-} from "../scripts/harness-usage";
+} from "./harness-usage";
 
 describe("fmtTokens", () => {
   it("formats < 1M correctly", () => {
@@ -239,6 +239,38 @@ describe("buildClientSvg", () => {
     expect(svg).toContain("ALL-TIME");
     expect(svg).toContain("gpt-5.6-sol");
   });
+
+  it("renders top 5 models and token composition bar", () => {
+    const days: DailyRecord[] = [
+      {
+        date: "2026-09-01",
+        inputTokens: 5000,
+        outputTokens: 1000,
+        cacheReadTokens: 90000,
+        cacheCreationTokens: 0,
+        totalTokens: 96000,
+        totalCost: 0.5,
+        modelBreakdowns: [
+          { modelName: "model-one", inputTokens: 50000, outputTokens: 0, cacheReadTokens: 0, cacheCreationTokens: 0, cost: 0 },
+          { modelName: "model-two", inputTokens: 40000, outputTokens: 0, cacheReadTokens: 0, cacheCreationTokens: 0, cost: 0 },
+          { modelName: "model-three", inputTokens: 30000, outputTokens: 0, cacheReadTokens: 0, cacheCreationTokens: 0, cost: 0 },
+          { modelName: "model-four", inputTokens: 20000, outputTokens: 0, cacheReadTokens: 0, cacheCreationTokens: 0, cost: 0 },
+          { modelName: "model-five", inputTokens: 10000, outputTokens: 0, cacheReadTokens: 0, cacheCreationTokens: 0, cost: 0 },
+          { modelName: "model-six", inputTokens: 5000, outputTokens: 0, cacheReadTokens: 0, cacheCreationTokens: 0, cost: 0 },
+        ],
+      },
+    ];
+
+    const svg = buildClientSvg(days, "omp");
+    expect(svg).toContain("TOP 5 MODELS");
+    expect(svg).toContain("TOKEN COMPOSITION");
+    expect(svg).toContain("model-one");
+    expect(svg).toContain("model-two");
+    expect(svg).toContain("model-three");
+    expect(svg).toContain("model-four");
+    expect(svg).toContain("model-five");
+    expect(svg).not.toContain("model-six");
+  });
 });
 describe("buildHistorySvg", () => {
   it("generates 2x2 quadrant SVG with 4 historical clients", () => {
@@ -303,7 +335,10 @@ describe("buildHistorySvg", () => {
     expect(svg).toContain("Active days");
     expect(svg).toContain("Avg / day");
     expect(svg).toContain("Peak day");
-    expect(svg).toContain("TOP MODELS");
+    expect(svg).toContain("TOP 5 MODELS");
+    expect(svg).toContain("cache-hit");
+    expect(svg).not.toContain("243 active days");
+    expect(svg).toContain(">4</tspan><tspan fill=\"#6e738d\"> active days</tspan>");
     expect(svg).toContain("Pi");
     expect(svg).toContain("Codex");
     expect(svg).toContain("OpenCode");

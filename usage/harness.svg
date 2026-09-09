@@ -5,7 +5,7 @@
   <text x="816" y="32" fill="#b8c0e0" font-size="13" font-weight="600" font-family="-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,sans-serif" text-anchor="end">@shelken</text>
   <text x="816" y="47" fill="#6e738d" font-size="11" font-weight="400" font-family="-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,sans-serif" text-anchor="end">2025-09-07 · 2026-09-09</text>
   <text x="30" y="52" font-size="12" font-family="-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,sans-serif">
-    <tspan fill="#cad3f5" font-weight="700">42.8B</tspan><tspan fill="#6e738d"> tokens · </tspan>
+    <tspan fill="#cad3f5" font-weight="700">42.9B</tspan><tspan fill="#6e738d"> tokens · </tspan>
     <tspan fill="#cad3f5" font-weight="700">243</tspan><tspan fill="#6e738d"> active days · </tspan>
     <tspan fill="#c6a0f6" font-weight="700">83d</tspan><tspan fill="#6e738d"> streak (max 84d)</tspan>
   </text>
@@ -277,7 +277,7 @@
   <rect x="542" y="134" width="11" height="11" rx="2" fill="#f5bde6" fill-opacity="1"><title>2026-05-14: Peak (&gt; 2× avg) · Pi</title></rect>
   <rect x="542" y="148" width="11" height="11" rx="2" fill="#f5bde6" fill-opacity="0.85"><title>2026-05-15: Elevated (~1.5× avg) · Pi</title></rect>
   <rect x="542" y="162" width="11" height="11" rx="2" fill="#f5bde6" fill-opacity="0.6"><title>2026-05-16: Moderate (~1× avg) · Pi</title></rect>
-  <rect x="556" y="78" width="11" height="11" rx="2" fill="#f5bde6" fill-opacity="1"><title>2026-05-17: Peak (&gt; 2× avg) · Pi</title></rect>
+  <rect x="556" y="78" width="11" height="11" rx="2" fill="#f5bde6" fill-opacity="0.85"><title>2026-05-17: Elevated (~1.5× avg) · Pi</title></rect>
   <rect x="556" y="92" width="11" height="11" rx="2" fill="#f5bde6" fill-opacity="0.6"><title>2026-05-18: Moderate (~1× avg) · Pi</title></rect>
   <rect x="556" y="106" width="11" height="11" rx="2" fill="#8aadf4" fill-opacity="1"><title>2026-05-19: Peak (&gt; 2× avg) · Codex</title></rect>
   <rect x="556" y="120" width="11" height="11" rx="2" fill="#8aadf4" fill-opacity="0.35"><title>2026-05-20: Light (&lt; 0.5× avg) · Codex</title></rect>
@@ -392,7 +392,7 @@
   <rect x="780" y="78" width="11" height="11" rx="2" fill="#c6a0f6" fill-opacity="0.35"><title>2026-09-06: Light (&lt; 0.5× avg) · OMP</title></rect>
   <rect x="780" y="92" width="11" height="11" rx="2" fill="#c6a0f6" fill-opacity="0.6"><title>2026-09-07: Moderate (~1× avg) · OMP</title></rect>
   <rect x="780" y="106" width="11" height="11" rx="2" fill="#c6a0f6" fill-opacity="1"><title>2026-09-08: Peak (&gt; 2× avg) · OMP</title></rect>
-  <rect x="780" y="120" width="11" height="11" rx="2" fill="#c6a0f6" fill-opacity="0.35"><title>2026-09-09: Light (&lt; 0.5× avg) · OMP</title></rect>
+  <rect x="780" y="120" width="11" height="11" rx="2" fill="#c6a0f6" fill-opacity="0.6"><title>2026-09-09: Moderate (~1× avg) · OMP</title></rect>
   <text x="30" y="198" fill="#6e738d" font-size="11" font-family="-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,sans-serif">Harness:</text>
   <circle cx="102" cy="194" r="4.5" fill="#c6a0f6"/>
   <text x="112" y="198" fill="#cad3f5" font-size="11" font-family="-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,sans-serif">OMP</text>

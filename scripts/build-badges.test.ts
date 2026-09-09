@@ -1,5 +1,5 @@
 import { describe, expect, it } from "bun:test";
-import { parseSvg } from "../scripts/build-badges";
+import { parseSvg } from "./build-badges";
 
 describe("build-badges parseSvg", () => {
   it("extracts width, height, and inner content from SVG", () => {

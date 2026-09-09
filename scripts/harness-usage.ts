@@ -61,7 +61,7 @@ export const USAGE_CONFIG = {
   // 单客户端卡片（如 omp.svg）
   clientCard: {
     width: 846,
-    height: 225,
+    height: 230,
     topModels: 5,
   },
   // 2×2 历史归档卡片（history.svg）
@@ -588,7 +588,8 @@ export function buildClientSvg(days: DailyRecord[], client: Client): string {
   const t7 = sumTokens(d7);
   const t40 = sumTokens(d40);
 
-  const topModels = rankModels(days, 4);
+  const cfg = USAGE_CONFIG.clientCard;
+  const topModels = rankModels(days, cfg.topModels);
 
   const dates = days.map((d) => d.date).sort();
   const fr = dates[0] || "—";
@@ -607,44 +608,69 @@ export function buildClientSvg(days: DailyRecord[], client: Client): string {
   const denom = inp + cr;
   const cachePct = denom > 0 ? Math.round((100 * cr) / denom) : 0;
 
-  const W = 846;
-  const H = 225;
+  const totalDenom = cr + cw + inp + out;
+  const compBarW = 215;
+  const crPct = totalDenom > 0 ? Math.round((100 * cr) / totalDenom) : 0;
+  const inpPct = totalDenom > 0 ? Math.round((100 * inp) / totalDenom) : 0;
+  const outPct = totalDenom > 0 ? Math.max(0, 100 - crPct - inpPct) : 0;
+  let crSegW = totalDenom > 0 ? Math.floor((cr * compBarW) / totalDenom) : 0;
+  let inpSegW = totalDenom > 0 ? Math.floor((inp * compBarW) / totalDenom) : 0;
+  let outSegW = compBarW - crSegW - inpSegW;
+  if (cr > 0 && crSegW < 3) crSegW = 3;
+  if (inp > 0 && inpSegW < 3) inpSegW = 3;
+  if (out > 0 && outSegW < 3) outSegW = 3;
+
+  const W = cfg.width;
+  const H = cfg.height;
 
   const parts: string[] = [
     `<rect width="${W - 1}" height="${H - 1}" x="0.5" y="0.5" rx="6" fill="${PALETTE.bg}" stroke="${PALETTE.stroke}" stroke-width="1"/>`,
     svgText(30, 36, title, { fill: A, size: 17, weight: "700" }),
     svgText(W - 30, 35, "@shelken", { fill: PALETTE.user, size: 13, weight: "600", anchor: "end" }),
     svgText(W - 30, 50, dateStr, { fill: PALETTE.foot, size: 11, anchor: "end" }),
-    `<line x1="250" y1="62" x2="250" y2="202" stroke="${PALETTE.stroke}" stroke-width="1"/>`,
-    `<line x1="510" y1="62" x2="510" y2="202" stroke="${PALETTE.stroke}" stroke-width="1"/>`,
+    `<line x1="250" y1="62" x2="250" y2="214" stroke="${PALETTE.stroke}" stroke-width="1"/>`,
+    `<line x1="510" y1="62" x2="510" y2="214" stroke="${PALETTE.stroke}" stroke-width="1"/>`,
     // Col 1: ALL-TIME (30 ~ 230)
     svgText(30, 74, "ALL-TIME", { fill: PALETTE.foot, size: 10, weight: "700", spacing: "1.2" }),
     svgText(30, 112, fmtTokens(total), { fill: A, size: 38, weight: "800" }),
-    svgText(30, 132, `tokens · ${cachePct}% cache-hit`, { fill: PALETTE.sub, size: 12 }),
-    `<line x1="30" y1="144" x2="230" y2="144" stroke="${PALETTE.stroke}" stroke-dasharray="3 3"/>`,
-    svgText(30, 163, "Active days", { fill: PALETTE.sub, size: 12 }),
-    svgText(230, 163, String(activeDays), { fill: A, size: 12, weight: "700", anchor: "end" }),
-    svgText(30, 182, "Avg / day", { fill: PALETTE.sub, size: 12 }),
-    svgText(230, 182, fmtTokens(avgDay), { fill: A, size: 12, weight: "700", anchor: "end" }),
-    svgText(30, 201, "Peak day", { fill: PALETTE.sub, size: 12 }),
-    svgText(230, 201, fmtTokens(peakDay), { fill: A, size: 12, weight: "700", anchor: "end" }),
-    // Col 2: TOKEN MIX & PERIOD (275 ~ 490)
-    svgText(275, 74, "TOKEN MIX & PERIOD", { fill: PALETTE.foot, size: 10, weight: "700", spacing: "1.2" }),
-    svgText(275, 96, "Output", { fill: PALETTE.sub, size: 12 }),
-    svgText(490, 96, fmtTokens(out), { fill: A, size: 12, weight: "700", anchor: "end" }),
-    svgText(275, 113, "Input", { fill: PALETTE.sub, size: 12 }),
-    svgText(490, 113, fmtTokens(inp), { fill: A, size: 12, weight: "700", anchor: "end" }),
-    svgText(275, 130, "Cache read", { fill: PALETTE.sub, size: 12 }),
-    svgText(490, 130, fmtTokens(cr), { fill: A, size: 12, weight: "700", anchor: "end" }),
-    svgText(275, 147, "Cache write", { fill: PALETTE.sub, size: 12 }),
-    svgText(490, 147, fmtTokens(cw), { fill: A, size: 12, weight: "700", anchor: "end" }),
-    `<line x1="275" y1="157" x2="490" y2="157" stroke="${PALETTE.stroke}" stroke-dasharray="3 3"/>`,
-    svgText(275, 179, "Recent 7d", { fill: PALETTE.sub, size: 12 }),
-    svgText(490, 179, fmtTokens(t7), { fill: A, size: 12, weight: "700", anchor: "end" }),
-    svgText(275, 199, "Recent 40d", { fill: PALETTE.sub, size: 12 }),
-    svgText(490, 199, fmtTokens(t40), { fill: A, size: 12, weight: "700", anchor: "end" }),
-    // Col 3: TOP MODELS (535 ~ 816)
-    svgText(535, 74, "TOP MODELS", { fill: PALETTE.foot, size: 10, weight: "700", spacing: "1.2" }),
+    `<rect x="30" y="122" width="144" height="18" rx="4" fill="${PALETTE.barBg}"/>`,
+    svgText(38, 135, "tokens · ", { fill: PALETTE.sub, size: 11 }),
+    svgText(79, 135, `${cachePct}% cache-hit`, { fill: A, size: 11, weight: "700" }),
+    `<line x1="30" y1="148" x2="230" y2="148" stroke="${PALETTE.stroke}" stroke-dasharray="3 3"/>`,
+    svgText(30, 168, "Active days", { fill: PALETTE.sub, size: 12 }),
+    svgText(230, 168, String(activeDays), { fill: A, size: 12, weight: "700", anchor: "end" }),
+    svgText(30, 187, "Avg / day", { fill: PALETTE.sub, size: 12 }),
+    svgText(230, 187, fmtTokens(avgDay), { fill: A, size: 12, weight: "700", anchor: "end" }),
+    svgText(30, 206, "Peak day", { fill: PALETTE.sub, size: 12 }),
+    svgText(230, 206, fmtTokens(peakDay), { fill: A, size: 12, weight: "700", anchor: "end" }),
+    // Col 2: TOKEN COMPOSITION & MIX (275 ~ 490)
+    svgText(275, 74, "TOKEN COMPOSITION", { fill: PALETTE.foot, size: 10, weight: "700", spacing: "1.2" }),
+    `<defs><clipPath id="${client}-comp-clip"><rect x="275" y="86" width="${compBarW}" height="6" rx="3"/></clipPath></defs>`,
+    `<g clip-path="url(#${client}-comp-clip)">` +
+      `<rect x="275" y="86" width="${compBarW}" height="6" fill="${PALETTE.barBg}"/>` +
+      `<rect x="275" y="86" width="${crSegW}" height="6" fill="${A}"/>` +
+      `<rect x="${275 + crSegW}" y="86" width="${inpSegW}" height="6" fill="#8aadf4"/>` +
+      `<rect x="${275 + crSegW + inpSegW}" y="86" width="${outSegW}" height="6" fill="#a6da95"/>` +
+    `</g>`,
+    `<circle cx="279" cy="102" r="3" fill="${A}"/>`,
+    svgText(286, 105, `Cache ${crPct}%`, { fill: PALETTE.sub, size: 10 }),
+    `<circle cx="355" cy="102" r="3" fill="#8aadf4"/>`,
+    svgText(362, 105, `In ${inpPct}%`, { fill: PALETTE.sub, size: 10 }),
+    `<circle cx="417" cy="102" r="3" fill="#a6da95"/>`,
+    svgText(424, 105, `Out ${outPct}%`, { fill: PALETTE.sub, size: 10 }),
+    svgText(275, 124, "Output", { fill: PALETTE.sub, size: 12 }),
+    svgText(490, 124, fmtTokens(out), { fill: A, size: 12, weight: "700", anchor: "end" }),
+    svgText(275, 141, "Input", { fill: PALETTE.sub, size: 12 }),
+    svgText(490, 141, fmtTokens(inp), { fill: A, size: 12, weight: "700", anchor: "end" }),
+    svgText(275, 158, "Cache read", { fill: PALETTE.sub, size: 12 }),
+    svgText(490, 158, fmtTokens(cr), { fill: A, size: 12, weight: "700", anchor: "end" }),
+    `<line x1="275" y1="168" x2="490" y2="168" stroke="${PALETTE.stroke}" stroke-dasharray="3 3"/>`,
+    svgText(275, 187, "Recent 7d", { fill: PALETTE.sub, size: 12 }),
+    svgText(490, 187, fmtTokens(t7), { fill: A, size: 12, weight: "700", anchor: "end" }),
+    svgText(275, 206, "Recent 40d", { fill: PALETTE.sub, size: 12 }),
+    svgText(490, 206, fmtTokens(t40), { fill: A, size: 12, weight: "700", anchor: "end" }),
+    // Col 3: TOP 5 MODELS (535 ~ 816)
+    svgText(535, 74, "TOP 5 MODELS", { fill: PALETTE.foot, size: 10, weight: "700", spacing: "1.2" }),
   ];
 
   const maxModelTokens = topModels[0]?.[1] || 1;
@@ -652,13 +678,13 @@ export function buildClientSvg(days: DailyRecord[], client: Client): string {
   if (topModels.length === 0) {
     parts.push(svgText(535, 120, "No model breakdown available", { fill: PALETTE.foot, size: 12 }));
   } else {
-    const barX = 718;
-    const barW = 42;
-    const spacingY = topModels.length === 4 ? 26 : topModels.length === 3 ? 32 : 36;
-    let yPos = topModels.length === 4 ? 97 : topModels.length === 3 ? 102 : 108;
+    const barX = 705;
+    const barW = 55;
+    const spacingY = topModels.length >= 5 ? 27 : topModels.length === 4 ? 30 : topModels.length === 3 ? 36 : 40;
+    let yPos = topModels.length >= 5 ? 98 : topModels.length === 4 ? 100 : topModels.length === 3 ? 106 : 110;
 
     for (const [name, tok] of topModels) {
-      const displayName = name.length <= 25 ? name : `${name.slice(0, 24)}…`;
+      const displayName = name.length <= 21 ? name : `${name.slice(0, 20)}…`;
       const ratio = maxModelTokens > 0 ? tok / maxModelTokens : 0;
       const fillW = Math.max(2, Math.floor(barW * ratio));
 
@@ -687,16 +713,21 @@ export function buildHistorySvg(allClientDays?: Record<Client, DailyRecord[]>): 
 
   let totalTokensAll = 0;
   const allDates: string[] = [];
+  const uniqueActiveDates = new Set<string>();
   for (const c of cfg.clients) {
     const days = daysMap[c] || [];
     for (const d of days) {
       totalTokensAll += dayTokens(d);
-      if (d.date) allDates.push(d.date);
+      if (d.date) {
+        allDates.push(d.date);
+        if (dayTokens(d) > 0) uniqueActiveDates.add(d.date);
+      }
     }
   }
   allDates.sort();
   const minDate = allDates[0] || "";
   const maxDate = allDates[allDates.length - 1] || "";
+  const totalActiveDays = uniqueActiveDates.size;
 
   const lines = [
     '<?xml version="1.0" encoding="UTF-8"?>',
@@ -708,7 +739,7 @@ export function buildHistorySvg(allClientDays?: Record<Client, DailyRecord[]>): 
     `  <text x="30" y="52" font-size="12" font-family="${PALETTE.font}">`,
     `    <tspan fill="${PALETTE.text}" font-weight="700">${fmtTokens(totalTokensAll)}</tspan><tspan fill="${PALETTE.foot}"> tokens · </tspan>`,
     `    <tspan fill="${PALETTE.text}" font-weight="700">4</tspan><tspan fill="${PALETTE.foot}"> clients · </tspan>`,
-    `    <tspan fill="${PALETTE.text}" font-weight="700">243</tspan><tspan fill="${PALETTE.foot}"> active days</tspan>`,
+    `    <tspan fill="${PALETTE.text}" font-weight="700">${totalActiveDays}</tspan><tspan fill="${PALETTE.foot}"> active days</tspan>`,
     `  </text>`,
     `  <line x1="30" y1="${cfg.headerLineY}" x2="816" y2="${cfg.headerLineY}" stroke="${PALETTE.stroke}" stroke-width="1"/>`,
     `  <line x1="${cfg.dividerX}" y1="${cfg.headerLineY}" x2="${cfg.dividerX}" y2="${height - 16}" stroke="${PALETTE.stroke}" stroke-width="1"/>`,
@@ -719,6 +750,7 @@ export function buildHistorySvg(allClientDays?: Record<Client, DailyRecord[]>): 
     const days = daysMap[c] || [];
     const total = sumTokens(days);
     const nDays = days.length || 1;
+    const activeDays = days.filter((d) => dayTokens(d) > 0).length;
     const avgDay = Math.floor(total / nDays);
     const peakDay = Math.max(...days.map((d) => dayTokens(d)), 0);
 
@@ -738,41 +770,43 @@ export function buildHistorySvg(allClientDays?: Record<Client, DailyRecord[]>): 
     const accent = ACCENT[c];
     const title = TITLE[c];
 
-    // --- 左子栏：核心指标与用量（与 omp.svg 结构对齐）---
+    // --- 左子栏：核心指标与用量（舒展行间距，增强呼吸感）---
     lines.push(
-      `  <circle cx="${qx + 5}" cy="${qy + 7}" r="4.5" fill="${accent}"/>`,
-      `  ${svgText(qx + 16, qy + 11, title, { fill: accent, size: 13, weight: "700" })}`,
-      `  ${svgText(qx, qy + 42, fmtTokens(total), { fill: PALETTE.text, size: 26, weight: "800" })}`,
-      `  ${svgText(qx, qy + 58, `tokens · ${cacheHit} cache`, { fill: PALETTE.sub, size: 11 })}`,
-      `  <line x1="${qx}" y1="${qy + 68}" x2="${qx + 135}" y2="${qy + 68}" stroke="${PALETTE.stroke}" stroke-dasharray="2 2"/>`,
-      `  ${svgText(qx, qy + 86, "Active days", { fill: PALETTE.sub, size: 11 })}`,
-      `  ${svgText(qx + 135, qy + 86, String(days.length), { fill: accent, size: 11, weight: "700", anchor: "end" })}`,
-      `  ${svgText(qx, qy + 104, "Avg / day", { fill: PALETTE.sub, size: 11 })}`,
-      `  ${svgText(qx + 135, qy + 104, fmtTokens(avgDay), { fill: accent, size: 11, weight: "700", anchor: "end" })}`,
-      `  ${svgText(qx, qy + 122, "Peak day", { fill: PALETTE.sub, size: 11 })}`,
-      `  ${svgText(qx + 135, qy + 122, fmtTokens(peakDay), { fill: accent, size: 11, weight: "700", anchor: "end" })}`,
-      `  ${svgText(qx, qy + 140, dSpan, { fill: PALETTE.foot, size: 10 })}`,
-      `  <line x1="${qx + 147}" y1="${qy + 8}" x2="${qx + 147}" y2="${qy + 144}" stroke="${PALETTE.stroke}" stroke-dasharray="2 2" opacity="0.6"/>`
+      `  <circle cx="${qx + 5}" cy="${qy + 8}" r="4.5" fill="${accent}"/>`,
+      `  ${svgText(qx + 16, qy + 12, title, { fill: accent, size: 13, weight: "700" })}`,
+      `  ${svgText(qx, qy + 44, fmtTokens(total), { fill: PALETTE.text, size: 26, weight: "800" })}`,
+      `  <rect x="${qx}" y="${qy + 54}" width="135" height="18" rx="4" fill="${PALETTE.barBg}"/>`,
+      `  ${svgText(qx + 6, qy + 67, "tokens · ", { fill: PALETTE.sub, size: 10 })}`,
+      `  ${svgText(qx + 46, qy + 67, `${cacheHit} cache-hit`, { fill: accent, size: 10, weight: "700" })}`,
+      `  <line x1="${qx}" y1="${qy + 84}" x2="${qx + 135}" y2="${qy + 84}" stroke="${PALETTE.stroke}" stroke-dasharray="2 2"/>`,
+      `  ${svgText(qx, qy + 106, "Active days", { fill: PALETTE.sub, size: 11 })}`,
+      `  ${svgText(qx + 135, qy + 106, String(activeDays), { fill: accent, size: 11, weight: "700", anchor: "end" })}`,
+      `  ${svgText(qx, qy + 127, "Avg / day", { fill: PALETTE.sub, size: 11 })}`,
+      `  ${svgText(qx + 135, qy + 127, fmtTokens(avgDay), { fill: accent, size: 11, weight: "700", anchor: "end" })}`,
+      `  ${svgText(qx, qy + 148, "Peak day", { fill: PALETTE.sub, size: 11 })}`,
+      `  ${svgText(qx + 135, qy + 148, fmtTokens(peakDay), { fill: accent, size: 11, weight: "700", anchor: "end" })}`,
+      `  <line x1="${qx + 146}" y1="${qy + 16}" x2="${qx + 146}" y2="${qy + 152}" stroke="${PALETTE.stroke}" stroke-dasharray="2 2" opacity="0.6"/>`
     );
 
-    // --- 右子栏：TOP MODELS（5 款模型）---
+    // --- 右子栏：TOP 5 MODELS + 日期区间（顶行两端对齐，行距舒展）---
     const mx = qx + 158;
     lines.push(
-      `  ${svgText(mx, qy + 11, "TOP MODELS", { fill: PALETTE.foot, size: 10, weight: "700", spacing: "1.1" })}`
+      `  ${svgText(mx, qy + 12, "TOP 5 MODELS", { fill: PALETTE.foot, size: 10, weight: "700", spacing: "1.1" })}`,
+      `  ${svgText(qx + cfg.quadrantWidth, qy + 12, dSpan, { fill: PALETTE.foot, size: 10, anchor: "end" })}`
     );
 
-    let my = qy + 32;
-    const barMaxW = 44;
+    let my = qy + 36;
+    const barMaxW = 46;
     for (const [mName, mTok] of topModels) {
-      const displayName = mName.length <= 18 ? mName : `${mName.slice(0, 17)}…`;
+      const displayName = mName.length <= 17 ? mName : `${mName.slice(0, 16)}…`;
       const barW = Math.max(2, Math.round(barMaxW * (mTok / maxModelTok)));
       lines.push(
-        `  ${svgText(mx, my + 7, displayName, { fill: PALETTE.user, size: 11, weight: "500" })}`,
-        `  <rect x="${mx + 118}" y="${my}" width="${barMaxW}" height="5" rx="2.5" fill="${PALETTE.barBg}"/>`,
-        `  <rect x="${mx + 118}" y="${my}" width="${barW}" height="5" rx="2.5" fill="${accent}"/>`,
-        `  ${svgText(qx + cfg.quadrantWidth, my + 7, fmtTokens(mTok), { fill: accent, size: 11, weight: "700", anchor: "end" })}`
+        `  ${svgText(mx, my + 8, displayName, { fill: PALETTE.user, size: 11, weight: "500" })}`,
+        `  <rect x="${mx + 114}" y="${my}" width="${barMaxW}" height="6" rx="3" fill="${PALETTE.barBg}"/>`,
+        `  <rect x="${mx + 114}" y="${my}" width="${barW}" height="6" rx="3" fill="${accent}"/>`,
+        `  ${svgText(qx + cfg.quadrantWidth, my + 8, fmtTokens(mTok), { fill: accent, size: 11, weight: "700", anchor: "end" })}`
       );
-      my += 23;
+      my += 26;
     }
   }
 
@@ -974,7 +1008,8 @@ export function ccusageCmd(client: Client): string[] {
     ].filter(Boolean) as string[];
 
     const agentDir = candidateDirs.find((d) => existsSync(d)) || join(home, ".omp", "agent");
-    return [...base, "omp", "daily", "--agent-dir", agentDir, "--json"];
+    const sessionsDir = join(agentDir, "sessions");
+    return [...base, "pi", "daily", "--pi-path", sessionsDir, "--json"];
   }
 
   return [...base, client, "daily", "--json"];
