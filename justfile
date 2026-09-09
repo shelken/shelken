@@ -55,10 +55,6 @@ cron-sync:
 render-snake:
 	{{ bun }} {{ root }}/scripts/vibe-snake.ts
 
-# 根目录旧 mac-cc.json / pi-usage.svg 迁入 usage/
-migrate-usage:
-	{{ bun }} {{ root }}/scripts/harness-usage.ts migrate
-
 # 合成 Tech stack 横向 badge SVG（usage/badges/*.svg）并更新 README
 build-badges:
 	{{ bun }} {{ root }}/scripts/build-badges.ts

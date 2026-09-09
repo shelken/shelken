@@ -1,0 +1,14 @@
+{
+  "lockfileVersion": 1,
+  "configVersion": 1,
+  "workspaces": {
+    "": {
+      "dependencies": {
+        "generate-snake-animation": "^3.5.0",
+      },
+    },
+  },
+  "packages": {
+    "generate-snake-animation": ["generate-snake-animation@3.5.0", "", { "peerDependencies": { "canvas": "3.2.0", "gif-encoder-2": "1.0.5", "gifsicle": "5.3.0" }, "optionalPeers": ["canvas", "gif-encoder-2", "gifsicle"], "bin": { "generate-snake-animation": "cli.js" } }, "sha512-65fbvqG7hfrJgCI7YA9l80MyWJGpY37dcfjNOB/VPfup3qMlRejKUvCAYXxrIRyzi/3TkfEybBr+iCOAqQyV+Q=="],
+  }
+}
