@@ -3,9 +3,9 @@
  * 用本地 Vibe (Token) 数据生成 GitHub 贪吃蛇动态 SVG。
  *
  * 输入：
- *   复用 harness-usage 的多客户端日用量聚合数据
+ *   复用 usage/store 的多客户端日用量聚合数据
  * 输出：
- *   usage/vibe-snake.svg
+ *   assets/usage/vibe-snake.svg
  *
  * 用法：
  *   bun scripts/vibe-snake.ts [output_file]
@@ -13,17 +13,21 @@
 
 import { mkdirSync, writeFileSync } from "node:fs";
 import { dirname, join, resolve } from "node:path";
+import { fileURLToPath } from "node:url";
 import { generateSnakeAnimation } from "generate-snake-animation";
 import {
   type AggregateUsage,
   type Client,
   type DailyRecord,
+} from "./usage/types";
+import {
   fmtTokens,
-  getAggregateUsage,
-  loadAllClientDays,
-} from "./harness-usage";
+  aggregateUsage,
+  loadUsageDataset,
+} from "./usage/store";
 
-const ROOT = resolve(import.meta.dir, "..");
+const __dirname = dirname(fileURLToPath(import.meta.url));
+const ROOT = resolve(__dirname, "..");
 const OUT_FILE = join(ROOT, "assets", "usage", "vibe-snake.svg");
 
 interface ContributionDay {
@@ -43,7 +47,10 @@ export async function renderVibeSnake(options?: {
   clientDays?: Record<Client, DailyRecord[]>;
 }): Promise<string | null> {
   const outFile = options?.outFile || OUT_FILE;
-  const agg = options?.agg !== undefined ? options.agg : getAggregateUsage(options?.clientDays || loadAllClientDays());
+  const agg =
+    options?.agg !== undefined
+      ? options.agg
+      : aggregateUsage(options?.clientDays || loadUsageDataset());
   if (!agg) return null;
 
   const {
@@ -101,29 +108,32 @@ export async function renderVibeSnake(options?: {
     cur.setUTCDate(cur.getUTCDate() + 1);
   }
 
+  // 严格沙箱化第三方生成器的全局副作用
   const origFetch = globalThis.fetch;
-  globalThis.fetch = async (url: string | URL | Request, opts?: unknown) => {
-    const urlStr = typeof url === "string" ? url : url instanceof URL ? url.toString() : (url as Request).url;
-    if (urlStr.includes("api.github.com/graphql")) {
-      return new Response(
-        JSON.stringify({
-          data: {
-            user: {
-              contributionsCollection: {
-                contributionCalendar: {
-                  weeks,
+  const origLog = console.log;
+
+  try {
+    globalThis.fetch = async (url: string | URL | Request, opts?: unknown) => {
+      const urlStr = typeof url === "string" ? url : url instanceof URL ? url.toString() : (url as Request).url;
+      if (urlStr.includes("api.github.com/graphql")) {
+        return new Response(
+          JSON.stringify({
+            data: {
+              user: {
+                contributionsCollection: {
+                  contributionCalendar: {
+                    weeks,
+                  },
                 },
               },
             },
-          },
-        }),
-        { status: 200, headers: { "Content-Type": "application/json" } }
-      );
-    }
-    return origFetch(url, opts as RequestInit);
-  };
-  const origLog = console.log;
-  try {
+          }),
+          { status: 200, headers: { "Content-Type": "application/json" } }
+        );
+      }
+      return origFetch(url, opts as RequestInit);
+    };
+
     console.log = (...args: unknown[]) => {
       const msg = String(args[0] || "");
       if (
@@ -135,6 +145,7 @@ export async function renderVibeSnake(options?: {
       }
       origLog(...args);
     };
+
     const outputs = [
       {
         format: "svg",
@@ -198,8 +209,8 @@ export async function renderVibeSnake(options?: {
     }
     return null;
   } finally {
-    console.log = origLog;
     globalThis.fetch = origFetch;
+    console.log = origLog;
   }
 }
 

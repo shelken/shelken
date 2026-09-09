@@ -1,6 +1,6 @@
 #!/usr/bin/env bun
 /**
- * 多 Harness 用量：ccusage 导出 JSON，渲染 usage/*.svg，挂到 README。
+ * 多 Harness 用量：ccusage 导出 JSON，渲染 assets/usage/*.svg，同步到 README。
  *
  * 用法:
  *   bun scripts/harness-usage.ts export [--client omp|pi|claude|codex|opencode|all] [--name mio]
@@ -8,11 +8,89 @@
  *   bun scripts/harness-usage.ts sync [--client all] [--name mio] [--commit] [--push]
  */
 
-import { existsSync, mkdirSync, readFileSync, readdirSync, writeFileSync } from "node:fs";
+import { existsSync, mkdirSync, readFileSync, writeFileSync } from "node:fs";
 import { homedir } from "node:os";
 import { dirname, join, resolve } from "node:path";
 import { fileURLToPath } from "node:url";
+
+import {
+  CLIENTS,
+  type Client,
+  HISTORICAL_CLIENTS,
+  ACCENT,
+  TITLE,
+  PALETTE,
+  USAGE_CONFIG,
+  type ModelBreakdown,
+  type DailyRecord,
+  type StreakStats,
+  type AggregateUsage,
+  UsageError,
+} from "./usage/types";
+
+import {
+  cleanModelName,
+  modelTokens,
+  dayTokens,
+  sumTokens,
+  filterLastNDays,
+  rankModels,
+  fmtTokens,
+  calculateStreaks,
+  normalizeDay,
+  mergeDailyRecords,
+  loadClientDays,
+  loadUsageDataset,
+  loadAllClientDays,
+  aggregateUsage,
+  getAggregateUsage,
+} from "./usage/store";
+
+import {
+  type TextOptions,
+  escapeXml,
+  svgText,
+  buildClientSvg,
+  buildHistorySvg as renderHistorySvg,
+  buildHarnessSvg as renderHarnessSvg,
+} from "./usage/cards";
+
 import { renderVibeSnake } from "./vibe-snake";
+
+// 向后兼容统一导出
+export {
+  CLIENTS,
+  type Client,
+  HISTORICAL_CLIENTS,
+  ACCENT,
+  TITLE,
+  PALETTE,
+  USAGE_CONFIG,
+  type ModelBreakdown,
+  type DailyRecord,
+  type StreakStats,
+  type AggregateUsage,
+  UsageError,
+  cleanModelName,
+  modelTokens,
+  dayTokens,
+  sumTokens,
+  filterLastNDays,
+  rankModels,
+  fmtTokens,
+  calculateStreaks,
+  normalizeDay,
+  mergeDailyRecords,
+  loadClientDays,
+  loadUsageDataset,
+  loadAllClientDays,
+  aggregateUsage,
+  getAggregateUsage,
+  type TextOptions,
+  escapeXml,
+  svgText,
+  buildClientSvg,
+};
 
 const __dirname = dirname(fileURLToPath(import.meta.url));
 export const ROOT = resolve(__dirname, "..");
@@ -25,120 +103,6 @@ export const README_PATH = join(ROOT, "README.md");
 export const START_MARKER = "<!-- HARNESS-USAGE:START -->";
 export const END_MARKER = "<!-- HARNESS-USAGE:END -->";
 
-export const CLIENTS = ["omp", "pi", "claude", "codex", "opencode"] as const;
-export type Client = (typeof CLIENTS)[number];
-export const HISTORICAL_CLIENTS: Client[] = ["pi", "codex", "opencode", "claude"];
-
-/**
- * 集中配置区：主题色调、卡片尺寸、指标展示与排版网格
- */
-export const ACCENT: Record<Client, string> = {
-  omp: "#c6a0f6", // mauve
-  pi: "#f5bde6", // pink
-  claude: "#f5a97f", // peach
-  codex: "#8aadf4", // blue
-  opencode: "#8bd5ca", // teal
-};
-
-export const TITLE: Record<Client, string> = {
-  omp: "OMP",
-  pi: "Pi",
-  claude: "Claude Code",
-  codex: "Codex",
-  opencode: "OpenCode",
-};
-
-export const PALETTE = {
-  bg: "#181926",
-  stroke: "#363a4f",
-  user: "#b8c0e0",
-  text: "#cad3f5",
-  sub: "#a5adcb",
-  foot: "#6e738d",
-  barBg: "#24273a",
-  font: "-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,Ubuntu,sans-serif",
-} as const;
-
-export const USAGE_CONFIG = {
-  // 单客户端卡片（如 omp.svg）
-  clientCard: {
-    width: 846,
-    height: 230,
-    topModels: 5,
-  },
-  // 2×2 历史归档卡片（history.svg）
-  historyCard: {
-    title: "History",
-    user: "@shelken",
-    width: 846,
-    height: 425,
-    topModels: 5,
-    clients: ["pi", "codex", "opencode", "claude"] as Client[],
-    coordinates: [
-      { client: "pi" as Client, x: 30, y: 76 },
-      { client: "codex" as Client, x: 441, y: 76 },
-      { client: "opencode" as Client, x: 30, y: 252 },
-      { client: "claude" as Client, x: 441, y: 252 },
-    ],
-    dividerX: 423,
-    dividerY: 240,
-    headerLineY: 64,
-    quadrantWidth: 375,
-  },
-  // 全周期热力图卡片（harness.svg）
-  harnessCard: {
-    width: 846,
-    height: 215,
-  },
-} as const;
-
-export interface ModelBreakdown {
-  modelName: string;
-  inputTokens: number;
-  outputTokens: number;
-  cacheReadTokens: number;
-  cacheCreationTokens: number;
-  cost: number;
-}
-
-export interface DailyRecord {
-  date: string;
-  inputTokens: number;
-  outputTokens: number;
-  cacheReadTokens: number;
-  cacheCreationTokens: number;
-  totalTokens: number;
-  totalCost: number;
-  modelBreakdowns: ModelBreakdown[];
-  modelsUsed?: string[];
-}
-
-export interface StreakStats {
-  currentStreak: number;
-  maxStreak: number;
-}
-
-export interface AggregateUsage {
-  dailyTokens: Record<string, number>;
-  clientDailyTokens: Record<string, Partial<Record<Client, number>>>;
-  allDates: string[];
-  startDate: Date;
-  latestDate: Date;
-  startDateStr: string;
-  latestDateStr: string;
-  totalTokens: number;
-  activeDays: number;
-  currentStreak: number;
-  maxStreak: number;
-}
-
-export class UsageError extends Error {
-  constructor(message: string) {
-    super(message);
-    this.name = "UsageError";
-  }
-}
-
 export function die(msg: string, code = 1): never {
   console.error(msg);
   process.exit(code);
@@ -147,821 +111,6 @@ export function die(msg: string, code = 1): never {
 export function ensureDirs(): void {
   mkdirSync(DATA_DIR, { recursive: true });
   mkdirSync(CARDS_DIR, { recursive: true });
-}
-
-export function cleanModelName(name: string): string {
-  return name.replace(/^\[(?:pi|omp)\]\s*/i, "").trim();
-}
-
-export function modelTokens(m: ModelBreakdown): number {
-  return (
-    (m.inputTokens || 0) +
-    (m.outputTokens || 0) +
-    (m.cacheReadTokens || 0) +
-    (m.cacheCreationTokens || 0)
-  );
-}
-
-export function dayTokens(d: DailyRecord): number {
-  if (typeof d.totalTokens === "number" && d.totalTokens > 0) {
-    return d.totalTokens;
-  }
-  return (d.modelBreakdowns || []).reduce((acc, m) => acc + modelTokens(m), 0);
-}
-
-export function sumTokens(days: DailyRecord[]): number {
-  return days.reduce((acc, d) => acc + dayTokens(d), 0);
-}
-
-export function filterLastNDays(days: DailyRecord[], n: number): DailyRecord[] {
-  if (days.length === 0) return [];
-  const sorted = [...days].sort((a, b) => a.date.localeCompare(b.date));
-  const latest = new Date(sorted[sorted.length - 1].date);
-  const cutoff = new Date(latest);
-  cutoff.setUTCDate(cutoff.getUTCDate() - (n - 1));
-  const cutoffStr = cutoff.toISOString().slice(0, 10);
-  return sorted.filter((d) => d.date >= cutoffStr);
-}
-
-export function rankModels(days: DailyRecord[], top = 5): [string, number][] {
-  const totals: Record<string, number> = {};
-  const displayNames: Record<string, string> = {};
-
-  for (const d of days) {
-    for (const m of d.modelBreakdowns || []) {
-      const raw = cleanModelName(m.modelName || "unknown");
-      const lower = raw.toLowerCase();
-      const tok = modelTokens(m);
-      totals[lower] = (totals[lower] || 0) + tok;
-      if (!displayNames[lower]) {
-        displayNames[lower] = raw;
-      }
-    }
-  }
-
-  return Object.entries(totals)
-    .map(([k, v]) => [displayNames[k] || k, v] as [string, number])
-    .sort((a, b) => b[1] - a[1])
-    .slice(0, top);
-}
-
-export function fmtTokens(n: number): string {
-  const abs = Math.abs(Number(n) || 0);
-  const m = abs / 1_000_000;
-
-  if (m >= 1000) {
-    const b = m / 1000;
-    const body = b >= 100 ? b.toFixed(0) : b >= 10 ? b.toFixed(1) : b.toFixed(2);
-    return `${formatNumberString(body)}B`;
-  }
-
-  let body: string;
-  if (m >= 100) body = m.toFixed(0);
-  else if (m >= 1) body = m.toFixed(1);
-  else body = m.toFixed(2);
-
-  return `${formatNumberString(body)}M`;
-}
-
-function formatNumberString(s: string): string {
-  if (s.includes(".")) {
-    const [whole, frac] = s.split(".");
-    return `${Number(whole).toLocaleString("en-US")}.${frac}`;
-  }
-  return Number(s).toLocaleString("en-US");
-}
-
-export function calculateStreaks(dailyTokens: Record<string, number>): StreakStats {
-  const dates = Object.keys(dailyTokens).sort();
-  if (dates.length === 0) return { currentStreak: 0, maxStreak: 0 };
-
-  let maxStreak = 0;
-  let tempStreak = 0;
-  let prevDate: Date | null = null;
-
-  for (const dStr of dates) {
-    const count = dailyTokens[dStr];
-    if (count > 0) {
-      const curDate = new Date(`${dStr}T00:00:00Z`);
-      if (prevDate) {
-        const diffDays = Math.round((curDate.getTime() - prevDate.getTime()) / 86400000);
-        tempStreak = diffDays === 1 ? tempStreak + 1 : 1;
-      } else {
-        tempStreak = 1;
-      }
-      prevDate = curDate;
-      if (tempStreak > maxStreak) maxStreak = tempStreak;
-    }
-  }
-
-  const latestActiveStr = [...dates].reverse().find((d) => dailyTokens[d] > 0);
-  let currentStreak = 0;
-
-  if (latestActiveStr) {
-    const latestDate = new Date(`${dates[dates.length - 1]}T00:00:00Z`);
-    const activeDate = new Date(`${latestActiveStr}T00:00:00Z`);
-    const daysSinceActive = Math.round((latestDate.getTime() - activeDate.getTime()) / 86400000);
-
-    if (daysSinceActive <= 1) {
-      let checkDate = new Date(activeDate);
-      while (true) {
-        const iso = checkDate.toISOString().slice(0, 10);
-        if ((dailyTokens[iso] || 0) > 0) {
-          currentStreak++;
-          checkDate.setUTCDate(checkDate.getUTCDate() - 1);
-        } else {
-          break;
-        }
-      }
-    }
-  }
-
-  return { currentStreak, maxStreak };
-}
-
-export function normalizeDay(raw: Record<string, unknown>): DailyRecord {
-  const dateVal = raw.date;
-  if (!dateVal || typeof dateVal !== "string") {
-    throw new UsageError(`Record missing 'date': ${JSON.stringify(raw)}`);
-  }
-
-  const inputTokens = Number(raw.inputTokens) || 0;
-  const outputTokens = Number(raw.outputTokens) || 0;
-  const cacheReadTokens = Number(raw.cacheReadTokens) || 0;
-  const cacheCreationTokens = Number(raw.cacheCreationTokens) || 0;
-  const totalCost = Number(raw.totalCost || raw.cost) || 0;
-
-  let modelBreakdowns: ModelBreakdown[] = [];
-
-  if (Array.isArray(raw.modelBreakdowns)) {
-    for (const m of raw.modelBreakdowns) {
-      if (m && typeof m === "object") {
-        const mObj = m as Record<string, unknown>;
-        modelBreakdowns.push({
-          modelName: String(mObj.modelName || ""),
-          inputTokens: Number(mObj.inputTokens) || 0,
-          outputTokens: Number(mObj.outputTokens) || 0,
-          cacheReadTokens: Number(mObj.cacheReadTokens) || 0,
-          cacheCreationTokens: Number(mObj.cacheCreationTokens) || 0,
-          cost: Number(mObj.cost) || 0,
-        });
-      }
-    }
-  } else if (raw.models && typeof raw.models === "object") {
-    if (Array.isArray(raw.models)) {
-      for (const name of raw.models) {
-        modelBreakdowns.push({
-          modelName: String(name),
-          inputTokens: 0,
-          outputTokens: 0,
-          cacheReadTokens: 0,
-          cacheCreationTokens: 0,
-          cost: 0,
-        });
-      }
-    } else {
-      for (const [name, stats] of Object.entries(raw.models as Record<string, Record<string, unknown>>)) {
-        modelBreakdowns.push({
-          modelName: name,
-          inputTokens: Number(stats?.inputTokens) || 0,
-          outputTokens: Number(stats?.outputTokens) || 0,
-          cacheReadTokens: Number(stats?.cacheReadTokens) || 0,
-          cacheCreationTokens: Number(stats?.cacheCreationTokens) || 0,
-          cost: Number(stats?.cost) || 0,
-        });
-      }
-    }
-  }
-
-  let totalTokens = Number(raw.totalTokens) || 0;
-  if (totalTokens === 0) {
-    const sumBreakdowns = modelBreakdowns.reduce((acc, m) => acc + modelTokens(m), 0);
-    const sumDay = inputTokens + outputTokens + cacheReadTokens + cacheCreationTokens;
-    totalTokens = Math.max(sumBreakdowns, sumDay);
-  }
-
-  const modelsUsed = Array.isArray(raw.modelsUsed)
-    ? raw.modelsUsed.map(String)
-    : modelBreakdowns.map((m) => m.modelName).filter(Boolean);
-
-  return {
-    date: dateVal,
-    inputTokens,
-    outputTokens,
-    cacheReadTokens,
-    cacheCreationTokens,
-    totalTokens,
-    totalCost,
-    modelBreakdowns,
-    modelsUsed,
-  };
-}
-
-export function mergeDailyRecords(days: DailyRecord[]): DailyRecord[] {
-  interface AggTarget {
-    date: string;
-    inputTokens: number;
-    outputTokens: number;
-    cacheReadTokens: number;
-    cacheCreationTokens: number;
-    totalTokens: number;
-    totalCost: number;
-    models: Record<
-      string,
-      {
-        inputTokens: number;
-        outputTokens: number;
-        cacheReadTokens: number;
-        cacheCreationTokens: number;
-        cost: number;
-      }
-    >;
-  }
-
-  const byDate: Record<string, AggTarget> = {};
-
-  for (const d of days) {
-    const dt = d.date;
-    if (!byDate[dt]) {
-      byDate[dt] = {
-        date: dt,
-        inputTokens: 0,
-        outputTokens: 0,
-        cacheReadTokens: 0,
-        cacheCreationTokens: 0,
-        totalTokens: 0,
-        totalCost: 0,
-        models: {},
-      };
-    }
-
-    const t = byDate[dt];
-    t.inputTokens += d.inputTokens;
-    t.outputTokens += d.outputTokens;
-    t.cacheReadTokens += d.cacheReadTokens;
-    t.cacheCreationTokens += d.cacheCreationTokens;
-    t.totalTokens += dayTokens(d);
-    t.totalCost += d.totalCost;
-
-    for (const m of d.modelBreakdowns || []) {
-      const mName = m.modelName || "";
-      if (!t.models[mName]) {
-        t.models[mName] = {
-          inputTokens: 0,
-          outputTokens: 0,
-          cacheReadTokens: 0,
-          cacheCreationTokens: 0,
-          cost: 0,
-        };
-      }
-      const mTarget = t.models[mName];
-      mTarget.inputTokens += m.inputTokens || 0;
-      mTarget.outputTokens += m.outputTokens || 0;
-      mTarget.cacheReadTokens += m.cacheReadTokens || 0;
-      mTarget.cacheCreationTokens += m.cacheCreationTokens || 0;
-      mTarget.cost += m.cost || 0;
-    }
-  }
-
-  const merged: DailyRecord[] = [];
-  for (const dt of Object.keys(byDate).sort()) {
-    const item = byDate[dt];
-    const breakdowns: ModelBreakdown[] = [];
-
-    for (const [mName, mStats] of Object.entries(item.models)) {
-      breakdowns.push({
-        modelName: mName,
-        inputTokens: mStats.inputTokens,
-        outputTokens: mStats.outputTokens,
-        cacheReadTokens: mStats.cacheReadTokens,
-        cacheCreationTokens: mStats.cacheCreationTokens,
-        cost: mStats.cost,
-      });
-    }
-
-    breakdowns.sort((a, b) => modelTokens(b) - modelTokens(a));
-
-    merged.push({
-      date: dt,
-      inputTokens: item.inputTokens,
-      outputTokens: item.outputTokens,
-      cacheReadTokens: item.cacheReadTokens,
-      cacheCreationTokens: item.cacheCreationTokens,
-      totalTokens: item.totalTokens,
-      totalCost: item.totalCost,
-      modelBreakdowns: breakdowns,
-      modelsUsed: breakdowns.map((b) => b.modelName),
-    });
-  }
-
-  return merged;
-}
-
-export function loadClientDays(client: Client): DailyRecord[] {
-  ensureDirs();
-  const files: string[] = [];
-
-  if (client === "omp" || client === "pi") {
-    const matched = readdirSync(DATA_DIR)
-      .filter((f) => f.startsWith(`${client}-`) && f.endsWith(".json"))
-      .sort();
-    files.push(...matched.map((f) => join(DATA_DIR, f)));
-    const fallback = join(DATA_DIR, `${client}.json`);
-    if (existsSync(fallback) && !files.includes(fallback)) {
-      files.push(fallback);
-    }
-    if (files.length === 0) {
-      throw new UsageError(`没有 usage/data/${client}-*.json,先 export --client ${client}`);
-    }
-  } else {
-    const f = join(DATA_DIR, `${client}.json`);
-    if (!existsSync(f)) {
-      throw new UsageError(`没有 usage/data/${client}.json,先 export --client ${client}`);
-    }
-    files.push(f);
-  }
-
-  const days: DailyRecord[] = [];
-  for (const f of files) {
-    try {
-      const content = readFileSync(f, "utf-8");
-      const data = JSON.parse(content);
-      const rawDaily = Array.isArray(data.daily) ? data.daily : [];
-      for (const raw of rawDaily) {
-        days.push(normalizeDay(raw));
-      }
-    } catch (err: unknown) {
-      const msg = err instanceof Error ? err.message : String(err);
-      throw new UsageError(`解析 ${f} 失败: ${msg}`);
-    }
-  }
-
-  return mergeDailyRecords(days);
-}
-
-export function loadAllClientDays(): Record<Client, DailyRecord[]> {
-  const result = {} as Record<Client, DailyRecord[]>;
-  for (const c of CLIENTS) {
-    try {
-      result[c] = loadClientDays(c);
-    } catch {
-      result[c] = [];
-    }
-  }
-  return result;
-}
-
-export function getAggregateUsage(clientDays: Record<Client, DailyRecord[]>): AggregateUsage | null {
-  const dailyTokens: Record<string, number> = {};
-  const clientDailyTokens: Record<string, Partial<Record<Client, number>>> = {};
-
-  for (const c of CLIENTS) {
-    for (const d of clientDays[c] || []) {
-      if (!d.date) continue;
-      const tok = dayTokens(d);
-      dailyTokens[d.date] = (dailyTokens[d.date] || 0) + tok;
-      if (!clientDailyTokens[d.date]) {
-        clientDailyTokens[d.date] = {};
-      }
-      clientDailyTokens[d.date][c] = (clientDailyTokens[d.date][c] || 0) + tok;
-    }
-  }
-
-  const allDates = Object.keys(dailyTokens).sort();
-  if (allDates.length === 0) return null;
-
-  const latestDate = new Date(`${allDates[allDates.length - 1]}T00:00:00Z`);
-  const wOffset = latestDate.getUTCDay();
-  const startDate = new Date(latestDate);
-  startDate.setUTCDate(latestDate.getUTCDate() - (52 * 7 + wOffset));
-
-  const totalTokens = Object.values(dailyTokens).reduce((a, b) => a + b, 0);
-  const activeDays = Object.values(dailyTokens).filter((v) => v > 0).length;
-  const { currentStreak, maxStreak } = calculateStreaks(dailyTokens);
-
-  return {
-    dailyTokens,
-    clientDailyTokens,
-    allDates,
-    startDate,
-    latestDate,
-    startDateStr: startDate.toISOString().slice(0, 10),
-    latestDateStr: latestDate.toISOString().slice(0, 10),
-    totalTokens,
-    activeDays,
-    currentStreak,
-    maxStreak,
-  };
-}
-
-export function escapeXml(str: string): string {
-  return str
-    .replace(/&/g, "&amp;")
-    .replace(/</g, "&lt;")
-    .replace(/>/g, "&gt;")
-    .replace(/"/g, "&quot;")
-    .replace(/'/g, "&apos;");
-}
-
-export function svgText(
-  x: number,
-  y: number,
-  body: string,
-  opts: { fill: string; size: number; weight?: string; anchor?: string; spacing?: string; font?: string }
-): string {
-  let attrs = `x="${x}" y="${y}" fill="${opts.fill}" font-size="${opts.size}"`;
-  if (opts.weight !== undefined) {
-    if (opts.weight) attrs += ` font-weight="${opts.weight}"`;
-  } else {
-    attrs += ` font-weight="400"`;
-  }
-  attrs += ` font-family="${opts.font || PALETTE.font}"`;
-  if (opts.anchor) attrs += ` text-anchor="${opts.anchor}"`;
-  if (opts.spacing) attrs += ` letter-spacing="${opts.spacing}"`;
-  return `<text ${attrs}>${escapeXml(body)}</text>`;
-}
-
-export function buildClientSvg(days: DailyRecord[], client: Client): string {
-  const title = TITLE[client];
-  const A = ACCENT[client];
-  const d7 = filterLastNDays(days, 7);
-  const d40 = filterLastNDays(days, 40);
-  const total = sumTokens(days);
-  const t7 = sumTokens(d7);
-  const t40 = sumTokens(d40);
-
-  const cfg = USAGE_CONFIG.clientCard;
-  const topModels = rankModels(days, cfg.topModels);
-
-  const dates = days.map((d) => d.date).sort();
-  const fr = dates[0] || "—";
-  const to = dates[dates.length - 1] || "—";
-  const dateStr = fr === to ? fr : `${fr} · ${to}`;
-
-  const nDays = days.length || 1;
-  const activeDays = days.filter((d) => dayTokens(d) > 0).length;
-  const avgDay = Math.floor(total / nDays);
-  const peakDay = Math.max(...days.map((d) => dayTokens(d)), 0);
-
-  const inp = days.reduce((a, d) => a + d.inputTokens, 0);
-  const out = days.reduce((a, d) => a + d.outputTokens, 0);
-  const cr = days.reduce((a, d) => a + d.cacheReadTokens, 0);
-  const cw = days.reduce((a, d) => a + d.cacheCreationTokens, 0);
-  const denom = inp + cr;
-  const cachePct = denom > 0 ? Math.round((100 * cr) / denom) : 0;
-
-  const totalDenom = cr + cw + inp + out;
-  const compBarW = 215;
-  const crPct = totalDenom > 0 ? Math.round((100 * cr) / totalDenom) : 0;
-  const inpPct = totalDenom > 0 ? Math.round((100 * inp) / totalDenom) : 0;
-  const outPct = totalDenom > 0 ? Math.max(0, 100 - crPct - inpPct) : 0;
-  let crSegW = totalDenom > 0 ? Math.floor((cr * compBarW) / totalDenom) : 0;
-  let inpSegW = totalDenom > 0 ? Math.floor((inp * compBarW) / totalDenom) : 0;
-  let outSegW = compBarW - crSegW - inpSegW;
-  if (cr > 0 && crSegW < 3) crSegW = 3;
-  if (inp > 0 && inpSegW < 3) inpSegW = 3;
-  if (out > 0 && outSegW < 3) outSegW = 3;
-
-  const W = cfg.width;
-  const H = cfg.height;
-
-  const parts: string[] = [
-    `<rect width="${W - 1}" height="${H - 1}" x="0.5" y="0.5" rx="6" fill="${PALETTE.bg}" stroke="${PALETTE.stroke}" stroke-width="1"/>`,
-    svgText(30, 36, title, { fill: A, size: 17, weight: "700" }),
-    svgText(W - 30, 35, "@shelken", { fill: PALETTE.user, size: 13, weight: "600", anchor: "end" }),
-    svgText(W - 30, 50, dateStr, { fill: PALETTE.foot, size: 11, anchor: "end" }),
-    `<line x1="250" y1="62" x2="250" y2="214" stroke="${PALETTE.stroke}" stroke-width="1"/>`,
-    `<line x1="510" y1="62" x2="510" y2="214" stroke="${PALETTE.stroke}" stroke-width="1"/>`,
-    // Col 1: ALL-TIME (30 ~ 230)
-    svgText(30, 74, "ALL-TIME", { fill: PALETTE.foot, size: 10, weight: "700", spacing: "1.2" }),
-    svgText(30, 112, fmtTokens(total), { fill: A, size: 38, weight: "800" }),
-    `<rect x="30" y="122" width="144" height="18" rx="4" fill="${PALETTE.barBg}"/>`,
-    svgText(38, 135, "tokens · ", { fill: PALETTE.sub, size: 11 }),
-    svgText(79, 135, `${cachePct}% cache-hit`, { fill: A, size: 11, weight: "700" }),
-    `<line x1="30" y1="148" x2="230" y2="148" stroke="${PALETTE.stroke}" stroke-dasharray="3 3"/>`,
-    svgText(30, 168, "Active days", { fill: PALETTE.sub, size: 12 }),
-    svgText(230, 168, String(activeDays), { fill: A, size: 12, weight: "700", anchor: "end" }),
-    svgText(30, 187, "Avg / day", { fill: PALETTE.sub, size: 12 }),
-    svgText(230, 187, fmtTokens(avgDay), { fill: A, size: 12, weight: "700", anchor: "end" }),
-    svgText(30, 206, "Peak day", { fill: PALETTE.sub, size: 12 }),
-    svgText(230, 206, fmtTokens(peakDay), { fill: A, size: 12, weight: "700", anchor: "end" }),
-    // Col 2: TOKEN COMPOSITION & MIX (275 ~ 490)
-    svgText(275, 74, "TOKEN COMPOSITION", { fill: PALETTE.foot, size: 10, weight: "700", spacing: "1.2" }),
-    `<defs><clipPath id="${client}-comp-clip"><rect x="275" y="86" width="${compBarW}" height="6" rx="3"/></clipPath></defs>`,
-    `<g clip-path="url(#${client}-comp-clip)">` +
-      `<rect x="275" y="86" width="${compBarW}" height="6" fill="${PALETTE.barBg}"/>` +
-      `<rect x="275" y="86" width="${crSegW}" height="6" fill="${A}"/>` +
-      `<rect x="${275 + crSegW}" y="86" width="${inpSegW}" height="6" fill="#8aadf4"/>` +
-      `<rect x="${275 + crSegW + inpSegW}" y="86" width="${outSegW}" height="6" fill="#a6da95"/>` +
-    `</g>`,
-    `<circle cx="279" cy="102" r="3" fill="${A}"/>`,
-    svgText(286, 105, `Cache ${crPct}%`, { fill: PALETTE.sub, size: 10 }),
-    `<circle cx="355" cy="102" r="3" fill="#8aadf4"/>`,
-    svgText(362, 105, `In ${inpPct}%`, { fill: PALETTE.sub, size: 10 }),
-    `<circle cx="417" cy="102" r="3" fill="#a6da95"/>`,
-    svgText(424, 105, `Out ${outPct}%`, { fill: PALETTE.sub, size: 10 }),
-    svgText(275, 124, "Output", { fill: PALETTE.sub, size: 12 }),
-    svgText(490, 124, fmtTokens(out), { fill: A, size: 12, weight: "700", anchor: "end" }),
-    svgText(275, 141, "Input", { fill: PALETTE.sub, size: 12 }),
-    svgText(490, 141, fmtTokens(inp), { fill: A, size: 12, weight: "700", anchor: "end" }),
-    svgText(275, 158, "Cache read", { fill: PALETTE.sub, size: 12 }),
-    svgText(490, 158, fmtTokens(cr), { fill: A, size: 12, weight: "700", anchor: "end" }),
-    `<line x1="275" y1="168" x2="490" y2="168" stroke="${PALETTE.stroke}" stroke-dasharray="3 3"/>`,
-    svgText(275, 187, "Recent 7d", { fill: PALETTE.sub, size: 12 }),
-    svgText(490, 187, fmtTokens(t7), { fill: A, size: 12, weight: "700", anchor: "end" }),
-    svgText(275, 206, "Recent 40d", { fill: PALETTE.sub, size: 12 }),
-    svgText(490, 206, fmtTokens(t40), { fill: A, size: 12, weight: "700", anchor: "end" }),
-    // Col 3: TOP 5 MODELS (535 ~ 816)
-    svgText(535, 74, "TOP 5 MODELS", { fill: PALETTE.foot, size: 10, weight: "700", spacing: "1.2" }),
-  ];
-
-  const maxModelTokens = topModels[0]?.[1] || 1;
-
-  if (topModels.length === 0) {
-    parts.push(svgText(535, 120, "No model breakdown available", { fill: PALETTE.foot, size: 12 }));
-  } else {
-    const barX = 705;
-    const barW = 55;
-    const spacingY = topModels.length >= 5 ? 27 : topModels.length === 4 ? 30 : topModels.length === 3 ? 36 : 40;
-    let yPos = topModels.length >= 5 ? 98 : topModels.length === 4 ? 100 : topModels.length === 3 ? 106 : 110;
-
-    for (const [name, tok] of topModels) {
-      const displayName = name.length <= 21 ? name : `${name.slice(0, 20)}…`;
-      const ratio = maxModelTokens > 0 ? tok / maxModelTokens : 0;
-      const fillW = Math.max(2, Math.floor(barW * ratio));
-
-      parts.push(
-        svgText(535, yPos, displayName, { fill: PALETTE.user, size: 12, weight: "500" }),
-        `<rect x="${barX}" y="${yPos - 8}" width="${barW}" height="6" rx="3" fill="${PALETTE.barBg}"/>`,
-        `<rect x="${barX}" y="${yPos - 8}" width="${fillW}" height="6" rx="3" fill="${A}"/>`,
-        svgText(816, yPos, fmtTokens(tok), { fill: A, size: 12, weight: "700", anchor: "end" })
-      );
-      yPos += spacingY;
-    }
-  }
-
-  return (
-    `<?xml version="1.0" encoding="UTF-8"?>\n` +
-    `<svg width="${W}" height="${H}" viewBox="0 0 ${W} ${H}" xmlns="http://www.w3.org/2000/svg" role="img" aria-label="${escapeXml(title)}">\n` +
-    parts.join("\n") +
-    "\n</svg>\n"
-  );
-}
-export function buildHistorySvg(allClientDays?: Record<Client, DailyRecord[]>): string {
-  const daysMap = allClientDays || loadAllClientDays();
-  const cfg = USAGE_CONFIG.historyCard;
-  const width = cfg.width;
-  const height = cfg.height;
-
-  let totalTokensAll = 0;
-  const allDates: string[] = [];
-  const uniqueActiveDates = new Set<string>();
-  for (const c of cfg.clients) {
-    const days = daysMap[c] || [];
-    for (const d of days) {
-      totalTokensAll += dayTokens(d);
-      if (d.date) {
-        allDates.push(d.date);
-        if (dayTokens(d) > 0) uniqueActiveDates.add(d.date);
-      }
-    }
-  }
-  allDates.sort();
-  const minDate = allDates[0] || "";
-  const maxDate = allDates[allDates.length - 1] || "";
-  const totalActiveDays = uniqueActiveDates.size;
-
-  const lines = [
-    '<?xml version="1.0" encoding="UTF-8"?>',
-    `<svg width="${width}" height="${height}" viewBox="0 0 ${width} ${height}" xmlns="http://www.w3.org/2000/svg" role="img" aria-label="${escapeXml(cfg.title)}">`,
-    `  <rect width="${width - 1}" height="${height - 1}" x="0.5" y="0.5" rx="6" fill="${PALETTE.bg}" stroke="${PALETTE.stroke}" stroke-width="1"/>`,
-    `  ${svgText(30, 34, cfg.title, { fill: "#c6a0f6", size: 16, weight: "700" })}`,
-    `  ${svgText(816, 32, cfg.user, { fill: PALETTE.user, size: 13, weight: "600", anchor: "end" })}`,
-    `  ${svgText(816, 47, `${minDate} · ${maxDate}`, { fill: PALETTE.foot, size: 11, anchor: "end" })}`,
-    `  <text x="30" y="52" font-size="12" font-family="${PALETTE.font}">`,
-    `    <tspan fill="${PALETTE.text}" font-weight="700">${fmtTokens(totalTokensAll)}</tspan><tspan fill="${PALETTE.foot}"> tokens · </tspan>`,
-    `    <tspan fill="${PALETTE.text}" font-weight="700">4</tspan><tspan fill="${PALETTE.foot}"> clients · </tspan>`,
-    `    <tspan fill="${PALETTE.text}" font-weight="700">${totalActiveDays}</tspan><tspan fill="${PALETTE.foot}"> active days</tspan>`,
-    `  </text>`,
-    `  <line x1="30" y1="${cfg.headerLineY}" x2="816" y2="${cfg.headerLineY}" stroke="${PALETTE.stroke}" stroke-width="1"/>`,
-    `  <line x1="${cfg.dividerX}" y1="${cfg.headerLineY}" x2="${cfg.dividerX}" y2="${height - 16}" stroke="${PALETTE.stroke}" stroke-width="1"/>`,
-    `  <line x1="30" y1="${cfg.dividerY}" x2="816" y2="${cfg.dividerY}" stroke="${PALETTE.stroke}" stroke-width="1"/>`,
-  ];
-
-  for (const { client: c, x: qx, y: qy } of cfg.coordinates) {
-    const days = daysMap[c] || [];
-    const total = sumTokens(days);
-    const nDays = days.length || 1;
-    const activeDays = days.filter((d) => dayTokens(d) > 0).length;
-    const avgDay = Math.floor(total / nDays);
-    const peakDay = Math.max(...days.map((d) => dayTokens(d)), 0);
-
-    const inp = days.reduce((acc, d) => acc + (d.inputTokens || 0), 0);
-    const out = days.reduce((acc, d) => acc + (d.outputTokens || 0), 0);
-    const cr = days.reduce((acc, d) => acc + (d.cacheReadTokens || 0), 0);
-    const cw = days.reduce((acc, d) => acc + (d.cacheCreationTokens || 0), 0);
-    const denom = inp + out + cr + cw;
-    const cacheHit = denom > 0 ? `${Math.round((cr / denom) * 100)}%` : "-";
-
-    const dates = days.map((d) => d.date).sort();
-    const dSpan = dates.length ? `${dates[0]} · ${dates[dates.length - 1]}` : "-";
-
-    const topModels = rankModels(days, cfg.topModels);
-    const maxModelTok = topModels[0]?.[1] || 1;
-
-    const accent = ACCENT[c];
-    const title = TITLE[c];
-
-    // --- 左子栏：核心指标与用量（舒展行间距，增强呼吸感）---
-    lines.push(
-      `  <circle cx="${qx + 5}" cy="${qy + 8}" r="4.5" fill="${accent}"/>`,
-      `  ${svgText(qx + 16, qy + 12, title, { fill: accent, size: 13, weight: "700" })}`,
-      `  ${svgText(qx, qy + 44, fmtTokens(total), { fill: PALETTE.text, size: 26, weight: "800" })}`,
-      `  <rect x="${qx}" y="${qy + 54}" width="135" height="18" rx="4" fill="${PALETTE.barBg}"/>`,
-      `  ${svgText(qx + 6, qy + 67, "tokens · ", { fill: PALETTE.sub, size: 10 })}`,
-      `  ${svgText(qx + 46, qy + 67, `${cacheHit} cache-hit`, { fill: accent, size: 10, weight: "700" })}`,
-      `  <line x1="${qx}" y1="${qy + 84}" x2="${qx + 135}" y2="${qy + 84}" stroke="${PALETTE.stroke}" stroke-dasharray="2 2"/>`,
-      `  ${svgText(qx, qy + 106, "Active days", { fill: PALETTE.sub, size: 11 })}`,
-      `  ${svgText(qx + 135, qy + 106, String(activeDays), { fill: accent, size: 11, weight: "700", anchor: "end" })}`,
-      `  ${svgText(qx, qy + 127, "Avg / day", { fill: PALETTE.sub, size: 11 })}`,
-      `  ${svgText(qx + 135, qy + 127, fmtTokens(avgDay), { fill: accent, size: 11, weight: "700", anchor: "end" })}`,
-      `  ${svgText(qx, qy + 148, "Peak day", { fill: PALETTE.sub, size: 11 })}`,
-      `  ${svgText(qx + 135, qy + 148, fmtTokens(peakDay), { fill: accent, size: 11, weight: "700", anchor: "end" })}`,
-      `  <line x1="${qx + 146}" y1="${qy + 16}" x2="${qx + 146}" y2="${qy + 152}" stroke="${PALETTE.stroke}" stroke-dasharray="2 2" opacity="0.6"/>`
-    );
-
-    // --- 右子栏：TOP 5 MODELS + 日期区间（顶行两端对齐，行距舒展）---
-    const mx = qx + 158;
-    lines.push(
-      `  ${svgText(mx, qy + 12, "TOP 5 MODELS", { fill: PALETTE.foot, size: 10, weight: "700", spacing: "1.1" })}`,
-      `  ${svgText(qx + cfg.quadrantWidth, qy + 12, dSpan, { fill: PALETTE.foot, size: 10, anchor: "end" })}`
-    );
-
-    let my = qy + 36;
-    const barMaxW = 46;
-    for (const [mName, mTok] of topModels) {
-      const displayName = mName.length <= 17 ? mName : `${mName.slice(0, 16)}…`;
-      const barW = Math.max(2, Math.round(barMaxW * (mTok / maxModelTok)));
-      lines.push(
-        `  ${svgText(mx, my + 8, displayName, { fill: PALETTE.user, size: 11, weight: "500" })}`,
-        `  <rect x="${mx + 114}" y="${my}" width="${barMaxW}" height="6" rx="3" fill="${PALETTE.barBg}"/>`,
-        `  <rect x="${mx + 114}" y="${my}" width="${barW}" height="6" rx="3" fill="${accent}"/>`,
-        `  ${svgText(qx + cfg.quadrantWidth, my + 8, fmtTokens(mTok), { fill: accent, size: 11, weight: "700", anchor: "end" })}`
-      );
-      my += 26;
-    }
-  }
-
-  lines.push("</svg>\n");
-  return lines.join("\n");
-}
-
-export function buildHarnessSvg(
-  clientDays?: Record<Client, DailyRecord[]>,
-  injectedAgg?: AggregateUsage | null
-): string {
-  const allDays = clientDays || loadAllClientDays();
-  const agg = injectedAgg !== undefined ? injectedAgg : getAggregateUsage(allDays);
-  if (!agg) return "";
-
-  const {
-    dailyTokens,
-    clientDailyTokens,
-    startDate,
-    latestDate,
-    startDateStr,
-    latestDateStr,
-    totalTokens,
-    activeDays,
-    currentStreak,
-    maxStreak,
-  } = agg;
-
-  const monthsLabels: [number, string][] = [];
-  const monthsSeen: Record<string, number> = {};
-  const monthNames = ["Jan", "Feb", "Mar", "Apr", "May", "Jun", "Jul", "Aug", "Sep", "Oct", "Nov", "Dec"];
-
-  let wIdx = 0;
-  for (let cur = new Date(startDate); cur <= latestDate; cur.setUTCDate(cur.getUTCDate() + 1)) {
-    const dW = cur.getUTCDay();
-    if (cur.getUTCDate() === 1 || cur.getTime() === startDate.getTime()) {
-      const mStr = monthNames[cur.getUTCMonth()];
-      if (monthsSeen[mStr] === undefined || wIdx - monthsSeen[mStr] >= 3) {
-        monthsLabels.push([wIdx, mStr]);
-        monthsSeen[mStr] = wIdx;
-      }
-    }
-    if (dW === 6) {
-      wIdx++;
-    }
-  }
-
-  const cardTitle = "Harness";
-  const harnessFont = "-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,sans-serif";
-
-  const lines = [
-    '<?xml version="1.0" encoding="UTF-8"?>',
-    `<svg width="846" height="215" viewBox="0 0 846 215" xmlns="http://www.w3.org/2000/svg" role="img" aria-label="${escapeXml(cardTitle)}">`,
-    `  <rect width="845" height="214" x="0.5" y="0.5" rx="6" fill="${PALETTE.bg}" stroke="${PALETTE.stroke}" stroke-width="1"/>`,
-    `  ${svgText(30, 33, cardTitle, { fill: "#c6a0f6", size: 16, weight: "700", font: harnessFont })}`,
-    `  ${svgText(816, 32, "@shelken", { fill: PALETTE.user, size: 13, weight: "600", anchor: "end", font: harnessFont })}`,
-    `  ${svgText(816, 47, `${startDateStr} · ${latestDateStr}`, { fill: PALETTE.foot, size: 11, anchor: "end", font: harnessFont, weight: "400" })}`,
-    `  <text x="30" y="52" font-size="12" font-family="${harnessFont}">`,
-    `    <tspan fill="${PALETTE.text}" font-weight="700">${fmtTokens(totalTokens)}</tspan><tspan fill="${PALETTE.foot}"> tokens · </tspan>`,
-    `    <tspan fill="${PALETTE.text}" font-weight="700">${activeDays}</tspan><tspan fill="${PALETTE.foot}"> active days · </tspan>`,
-    `    <tspan fill="#c6a0f6" font-weight="700">${currentStreak}d</tspan><tspan fill="${PALETTE.foot}"> streak (max ${maxStreak}d)</tspan>`,
-    "  </text>",
-  ];
-
-  for (const [w, m] of monthsLabels) {
-    const x = 52 + w * 14;
-    lines.push(`  ${svgText(x, 70, m, { fill: PALETTE.foot, size: 10, weight: "500", font: harnessFont })}`);
-  }
-
-  lines.push(
-    `  ${svgText(30, 99, "Mon", { fill: PALETTE.foot, size: 10, weight: "500", font: harnessFont })}`,
-    `  ${svgText(30, 127, "Wed", { fill: PALETTE.foot, size: 10, weight: "500", font: harnessFont })}`,
-    `  ${svgText(30, 155, "Fri", { fill: PALETTE.foot, size: 10, weight: "500", font: harnessFont })}`
-  );
-
-  const avgTokens = activeDays > 0 ? totalTokens / activeDays : 1;
-  wIdx = 0;
-
-  for (let cur = new Date(startDate); cur <= latestDate; cur.setUTCDate(cur.getUTCDate() + 1)) {
-    const dW = cur.getUTCDay();
-    const iso = cur.toISOString().slice(0, 10);
-    const tok = dailyTokens[iso] || 0;
-    const x = 52 + wIdx * 14;
-    const y = 78 + dW * 14;
-
-    if (tok <= 0) {
-      lines.push(
-        `  <rect x="${x}" y="${y}" width="11" height="11" rx="2" fill="${PALETTE.barBg}"><title>${iso}: Inactive</title></rect>`
-      );
-    } else {
-      const ratio = tok / avgTokens;
-      let tierName: string;
-      let opacity: number;
-
-      if (ratio < 0.4) {
-        tierName = "Light (< 0.5× avg)";
-        opacity = 0.35;
-      } else if (ratio < 1.0) {
-        tierName = "Moderate (~1× avg)";
-        opacity = 0.6;
-      } else if (ratio < 1.8) {
-        tierName = "Elevated (~1.5× avg)";
-        opacity = 0.85;
-      } else {
-        tierName = "Peak (> 2× avg)";
-        opacity = 1.0;
-      }
-
-      const clientMap = clientDailyTokens[iso] || {};
-      const topClient =
-        (Object.entries(clientMap).sort((a, b) => b[1] - a[1])[0]?.[0] as Client) || "omp";
-      const clientLabel = TITLE[topClient] || topClient;
-      const tip = `${iso}: ${tierName} · ${clientLabel}`;
-      const baseColor = ACCENT[topClient] || "#c6a0f6";
-
-      lines.push(
-        `  <rect x="${x}" y="${y}" width="11" height="11" rx="2" fill="${baseColor}" fill-opacity="${opacity}"><title>${escapeXml(tip)}</title></rect>`
-      );
-    }
-
-    if (dW === 6) {
-      wIdx++;
-    }
-  }
-
-  const legends: [Client, string, number][] = [
-    ["omp", "OMP", 102],
-    ["pi", "Pi", 160],
-    ["claude", "Claude", 200],
-    ["codex", "Codex", 265],
-    ["opencode", "OpenCode", 330],
-  ];
-
-  lines.push(`  ${svgText(30, 198, "Harness:", { fill: PALETTE.foot, size: 11, font: harnessFont, weight: "" })}`);
-  for (const [c, label, cx] of legends) {
-    lines.push(
-      `  <circle cx="${cx}" cy="194" r="4.5" fill="${ACCENT[c]}"/>`,
-      `  ${svgText(cx + 10, 198, label, { fill: PALETTE.text, size: 11, font: harnessFont, weight: "" })}`
-    );
-  }
-
-  lines.push(
-    `  ${svgText(636, 198, "Intensity:", { fill: PALETTE.foot, size: 11, font: harnessFont, weight: "" })}`,
-    `  ${svgText(690, 198, "< 0.5×", { fill: PALETTE.foot, size: 10, font: harnessFont, weight: "" })}`,
-    '  <rect x="726" y="189" width="11" height="11" rx="2" fill="#c6a0f6" fill-opacity="0.35"/>',
-    '  <rect x="740" y="189" width="11" height="11" rx="2" fill="#c6a0f6" fill-opacity="0.60"/>',
-    '  <rect x="754" y="189" width="11" height="11" rx="2" fill="#c6a0f6" fill-opacity="0.85"/>',
-    '  <rect x="768" y="189" width="11" height="11" rx="2" fill="#c6a0f6" fill-opacity="1.0"/>',
-    `  ${svgText(784, 198, "> 2× avg", { fill: PALETTE.foot, size: 10, font: harnessFont, weight: "" })}`,
-    "</svg>\n"
-  );
-
-  return lines.join("\n");
 }
 
 export function patchReadme(rendered: string[] = ["omp", "history"]): void {
@@ -995,6 +144,27 @@ export function patchReadme(rendered: string[] = ["omp", "history"]): void {
   }
 
   writeFileSync(README_PATH, text.slice(0, i) + block + text.slice(j + END_MARKER.length), "utf-8");
+}
+
+/**
+ * 向后兼容导出的 buildHistorySvg：入参缺省时使用当前数据集
+ */
+export function buildHistorySvg(allClientDays?: Record<Client, DailyRecord[]>): string {
+  const days = allClientDays || loadUsageDataset(DATA_DIR);
+  return renderHistorySvg(days);
+}
+
+/**
+ * 向后兼容导出的 buildHarnessSvg：入参缺省时自动计算聚合
+ */
+export function buildHarnessSvg(
+  clientDays?: Record<Client, DailyRecord[]>,
+  injectedAgg?: AggregateUsage | null
+): string {
+  const days = clientDays || loadUsageDataset(DATA_DIR);
+  const agg = injectedAgg !== undefined ? injectedAgg : aggregateUsage(days);
+  if (!agg) return "";
+  return renderHarnessSvg(days, agg);
 }
 
 export function ccusageCmd(client: Client): string[] {
@@ -1084,14 +254,17 @@ export async function exportAll(name = "mio"): Promise<string[]> {
   return results.filter((p): p is string => Boolean(p));
 }
 
+/**
+ * 线性用量渲染管道
+ */
 export async function render(): Promise<string[]> {
   ensureDirs();
-  const allClientDays = loadAllClientDays();
-  const agg = getAggregateUsage(allClientDays);
+  const allClientDays = loadUsageDataset(DATA_DIR);
+  const agg = aggregateUsage(allClientDays);
 
   await renderVibeSnake({ agg });
 
-  const harnessSvg = buildHarnessSvg(allClientDays, agg);
+  const harnessSvg = agg ? renderHarnessSvg(allClientDays, agg) : "";
   if (harnessSvg) {
     writeFileSync(join(CARDS_DIR, "harness.svg"), harnessSvg, "utf-8");
     console.log("✓ assets/usage/harness.svg");
@@ -1109,7 +282,7 @@ export async function render(): Promise<string[]> {
   }
 
   // 历史 4 大生态 2×2 归档卡片 (pi, codex, opencode, claude)
-  const historySvg = buildHistorySvg(allClientDays);
+  const historySvg = renderHistorySvg(allClientDays);
   writeFileSync(join(CARDS_DIR, "history.svg"), historySvg, "utf-8");
   rendered.push("history");
   console.log("✓ assets/usage/history.svg (2×2 历史归档)");

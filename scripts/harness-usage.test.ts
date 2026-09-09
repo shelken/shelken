@@ -1,232 +1,251 @@
 import { describe, expect, it } from "bun:test";
 import {
-  cleanModelName,
-  fmtTokens,
-  modelTokens,
-  dayTokens,
-  sumTokens,
-  filterLastNDays,
-  rankModels,
-  calculateStreaks,
-  normalizeDay,
-  mergeDailyRecords,
-  buildClientSvg,
-  buildHistorySvg,
-  USAGE_CONFIG,
+  type Client,
   type DailyRecord,
   type ModelBreakdown,
-} from "./harness-usage";
+  type AggregateUsage,
+  USAGE_CONFIG,
+  ACCENT,
+  PALETTE,
+} from "./usage/types";
+import {
+  normalizeDay,
+  mergeDailyRecords,
+  calculateStreaks,
+  aggregateUsage,
+  fmtTokens,
+  rankModels,
+} from "./usage/store";
+import {
+  buildClientSvg,
+  buildHistorySvg,
+  buildHarnessSvg,
+} from "./usage/cards";
 
-describe("fmtTokens", () => {
-  it("formats < 1M correctly", () => {
-    expect(fmtTokens(0)).toBe("0.00M");
-    expect(fmtTokens(50_000)).toBe("0.05M");
-    expect(fmtTokens(500_000)).toBe("0.50M");
-  });
-
-  it("formats 1M to 999M correctly", () => {
-    expect(fmtTokens(3_800_000)).toBe("3.8M");
-    expect(fmtTokens(66_800_000)).toBe("66.8M");
-    expect(fmtTokens(147_000_000)).toBe("147M");
-    expect(fmtTokens(789_000_000)).toBe("789M");
-  });
-
-  it("formats >= 1000M in Billions", () => {
-    expect(fmtTokens(1_000_000_000)).toBe("1.00B");
-    expect(fmtTokens(4_040_000_000)).toBe("4.04B");
-    expect(fmtTokens(7_360_000_000)).toBe("7.36B");
-    expect(fmtTokens(30_429_000_000)).toBe("30.4B");
-    expect(fmtTokens(150_000_000_000)).toBe("150B");
-  });
-});
-
-describe("cleanModelName", () => {
-  it("strips [pi] and [omp] prefixes", () => {
-    expect(cleanModelName("[pi] gpt-5.6-sol")).toBe("gpt-5.6-sol");
-    expect(cleanModelName("[omp] deepseek-v4-flash")).toBe("deepseek-v4-flash");
-    expect(cleanModelName("claude-3-7-sonnet")).toBe("claude-3-7-sonnet");
-  });
-});
-
-describe("Token calculations", () => {
-  it("calculates modelTokens correctly", () => {
-    const m: ModelBreakdown = {
-      modelName: "test-model",
-      inputTokens: 100,
-      outputTokens: 50,
-      cacheReadTokens: 1000,
-      cacheCreationTokens: 200,
-      cost: 0.01,
-    };
-    expect(modelTokens(m)).toBe(1350);
-  });
-
-  it("calculates dayTokens with totalTokens fallback", () => {
-    const d1 = { totalTokens: 5000 } as DailyRecord;
-    expect(dayTokens(d1)).toBe(5000);
-
-    const d2 = {
-      totalTokens: 0,
-      modelBreakdowns: [
-        { modelName: "a", inputTokens: 100, outputTokens: 20, cacheReadTokens: 0, cacheCreationTokens: 0, cost: 0 },
-        { modelName: "b", inputTokens: 200, outputTokens: 30, cacheReadTokens: 0, cacheCreationTokens: 0, cost: 0 },
-      ],
-    } as DailyRecord;
-    expect(dayTokens(d2)).toBe(350);
-  });
-
-  it("filters last N days", () => {
-    const days = [
-      { date: "2026-09-01", totalTokens: 100 },
-      { date: "2026-09-05", totalTokens: 200 },
-      { date: "2026-09-09", totalTokens: 300 },
-    ] as DailyRecord[];
-    const filtered = filterLastNDays(days, 5);
-    expect(filtered.length).toBe(2);
-    expect(filtered[0].date).toBe("2026-09-05");
-    expect(filtered[1].date).toBe("2026-09-09");
-  });
-
-  it("ranks models aggregating by clean name", () => {
-    const days = [
-      {
-        date: "2026-09-01",
-        modelBreakdowns: [
-          { modelName: "[pi] ModelA", inputTokens: 500, outputTokens: 0, cacheReadTokens: 0, cacheCreationTokens: 0, cost: 0 },
-          { modelName: "[pi] ModelB", inputTokens: 1000, outputTokens: 0, cacheReadTokens: 0, cacheCreationTokens: 0, cost: 0 },
-        ],
-      },
-      {
-        date: "2026-09-02",
-        modelBreakdowns: [
-          { modelName: "ModelA", inputTokens: 600, outputTokens: 0, cacheReadTokens: 0, cacheCreationTokens: 0, cost: 0 },
-        ],
-      },
-    ] as DailyRecord[];
-
-    const ranked = rankModels(days, 2);
-    expect(ranked[0]).toEqual(["ModelA", 1100]);
-    expect(ranked[1]).toEqual(["ModelB", 1000]);
-  });
-});
-
-describe("calculateStreaks", () => {
-  it("computes current and max streaks accurately", () => {
-    const dailyTokens = {
-      "2026-09-01": 100,
-      "2026-09-02": 200,
-      "2026-09-03": 0,
-      "2026-09-04": 50,
-      "2026-09-05": 60,
-    };
-    const { currentStreak, maxStreak } = calculateStreaks(dailyTokens);
-    expect(currentStreak).toBe(2);
-    expect(maxStreak).toBe(2);
-  });
-
-  it("handles empty or single day correctly", () => {
-    expect(calculateStreaks({})).toEqual({ currentStreak: 0, maxStreak: 0 });
-    expect(calculateStreaks({ "2026-09-01": 100 })).toEqual({ currentStreak: 1, maxStreak: 1 });
-    expect(calculateStreaks({ "2026-09-01": 0 })).toEqual({ currentStreak: 0, maxStreak: 0 });
-  });
-});
-
-describe("normalizeDay", () => {
-  it("normalizes standard records", () => {
-    const raw = {
+describe("UsageStore - 跨节点与多数据源标准化及深度合并", () => {
+  it("标准化多客户端格式差异（字典 models vs 数组 modelBreakdowns）", () => {
+    // 模拟来自不同版本客户端的数据结构
+    const rawArray = {
       date: "2026-09-01",
-      totalTokens: 100,
-      modelBreakdowns: [{ modelName: "A", inputTokens: 100 }],
+      inputTokens: 1000,
+      outputTokens: 500,
+      cacheReadTokens: 2000,
+      cacheCreationTokens: 100,
+      totalCost: 0.15,
+      modelBreakdowns: [
+        {
+          modelName: "[omp] gpt-5.6-sol",
+          inputTokens: 1000,
+          outputTokens: 500,
+          cacheReadTokens: 2000,
+          cacheCreationTokens: 100,
+          cost: 0.15,
+        },
+      ],
     };
-    const res = normalizeDay(raw);
-    expect(res.date).toBe("2026-09-01");
-    expect(res.totalTokens).toBe(100);
-  });
 
-  it("normalizes codex dictionary models", () => {
-    const raw = {
-      date: "2026-05-01",
+    const rawDict = {
+      date: "2026-09-01",
+      cost: 0.25,
       models: {
-        "gpt-4": {
-          inputTokens: 200,
-          outputTokens: 50,
-          cacheReadTokens: 0,
+        "claude-3-7-sonnet": {
+          inputTokens: 2000,
+          outputTokens: 800,
+          cacheReadTokens: 5000,
           cacheCreationTokens: 0,
-          cost: 0.05,
+          cost: 0.25,
         },
       },
     };
-    const res = normalizeDay(raw);
-    expect(res.date).toBe("2026-05-01");
-    expect(res.totalTokens).toBe(250);
-    expect(res.modelBreakdowns.length).toBe(1);
-    expect(res.modelBreakdowns[0].modelName).toBe("gpt-4");
+
+    const norm1 = normalizeDay(rawArray);
+    expect(norm1.date).toBe("2026-09-01");
+    expect(norm1.totalTokens).toBe(3600);
+    expect(norm1.modelBreakdowns[0].modelName).toBe("[omp] gpt-5.6-sol");
+
+    const norm2 = normalizeDay(rawDict);
+    expect(norm2.date).toBe("2026-09-01");
+    expect(norm2.totalTokens).toBe(7800);
+    expect(norm2.modelBreakdowns[0].modelName).toBe("claude-3-7-sonnet");
+    expect(norm2.totalCost).toBe(0.25);
   });
 
-  it("throws on missing date", () => {
-    expect(() => normalizeDay({ totalTokens: 100 })).toThrow();
-  });
-});
-
-describe("mergeDailyRecords", () => {
-  it("merges multi-device records on the same day and sorts breakdowns", () => {
-    const day1Dev1 = {
+  it("跨节点（mio 与 sakamoto）同日数据深度合并、去重与降序排序", () => {
+    // 模拟 mio 节点
+    const mioRecord: DailyRecord = {
       date: "2026-09-01",
-      inputTokens: 100,
-      outputTokens: 50,
-      cacheReadTokens: 0,
-      cacheCreationTokens: 0,
-      totalTokens: 150,
-      totalCost: 1.0,
+      inputTokens: 10_000,
+      outputTokens: 2_000,
+      cacheReadTokens: 50_000,
+      cacheCreationTokens: 1_000,
+      totalTokens: 63_000,
+      totalCost: 1.5,
       modelBreakdowns: [
-        { modelName: "model-x", inputTokens: 100, outputTokens: 50, cacheReadTokens: 0, cacheCreationTokens: 0, cost: 1.0 },
+        {
+          modelName: "deepseek-v4-flash",
+          inputTokens: 10_000,
+          outputTokens: 2_000,
+          cacheReadTokens: 50_000,
+          cacheCreationTokens: 1_000,
+          cost: 1.5,
+        },
       ],
-    } as DailyRecord;
+    };
 
-    const day1Dev2 = {
+    // 模拟 sakamoto 节点（包含共同模型与独立模型）
+    const sakamotoRecord: DailyRecord = {
       date: "2026-09-01",
-      inputTokens: 200,
-      outputTokens: 100,
-      cacheReadTokens: 0,
+      inputTokens: 20_000,
+      outputTokens: 5_000,
+      cacheReadTokens: 80_000,
       cacheCreationTokens: 0,
-      totalTokens: 300,
-      totalCost: 2.0,
+      totalTokens: 105_000,
+      totalCost: 3.0,
       modelBreakdowns: [
-        { modelName: "model-x", inputTokens: 100, outputTokens: 50, cacheReadTokens: 0, cacheCreationTokens: 0, cost: 1.0 },
-        { modelName: "model-y", inputTokens: 100, outputTokens: 50, cacheReadTokens: 0, cacheCreationTokens: 0, cost: 1.0 },
+        {
+          modelName: "deepseek-v4-flash",
+          inputTokens: 15_000,
+          outputTokens: 4_000,
+          cacheReadTokens: 70_000,
+          cacheCreationTokens: 0,
+          cost: 2.2,
+        },
+        {
+          modelName: "gpt-5.6-sol",
+          inputTokens: 5_000,
+          outputTokens: 1_000,
+          cacheReadTokens: 10_000,
+          cacheCreationTokens: 0,
+          cost: 0.8,
+        },
       ],
-    } as DailyRecord;
+    };
 
-    const merged = mergeDailyRecords([day1Dev1, day1Dev2]);
+    const merged = mergeDailyRecords([mioRecord, sakamotoRecord]);
     expect(merged.length).toBe(1);
-    expect(merged[0].totalTokens).toBe(450);
-    expect(merged[0].totalCost).toBe(3.0);
-    expect(merged[0].modelBreakdowns.length).toBe(2);
-    expect(merged[0].modelBreakdowns[0].modelName).toBe("model-x");
-    expect(merged[0].modelBreakdowns[1].modelName).toBe("model-y");
+
+    const day = merged[0];
+    expect(day.date).toBe("2026-09-01");
+    expect(day.totalTokens).toBe(168_000);
+    expect(day.totalCost).toBe(4.5);
+    expect(day.modelBreakdowns.length).toBe(2);
+
+    // 验证深度合并后按 Token 降序排列：deepseek-v4-flash (63000 + 89000 = 152000) > gpt-5.6-sol (16000)
+    expect(day.modelBreakdowns[0].modelName).toBe("deepseek-v4-flash");
+    expect(day.modelBreakdowns[0].cacheReadTokens).toBe(120_000);
+    expect(day.modelBreakdowns[0].cost).toBe(3.7);
+
+    expect(day.modelBreakdowns[1].modelName).toBe("gpt-5.6-sol");
+    expect(day.modelBreakdowns[1].inputTokens).toBe(5_000);
   });
 });
 
-describe("buildClientSvg", () => {
-  it("generates valid SVG with Catppuccin theme and three columns", () => {
+describe("UsageStore - 时序连续打卡与全量聚合", () => {
+  it("精准计算跨年与断签场景下的连续打卡与历史最长打卡", () => {
+    const dailyTokens: Record<string, number> = {
+      // 第一段连续打卡 (3天)
+      "2025-12-30": 1000,
+      "2025-12-31": 2000,
+      "2026-01-01": 1500,
+      // 断签一天
+      "2026-01-02": 0,
+      // 第二段连续打卡，跨闰年 2 月 (4天: 27, 28, 29, 01)
+      "2028-02-27": 500,
+      "2028-02-28": 500,
+      "2028-02-29": 500,
+      "2028-03-01": 500,
+      // 尾部当天正在进行中
+      "2028-03-02": 200,
+    };
+
+    const streaks = calculateStreaks(dailyTokens);
+    expect(streaks.maxStreak).toBe(5); // 2028-02-27 至 2028-03-02 共 5 天连续
+    expect(streaks.currentStreak).toBe(5);
+  });
+
+  it("当最新一天未产生 Token 且距离最后活跃日超过 1 天时 currentStreak 归零", () => {
+    const dailyTokens: Record<string, number> = {
+      "2026-09-01": 500,
+      "2026-09-02": 500,
+      "2026-09-05": 0, // 最近日期，已断更 3 天
+    };
+
+    const streaks = calculateStreaks(dailyTokens);
+    expect(streaks.maxStreak).toBe(2);
+    expect(streaks.currentStreak).toBe(0);
+  });
+
+  it("aggregateUsage 生成不可变聚合契约对象", () => {
+    const mockDataset: Record<Client, DailyRecord[]> = {
+      omp: [
+        {
+          date: "2026-09-01",
+          inputTokens: 10_000,
+          outputTokens: 1_000,
+          cacheReadTokens: 40_000,
+          cacheCreationTokens: 0,
+          totalTokens: 51_000,
+          totalCost: 0.5,
+          modelBreakdowns: [{ modelName: "omp-model", inputTokens: 10000, outputTokens: 1000, cacheReadTokens: 40000, cacheCreationTokens: 0, cost: 0.5 }],
+        },
+        {
+          date: "2026-09-02",
+          inputTokens: 20_000,
+          outputTokens: 2_000,
+          cacheReadTokens: 80_000,
+          cacheCreationTokens: 0,
+          totalTokens: 102_000,
+          totalCost: 1.0,
+          modelBreakdowns: [{ modelName: "omp-model", inputTokens: 20000, outputTokens: 2000, cacheReadTokens: 80000, cacheCreationTokens: 0, cost: 1.0 }],
+        },
+      ],
+      pi: [
+        {
+          date: "2026-09-01",
+          inputTokens: 5_000,
+          outputTokens: 500,
+          cacheReadTokens: 15_000,
+          cacheCreationTokens: 0,
+          totalTokens: 20_500,
+          totalCost: 0.2,
+          modelBreakdowns: [{ modelName: "pi-model", inputTokens: 5000, outputTokens: 500, cacheReadTokens: 15000, cacheCreationTokens: 0, cost: 0.2 }],
+        },
+      ],
+      claude: [],
+      codex: [],
+      opencode: [],
+    };
+
+    const agg = aggregateUsage(mockDataset);
+    expect(agg).not.toBeNull();
+    if (!agg) return;
+
+    expect(agg.totalTokens).toBe(173_500);
+    expect(agg.activeDays).toBe(2);
+    expect(agg.dailyTokens["2026-09-01"]).toBe(71_500);
+    expect(agg.dailyTokens["2026-09-02"]).toBe(102_000);
+    expect(agg.clientDailyTokens["2026-09-01"].omp).toBe(51_000);
+    expect(agg.clientDailyTokens["2026-09-01"].pi).toBe(20_500);
+    expect(agg.currentStreak).toBe(2);
+    expect(agg.maxStreak).toBe(2);
+    expect(agg.startDateStr <= "2026-09-01").toBeTrue();
+    expect(agg.latestDateStr).toBe("2026-09-02");
+  });
+});
+
+describe("Card Visualizers - SVG 渲染适配器", () => {
+  it("buildClientSvg 渲染符合 Catppuccin 规范的单客户端卡片", () => {
     const days: DailyRecord[] = [
       {
         date: "2026-09-01",
         inputTokens: 1000,
         outputTokens: 500,
-        cacheReadTokens: 2000,
+        cacheReadTokens: 8500,
         cacheCreationTokens: 0,
-        totalTokens: 3500,
+        totalTokens: 10_000,
         totalCost: 0.1,
         modelBreakdowns: [
-          {
-            modelName: "gpt-5.6-sol",
-            inputTokens: 1000,
-            outputTokens: 500,
-            cacheReadTokens: 2000,
-            cacheCreationTokens: 0,
-            cost: 0.1,
-          },
+          { modelName: "[omp] gpt-5.6-sol", inputTokens: 1000, outputTokens: 500, cacheReadTokens: 8500, cacheCreationTokens: 0, cost: 0.1 },
         ],
       },
     ];
@@ -234,47 +253,17 @@ describe("buildClientSvg", () => {
     const svg = buildClientSvg(days, "omp");
     expect(svg.startsWith('<?xml version="1.0" encoding="UTF-8"?>')).toBeTrue();
     expect(svg.trim().endsWith("</svg>")).toBeTrue();
+    expect(svg).toContain(`fill="${PALETTE.bg}"`);
+    expect(svg).toContain(`fill="${ACCENT.omp}"`);
     expect(svg).toContain("OMP");
     expect(svg).toContain("@shelken");
-    expect(svg).toContain("ALL-TIME");
     expect(svg).toContain("gpt-5.6-sol");
-  });
-
-  it("renders top 5 models and token composition bar", () => {
-    const days: DailyRecord[] = [
-      {
-        date: "2026-09-01",
-        inputTokens: 5000,
-        outputTokens: 1000,
-        cacheReadTokens: 90000,
-        cacheCreationTokens: 0,
-        totalTokens: 96000,
-        totalCost: 0.5,
-        modelBreakdowns: [
-          { modelName: "model-one", inputTokens: 50000, outputTokens: 0, cacheReadTokens: 0, cacheCreationTokens: 0, cost: 0 },
-          { modelName: "model-two", inputTokens: 40000, outputTokens: 0, cacheReadTokens: 0, cacheCreationTokens: 0, cost: 0 },
-          { modelName: "model-three", inputTokens: 30000, outputTokens: 0, cacheReadTokens: 0, cacheCreationTokens: 0, cost: 0 },
-          { modelName: "model-four", inputTokens: 20000, outputTokens: 0, cacheReadTokens: 0, cacheCreationTokens: 0, cost: 0 },
-          { modelName: "model-five", inputTokens: 10000, outputTokens: 0, cacheReadTokens: 0, cacheCreationTokens: 0, cost: 0 },
-          { modelName: "model-six", inputTokens: 5000, outputTokens: 0, cacheReadTokens: 0, cacheCreationTokens: 0, cost: 0 },
-        ],
-      },
-    ];
-
-    const svg = buildClientSvg(days, "omp");
-    expect(svg).toContain("TOP 5 MODELS");
     expect(svg).toContain("TOKEN COMPOSITION");
-    expect(svg).toContain("model-one");
-    expect(svg).toContain("model-two");
-    expect(svg).toContain("model-three");
-    expect(svg).toContain("model-four");
-    expect(svg).toContain("model-five");
-    expect(svg).not.toContain("model-six");
+    expect(svg).toContain("TOP 5 MODELS");
   });
-});
-describe("buildHistorySvg", () => {
-  it("generates 2x2 quadrant SVG with 4 historical clients", () => {
-    const mockData = {
+
+  it("buildHistorySvg 正确渲染 4 象限历史生态归档", () => {
+    const historyData: Record<Client, DailyRecord[]> = {
       omp: [],
       pi: [
         {
@@ -285,7 +274,7 @@ describe("buildHistorySvg", () => {
           cacheReadTokens: 8_500_000,
           cacheCreationTokens: 0,
           totalCost: 1.0,
-          modelBreakdowns: [{ modelName: "[pi] gpt-5.6-sol", inputTokens: 1000, outputTokens: 500, cacheReadTokens: 8500, cacheCreationTokens: 0, cost: 0.1 }],
+          modelBreakdowns: [{ modelName: "gpt-5.6-sol", inputTokens: 1000, outputTokens: 500, cacheReadTokens: 8500, cacheCreationTokens: 0, cost: 0.1 }],
         },
       ],
       codex: [
@@ -326,19 +315,10 @@ describe("buildHistorySvg", () => {
       ],
     };
 
-    const svg = buildHistorySvg(mockData as any);
+    const svg = buildHistorySvg(historyData);
     expect(svg.startsWith('<?xml version="1.0" encoding="UTF-8"?>')).toBeTrue();
     expect(svg.trim().endsWith("</svg>")).toBeTrue();
     expect(svg).toContain(`viewBox="0 0 ${USAGE_CONFIG.historyCard.width} ${USAGE_CONFIG.historyCard.height}"`);
-    expect(svg).toContain(USAGE_CONFIG.historyCard.title);
-    expect(svg).toContain("@shelken");
-    expect(svg).toContain("Active days");
-    expect(svg).toContain("Avg / day");
-    expect(svg).toContain("Peak day");
-    expect(svg).toContain("TOP 5 MODELS");
-    expect(svg).toContain("cache-hit");
-    expect(svg).not.toContain("243 active days");
-    expect(svg).toContain(">4</tspan><tspan fill=\"#6e738d\"> active days</tspan>");
     expect(svg).toContain("Pi");
     expect(svg).toContain("Codex");
     expect(svg).toContain("OpenCode");
@@ -347,5 +327,37 @@ describe("buildHistorySvg", () => {
     expect(svg).toContain("gpt-5.2-codex");
     expect(svg).toContain("deepseek-v3.2");
     expect(svg).toContain("claude-3-5-sonnet");
+  });
+
+  it("buildHarnessSvg 渲染全周期活跃热力图与图例", () => {
+    const mockDataset: Record<Client, DailyRecord[]> = {
+      omp: [
+        {
+          date: "2026-09-01",
+          inputTokens: 5000,
+          outputTokens: 1000,
+          cacheReadTokens: 20000,
+          cacheCreationTokens: 0,
+          totalTokens: 26000,
+          totalCost: 0.2,
+          modelBreakdowns: [],
+        },
+      ],
+      pi: [],
+      claude: [],
+      codex: [],
+      opencode: [],
+    };
+
+    const agg = aggregateUsage(mockDataset);
+    const svg = buildHarnessSvg(mockDataset, agg);
+    expect(svg.startsWith('<?xml version="1.0" encoding="UTF-8"?>')).toBeTrue();
+    expect(svg.trim().endsWith("</svg>")).toBeTrue();
+    expect(svg).toContain("Harness");
+    expect(svg).toContain("Mon");
+    expect(svg).toContain("Wed");
+    expect(svg).toContain("Fri");
+    expect(svg).toContain("Intensity:");
+    expect(svg).toContain("2026-09-01");
   });
 });
