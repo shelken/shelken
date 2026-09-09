@@ -5,6 +5,7 @@ set shell := ["bash", "-euo", "pipefail", "-c"]
 
 root := justfile_directory()
 bun := "bun"
+export PATH := root + "/node_modules/.bin:" + env_var("PATH")
 
 # 默认：列出全部 recipe
 default:
