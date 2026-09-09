@@ -1012,10 +1012,10 @@ export function ccusageCmd(client: Client): string[] {
 
     const agentDir = candidateDirs.find((d) => existsSync(d)) || join(home, ".omp", "agent");
     const sessionsDir = join(agentDir, "sessions");
-    return [...base, "pi", "daily", "--pi-path", sessionsDir, "--json"];
+    return [...base, "pi", "daily", "--pi-path", sessionsDir, "--json", "--offline"];
   }
 
-  return [...base, client, "daily", "--json"];
+  return [...base, client, "daily", "--json", "--offline"];
 }
 
 export async function runCcusage(client: Client): Promise<Record<string, unknown>> {
