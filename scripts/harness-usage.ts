@@ -16,6 +16,8 @@ import { renderVibeSnake } from "./vibe-snake";
 
 const __dirname = dirname(fileURLToPath(import.meta.url));
 export const ROOT = resolve(__dirname, "..");
+export const ASSETS_DIR = join(ROOT, "assets");
+export const CARDS_DIR = join(ASSETS_DIR, "usage");
 export const USAGE_DIR = join(ROOT, "usage");
 export const DATA_DIR = join(USAGE_DIR, "data");
 export const README_PATH = join(ROOT, "README.md");
@@ -144,7 +146,7 @@ export function die(msg: string, code = 1): never {
 
 export function ensureDirs(): void {
   mkdirSync(DATA_DIR, { recursive: true });
-  mkdirSync(USAGE_DIR, { recursive: true });
+  mkdirSync(CARDS_DIR, { recursive: true });
 }
 
 export function cleanModelName(name: string): string {
@@ -965,20 +967,20 @@ export function buildHarnessSvg(
 export function patchReadme(rendered: string[] = ["omp", "history"]): void {
   const lines: string[] = [START_MARKER, ""];
 
-  if (existsSync(join(USAGE_DIR, "vibe-snake.svg"))) {
-    const rel = "./usage/vibe-snake.svg";
+  if (existsSync(join(CARDS_DIR, "vibe-snake.svg"))) {
+    const rel = "./assets/usage/vibe-snake.svg";
     lines.push(`<a href="${rel}"><img class="usage-card" width="100%" src="${rel}" alt="Vibe Activity" /></a>`, "");
   }
-  if (existsSync(join(USAGE_DIR, "harness.svg"))) {
-    const rel = "./usage/harness.svg";
+  if (existsSync(join(CARDS_DIR, "harness.svg"))) {
+    const rel = "./assets/usage/harness.svg";
     lines.push(`<a href="${rel}"><img class="usage-card" width="100%" src="${rel}" alt="Harness" /></a>`, "");
   }
-  if (existsSync(join(USAGE_DIR, "omp.svg")) && rendered.includes("omp")) {
-    const rel = "./usage/omp.svg";
+  if (existsSync(join(CARDS_DIR, "omp.svg")) && rendered.includes("omp")) {
+    const rel = "./assets/usage/omp.svg";
     lines.push(`<a href="${rel}"><img class="usage-card" width="100%" src="${rel}" alt="OMP" /></a>`, "");
   }
-  if (existsSync(join(USAGE_DIR, "history.svg")) && rendered.includes("history")) {
-    const rel = "./usage/history.svg";
+  if (existsSync(join(CARDS_DIR, "history.svg")) && rendered.includes("history")) {
+    const rel = "./assets/usage/history.svg";
     lines.push(`<a href="${rel}"><img class="usage-card" width="100%" src="${rel}" alt="History" /></a>`, "");
   }
   lines.push(END_MARKER);
@@ -1094,8 +1096,8 @@ export async function render(): Promise<string[]> {
 
   const harnessSvg = buildHarnessSvg(allClientDays, agg);
   if (harnessSvg) {
-    writeFileSync(join(USAGE_DIR, "harness.svg"), harnessSvg, "utf-8");
-    console.log("✓ usage/harness.svg");
+    writeFileSync(join(CARDS_DIR, "harness.svg"), harnessSvg, "utf-8");
+    console.log("✓ assets/usage/harness.svg");
   }
 
   const rendered: string[] = [];
@@ -1103,17 +1105,17 @@ export async function render(): Promise<string[]> {
   // 主力客户端 (omp)
   const ompDays = allClientDays.omp || [];
   if (ompDays.length > 0) {
-    const outPath = join(USAGE_DIR, "omp.svg");
+    const outPath = join(CARDS_DIR, "omp.svg");
     writeFileSync(outPath, buildClientSvg(ompDays, "omp"), "utf-8");
     rendered.push("omp");
-    console.log(`✓ usage/omp.svg  days=${ompDays.length}  total=${fmtTokens(sumTokens(ompDays))}`);
+    console.log(`✓ assets/usage/omp.svg  days=${ompDays.length}  total=${fmtTokens(sumTokens(ompDays))}`);
   }
 
   // 历史 4 大生态 2×2 归档卡片 (pi, codex, opencode, claude)
   const historySvg = buildHistorySvg(allClientDays);
-  writeFileSync(join(USAGE_DIR, "history.svg"), historySvg, "utf-8");
+  writeFileSync(join(CARDS_DIR, "history.svg"), historySvg, "utf-8");
   rendered.push("history");
-  console.log("✓ usage/history.svg (2×2 历史归档)");
+  console.log("✓ assets/usage/history.svg (2×2 历史归档)");
 
   patchReadme(rendered);
   console.log(`✓ README  cards=${rendered.join(",")}`);
@@ -1226,7 +1228,7 @@ export async function main(): Promise<void> {
       await render();
 
       if (isCommit) {
-        await gitCommit([USAGE_DIR, README_PATH], `chore: update usage cards (${client})`);
+        await gitCommit([CARDS_DIR, README_PATH], `chore: update usage cards (${client})`);
       }
       if (isPush) {
         await gitPush();

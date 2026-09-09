@@ -106,14 +106,23 @@ export function buildHtml(article: string, dark: boolean): string {
       border-bottom-color: #363a4f;
     }
     .markdown-body hr { background-color: #363a4f; height: 1px; border: 0; }
-    /* usage 全宽卡：勿套 badge 高度 */
+    /* usage 全宽卡 */
     .markdown-body img.usage-card,
-    .markdown-body a img[src$=".svg"] {
+    .markdown-body a img[src*="/usage/"],
+    .markdown-body img[src*="/usage/"] {
       display: block;
       width: 100% !important;
       max-width: 100% !important;
       height: auto !important;
       margin: 8px 0 16px;
+    }
+    /* badges 徽章组 */
+    .markdown-body a img[src*="/badges/"],
+    .markdown-body img[src*="/badges/"] {
+      display: block;
+      max-width: 100%;
+      height: auto;
+      margin: 6px 0 12px;
     }
     /* shields badge 横排 */
     .markdown-body p > a > img[src*="shields.io"],

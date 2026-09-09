@@ -12,13 +12,13 @@
 
 <!-- HARNESS-USAGE:START -->
 
-<a href="./usage/vibe-snake.svg"><img class="usage-card" width="100%" src="./usage/vibe-snake.svg" alt="Vibe Activity" /></a>
+<a href="./assets/usage/vibe-snake.svg"><img class="usage-card" width="100%" src="./assets/usage/vibe-snake.svg" alt="Vibe Activity" /></a>
 
-<a href="./usage/harness.svg"><img class="usage-card" width="100%" src="./usage/harness.svg" alt="Harness" /></a>
+<a href="./assets/usage/harness.svg"><img class="usage-card" width="100%" src="./assets/usage/harness.svg" alt="Harness" /></a>
 
-<a href="./usage/omp.svg"><img class="usage-card" width="100%" src="./usage/omp.svg" alt="OMP" /></a>
+<a href="./assets/usage/omp.svg"><img class="usage-card" width="100%" src="./assets/usage/omp.svg" alt="OMP" /></a>
 
-<a href="./usage/history.svg"><img class="usage-card" width="100%" src="./usage/history.svg" alt="History" /></a>
+<a href="./assets/usage/history.svg"><img class="usage-card" width="100%" src="./assets/usage/history.svg" alt="History" /></a>
 
 <!-- HARNESS-USAGE:END -->
 
@@ -56,34 +56,34 @@
 
 **Languages**
 
-<img alt="Languages" src="./usage/badges/languages.svg" />
+<img alt="Languages" src="./assets/badges/languages.svg" />
 
 **Java / backend**
 
-<img alt="Java / backend" src="./usage/badges/java-backend.svg" />
+<img alt="Java / backend" src="./assets/badges/java-backend.svg" />
 
 **Cloud native / GitOps**
 
-<img alt="Cloud native / GitOps" src="./usage/badges/cloud-gitops.svg" />
+<img alt="Cloud native / GitOps" src="./assets/badges/cloud-gitops.svg" />
 
 **IaC / secrets**
 
-<img alt="IaC / secrets" src="./usage/badges/iac-secrets.svg" />
+<img alt="IaC / secrets" src="./assets/badges/iac-secrets.svg" />
 
 **Network / security**
 
-<img alt="Network / security" src="./usage/badges/network-security.svg" />
+<img alt="Network / security" src="./assets/badges/network-security.svg" />
 
 **Observability**
 
-<img alt="Observability" src="./usage/badges/observability.svg" />
+<img alt="Observability" src="./assets/badges/observability.svg" />
 
 **Automation / vision**
 
-<img alt="Automation / vision" src="./usage/badges/automation-vision.svg" />
+<img alt="Automation / vision" src="./assets/badges/automation-vision.svg" />
 
 **macOS / Agent**
 
-<img alt="macOS / Agent" src="./usage/badges/macos-agent.svg" />
+<img alt="macOS / Agent" src="./assets/badges/macos-agent.svg" />
 
 More on [blog.ooooo.space](https://blog.ooooo.space/) · [repositories](https://github.com/shelken?tab=repositories)

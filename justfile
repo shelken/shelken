@@ -34,7 +34,7 @@ export-codex:
 export-opencode:
 	just export-usage opencode
 
-# 渲染 usage/*.svg + 更新 README HARNESS-USAGE 块
+# 渲染 assets/usage/*.svg + 更新 README HARNESS-USAGE 块
 render-usage:
 	{{ bun }} {{ root }}/scripts/harness-usage.ts render
 
@@ -55,7 +55,7 @@ cron-sync:
 render-snake:
 	{{ bun }} {{ root }}/scripts/vibe-snake.ts
 
-# 合成 Tech stack 横向 badge SVG（usage/badges/*.svg）并更新 README
+# 合成 Tech stack 横向 badge SVG（assets/badges/*.svg）并更新 README
 build-badges:
 	{{ bun }} {{ root }}/scripts/build-badges.ts
 
@@ -91,7 +91,7 @@ commit msg:
 
 # 提交用量卡更新
 commit-usage:
-	git -C {{ root }} add usage README.md
+	git -C {{ root }} add assets README.md
 	git -C {{ root }} status -sb
 	git -C {{ root }} diff --staged --quiet && echo "无变更" || \
 		git -C {{ root }} commit -m "chore: update usage cards"

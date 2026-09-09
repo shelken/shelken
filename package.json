@@ -1,5 +1,6 @@
 {
   "dependencies": {
-    "generate-snake-animation": "^3.5.0"
+    "generate-snake-animation": "^3.5.0",
+    "yaml": "^2.9.0"
   }
 }

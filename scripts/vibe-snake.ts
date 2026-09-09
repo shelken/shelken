@@ -11,8 +11,8 @@
  *   bun scripts/vibe-snake.ts [output_file]
  */
 
-import { writeFileSync } from "node:fs";
-import { join, resolve } from "node:path";
+import { mkdirSync, writeFileSync } from "node:fs";
+import { dirname, join, resolve } from "node:path";
 import { generateSnakeAnimation } from "generate-snake-animation";
 import {
   type AggregateUsage,
@@ -24,7 +24,7 @@ import {
 } from "./harness-usage";
 
 const ROOT = resolve(import.meta.dir, "..");
-const OUT_FILE = join(ROOT, "usage", "vibe-snake.svg");
+const OUT_FILE = join(ROOT, "assets", "usage", "vibe-snake.svg");
 
 interface ContributionDay {
   contributionCount: number;
@@ -177,6 +177,7 @@ export async function renderVibeSnake(options?: {
           .replace(origOpen[0], newSvgOpen)
           .replace("</style>", `</style>\n${header}`);
 
+        mkdirSync(dirname(outFile), { recursive: true });
         writeFileSync(outFile, svgWithHeader, "utf-8");
         const rel = outFile.startsWith(ROOT) ? outFile.slice(ROOT.length + 1) : outFile;
         console.log(`✓ ${rel}`);

@@ -1,0 +1,239 @@
+# ==============================================================================
+# Tech Stack Badges Configuration
+# ==============================================================================
+# Catppuccin Macchiato Palette (可用颜色键名):
+#   - pink     (#f5bde6)
+#   - mauve    (#c6a0f6)
+#   - red      (#ed8796)
+#   - peach    (#f5a97f)
+#   - yellow   (#eed49f)
+#   - green    (#a6da95)
+#   - teal     (#8bd5ca)
+#   - sky      (#91d7e3)
+#   - sapphire (#7dc4e4)
+#   - blue     (#8aadf4)
+#   - lavender (#b7bdf8)
+#   - text     (#cad3f5)
+#
+# 配置格式说明:
+#   groups:
+#     - title: 分组标题 (如 "Languages")
+#       slug: 输出文件名 (可选，默认根据 title 自动转 kebab-case，如 "languages")
+#       items:
+#         - name: 显示文字 (空格将自动渲染为 shields badge 间距)
+#           color: Catppuccin 颜色键 (必填，参照上方列表)
+#           logo: SimpleIcons 标识符 (可选，无图标时不填或填 null)
+#         # 也支持紧凑数组简写: [name, color, logo]
+#         # - [Rust, peach, rust]
+# ==============================================================================
+
+groups:
+  - title: Languages
+    slug: languages
+    items:
+      - name: Java
+        color: peach
+        logo: openjdk
+      - name: Python
+        color: yellow
+        logo: python
+      - name: TypeScript
+        color: blue
+        logo: typescript
+      - name: JavaScript
+        color: yellow
+        logo: javascript
+      - name: Bash
+        color: green
+        logo: gnubash
+      - name: Rust
+        color: peach
+        logo: rust
+      - name: Lua
+        color: lavender
+        logo: lua
+      - name: Go
+        color: sapphire
+        logo: go
+
+  - title: Java / backend
+    slug: java-backend
+    items:
+      - name: Spring Boot
+        color: green
+        logo: springboot
+      - name: Spring Cloud
+        color: teal
+        logo: spring
+      - name: MySQL
+        color: sapphire
+        logo: mysql
+      - name: Redis
+        color: red
+        logo: redis
+      - name: RabbitMQ
+        color: peach
+        logo: rabbitmq
+      - name: Elasticsearch
+        color: yellow
+        logo: elasticsearch
+      - name: Nacos
+        color: blue
+      - name: XXL-Job
+        color: mauve
+      - name: DataX
+        color: lavender
+
+  - title: Cloud native / GitOps
+    slug: cloud-gitops
+    items:
+      - name: Docker
+        color: blue
+        logo: docker
+      - name: Kubernetes
+        color: sapphire
+        logo: kubernetes
+      - name: K3s
+        color: sky
+        logo: k3s
+      - name: Flux CD
+        color: lavender
+        logo: flux
+      - name: Helm
+        color: blue
+        logo: helm
+      - name: Cilium
+        color: yellow
+        logo: cilium
+      - name: Longhorn
+        color: mauve
+      - name: VolSync
+        color: sapphire
+      - name: MinIO
+        color: red
+        logo: minio
+      - name: CloudNativePG
+        color: blue
+        logo: postgresql
+      - name: KEDA
+        color: sky
+      - name: GitHub Actions
+        color: lavender
+        logo: githubactions
+
+  - title: IaC / secrets
+    slug: iac-secrets
+    items:
+      - name: Nix
+        color: yellow
+        logo: NixOS
+      - name: NixOS
+        color: yellow
+        logo: NixOS
+      - name: nix-darwin
+        color: peach
+      - name: Home Manager
+        color: blue
+      - name: Ansible
+        color: red
+        logo: ansible
+      - name: SOPS
+        color: mauve
+      - name: External Secrets
+        color: sapphire
+      - name: Azure Key Vault
+        color: blue
+        logo: azurekeyvault
+      - name: age
+        color: peach
+
+  - title: Network / security
+    slug: network-security
+    items:
+      - name: Tailscale
+        color: sky
+        logo: tailscale
+      - name: OpenWrt
+        color: teal
+        logo: openwrt
+      - name: Nginx
+        color: green
+        logo: nginx
+      - name: Caddy
+        color: sapphire
+        logo: caddy
+      - name: CrowdSec
+        color: peach
+      - name: Authelia
+        color: teal
+      - name: Envoy Gateway
+        color: pink
+        logo: envoyproxy
+      - name: External-DNS
+        color: blue
+
+  - title: Observability
+    slug: observability
+    items:
+      - name: Prometheus
+        color: peach
+        logo: prometheus
+      - name: Grafana
+        color: peach
+        logo: grafana
+      - name: Gatus
+        color: green
+      - name: Fluent Bit
+        color: teal
+        logo: fluentbit
+      - name: VictoriaLogs
+        color: mauve
+
+  - title: Automation / vision
+    slug: automation-vision
+    items:
+      - name: Python
+        color: yellow
+        logo: python
+      - name: FastAPI
+        color: teal
+        logo: fastapi
+      - name: pytest
+        color: sky
+        logo: pytest
+      - name: Playwright
+        color: green
+        logo: playwright
+      - name: OpenCV
+        color: blue
+        logo: opencv
+      - name: YOLO
+        color: red
+      - name: ADB
+        color: green
+        logo: android
+
+  - title: macOS / Agent
+    slug: macos-agent
+    items:
+      - name: TypeScript
+        color: blue
+        logo: typescript
+      - name: Bun
+        color: peach
+        logo: bun
+      - name: Pi Agent
+        color: pink
+      - name: macOS
+        color: text
+        logo: apple
+      - name: Rust
+        color: peach
+        logo: rust
+      - name: Neovim
+        color: green
+        logo: neovim
+      - name: Zed
+        color: sapphire
+      - name: mise
+        color: lavender
