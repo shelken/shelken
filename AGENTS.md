@@ -3,6 +3,7 @@
 - `scripts/`: 脚本
 - `docs/`: 文档
 - `justfile`: 常用
+- `config/`: 静态配置 (如技术栈 tech-stack.yaml)
 
 ## 偏好指引
 
