@@ -1,9 +1,9 @@
 {
   "dependencies": {
     "generate-snake-animation": "^3.5.0",
-    "yaml": "^2.9.0"
+    "yaml": "^2.9.1"
   },
   "devDependencies": {
-    "ccusage": "^20.0.20"
+    "ccusage": "^20.0.23"
   }
 }

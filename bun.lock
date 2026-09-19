@@ -13,22 +13,22 @@
     },
   },
   "packages": {
-    "@ccusage/ccusage-darwin-arm64": ["@ccusage/ccusage-darwin-arm64@20.0.20", "", { "os": "darwin", "cpu": "arm64" }, "sha512-TgvU1u9bjgBD+CuQqj55PNAl3LnrW9awCeXDkPS0acntTP72A4gdGjCBZ+LAmR8HECBlvD9lSDqWHhpCX9kZQw=="],
+    "@ccusage/ccusage-darwin-arm64": ["@ccusage/ccusage-darwin-arm64@20.0.23", "", { "os": "darwin", "cpu": "arm64" }, "sha512-nNab2ZG5RfGAIlnNXkbc5qVxIYLazJpwVA2+12ISEG2jso+yQGjUVtxWQc8Ygr0s4HSoXE8Ulvku/tfYN6dlcg=="],
 
-    "@ccusage/ccusage-darwin-x64": ["@ccusage/ccusage-darwin-x64@20.0.20", "", { "os": "darwin", "cpu": "x64" }, "sha512-UkanWl+XRiC7rgTG7eZDy4xqleQOZ3xd8i6RBW77p2OhHheBpGznMkqS7/5rPT2JQ10cnkOKqjxFE09CLAmIrQ=="],
+    "@ccusage/ccusage-darwin-x64": ["@ccusage/ccusage-darwin-x64@20.0.23", "", { "os": "darwin", "cpu": "x64" }, "sha512-R5IA7nCg4Ery4r3gbWN2ALxZsp3waryohhlCNsPXREAiIP0cGwpOzYo4JDsnaxqXb4OY4rRr7NZWTiiPtGop0g=="],
 
-    "@ccusage/ccusage-linux-arm64": ["@ccusage/ccusage-linux-arm64@20.0.20", "", { "os": "linux", "cpu": "arm64" }, "sha512-iiURX4sqr3S7jrDJW6P6F0QtP6lx7lkhqqxBQXzaL/66xjhUkCDHKzRglixPuSBxkNaKGL6RAtKGk/ubFGvdBg=="],
+    "@ccusage/ccusage-linux-arm64": ["@ccusage/ccusage-linux-arm64@20.0.23", "", { "os": "linux", "cpu": "arm64" }, "sha512-w2P2fjvH2uAbEInHTBtqNf+uE80kOwsXJS0jhzlXLDw0TRMA6s7F292tK/Knc24MfIy1gHy/qjaQbZiO875HVg=="],
 
-    "@ccusage/ccusage-linux-x64": ["@ccusage/ccusage-linux-x64@20.0.20", "", { "os": "linux", "cpu": "x64" }, "sha512-qG5LcyerzKJVPu3hTRHYaWo6VtKB9uyGbRdviw4imInIWRQdPcrEAIb22oCO7iWEfAEv5ZYmTjYWJLX+dR5HXg=="],
+    "@ccusage/ccusage-linux-x64": ["@ccusage/ccusage-linux-x64@20.0.23", "", { "os": "linux", "cpu": "x64" }, "sha512-ueWwPu5Me+7MlrtwouwbQvv5Xqk5Qx2OvUsT/izt8Maamc0uc5neBimEOn5bAcw8rOYLuyrCZXtIGqdL8WXxEA=="],
 
-    "@ccusage/ccusage-win32-arm64": ["@ccusage/ccusage-win32-arm64@20.0.20", "", { "os": "win32", "cpu": "arm64" }, "sha512-BUXxVGbZ6WtA8RGqjukzkKFmS2x2cjMTV1kU5weZ4+K/uPHIHJjDIDnSKJtNAllwpwlPKpC+k3UdhkapeVM10w=="],
+    "@ccusage/ccusage-win32-arm64": ["@ccusage/ccusage-win32-arm64@20.0.23", "", { "os": "win32", "cpu": "arm64" }, "sha512-CTpYR4p6qdr/OHXHERYrG/pmJAdjDEOTF0LWurUgWwIXVohBAucIs3H5vFKyrjssqXVcN2Dszu+8rULQNJwB4w=="],
 
-    "@ccusage/ccusage-win32-x64": ["@ccusage/ccusage-win32-x64@20.0.20", "", { "os": "win32", "cpu": "x64" }, "sha512-6R9cdLuRy529ewdkKbwtjx7boCQNFK8KG1F6d5G/pw2ApKRmucWcwjFo/7sNULQtZMyUxhYa40tUnWy9L/yTMA=="],
+    "@ccusage/ccusage-win32-x64": ["@ccusage/ccusage-win32-x64@20.0.23", "", { "os": "win32", "cpu": "x64" }, "sha512-i5aHoXaEF4VsneBgISJfoOrIQqvrvV9r7V9/vS0lstBz5pe8MVb5R5Of215cmNmRRHdReySFtoJCEoXCgX68HA=="],
 
-    "ccusage": ["ccusage@20.0.20", "", { "optionalDependencies": { "@ccusage/ccusage-darwin-arm64": "20.0.20", "@ccusage/ccusage-darwin-x64": "20.0.20", "@ccusage/ccusage-linux-arm64": "20.0.20", "@ccusage/ccusage-linux-x64": "20.0.20", "@ccusage/ccusage-win32-arm64": "20.0.20", "@ccusage/ccusage-win32-x64": "20.0.20" }, "bin": { "ccusage": "./src/cli.js" } }, "sha512-xctCxhwK4Nqo1i3zSa1+JM3wN/oSdPSglzgxIWZyk9KLsLyQQMfntG3NJHoRH3DJHzkvG1EzVwH/xSI2z6VH3Q=="],
+    "ccusage": ["ccusage@20.0.23", "", { "optionalDependencies": { "@ccusage/ccusage-darwin-arm64": "20.0.23", "@ccusage/ccusage-darwin-x64": "20.0.23", "@ccusage/ccusage-linux-arm64": "20.0.23", "@ccusage/ccusage-linux-x64": "20.0.23", "@ccusage/ccusage-win32-arm64": "20.0.23", "@ccusage/ccusage-win32-x64": "20.0.23" }, "bin": { "ccusage": "./src/cli.js" } }, "sha512-hOyGMpcX3alt9yq6xT+3VU8fp2B5eYuaew3kyOZgBxLkkf6Sa/LSDdA8+72uPQeFd6x+bzN5Sbw7lywMuLtZJw=="],
 
     "generate-snake-animation": ["generate-snake-animation@3.5.0", "", { "peerDependencies": { "canvas": "3.2.0", "gif-encoder-2": "1.0.5", "gifsicle": "5.3.0" }, "optionalPeers": ["canvas", "gif-encoder-2", "gifsicle"], "bin": { "generate-snake-animation": "cli.js" } }, "sha512-65fbvqG7hfrJgCI7YA9l80MyWJGpY37dcfjNOB/VPfup3qMlRejKUvCAYXxrIRyzi/3TkfEybBr+iCOAqQyV+Q=="],
 
-    "yaml": ["yaml@2.9.0", "", { "bin": { "yaml": "bin.mjs" } }, "sha512-2AvhNX3mb8zd6Zy7INTtSpl1F15HW6Wnqj0srWlkKLcpYl/gMIMJiyuGq2KeI2YFxUPjdlB+3Lc10seMLtL4cA=="],
+    "yaml": ["yaml@2.9.1", "", { "bin": { "yaml": "bin.mjs" } }, "sha512-3NxN8+78OdzbT7C/WjGsyfPAtJaN3FNDsWxv7Y7mcDsT/oOmgW8BpyQQFFBnvZE3j9Y2Sdz1ULFLezL7Eb2yFw=="],
   }
 }
