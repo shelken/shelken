@@ -1,0 +1,417 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<svg width="846" height="215" viewBox="0 0 846 215" xmlns="http://www.w3.org/2000/svg" role="img" aria-label="Harness">
+  <rect width="845" height="214" x="0.5" y="0.5" rx="6" fill="#181926" stroke="#363a4f" stroke-width="1"/>
+  <text x="30" y="33" fill="#c6a0f6" font-size="16" font-weight="700" font-family="-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,sans-serif">Harness</text>
+  <text x="816" y="32" fill="#b8c0e0" font-size="13" font-weight="600" font-family="-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,sans-serif" text-anchor="end">@shelken</text>
+  <text x="816" y="47" fill="#6e738d" font-size="11" font-weight="400" font-family="-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,sans-serif" text-anchor="end">2025-09-14 · 2026-09-19</text>
+  <text x="30" y="52" font-size="12" font-family="-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,sans-serif">
+    <tspan fill="#cad3f5" font-weight="700">34.4B</tspan><tspan fill="#6e738d"> tokens · </tspan>
+    <tspan fill="#cad3f5" font-weight="700">253</tspan><tspan fill="#6e738d"> active days · </tspan>
+    <tspan fill="#c6a0f6" font-weight="700">93d</tspan><tspan fill="#6e738d"> streak (max 93d)</tspan>
+  </text>
+  <text x="52" y="70" fill="#6e738d" font-size="10" font-weight="500" font-family="-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,sans-serif">Sep</text>
+  <text x="80" y="70" fill="#6e738d" font-size="10" font-weight="500" font-family="-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,sans-serif">Oct</text>
+  <text x="136" y="70" fill="#6e738d" font-size="10" font-weight="500" font-family="-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,sans-serif">Nov</text>
+  <text x="206" y="70" fill="#6e738d" font-size="10" font-weight="500" font-family="-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,sans-serif">Dec</text>
+  <text x="262" y="70" fill="#6e738d" font-size="10" font-weight="500" font-family="-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,sans-serif">Jan</text>
+  <text x="332" y="70" fill="#6e738d" font-size="10" font-weight="500" font-family="-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,sans-serif">Feb</text>
+  <text x="388" y="70" fill="#6e738d" font-size="10" font-weight="500" font-family="-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,sans-serif">Mar</text>
+  <text x="444" y="70" fill="#6e738d" font-size="10" font-weight="500" font-family="-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,sans-serif">Apr</text>
+  <text x="500" y="70" fill="#6e738d" font-size="10" font-weight="500" font-family="-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,sans-serif">May</text>
+  <text x="570" y="70" fill="#6e738d" font-size="10" font-weight="500" font-family="-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,sans-serif">Jun</text>
+  <text x="626" y="70" fill="#6e738d" font-size="10" font-weight="500" font-family="-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,sans-serif">Jul</text>
+  <text x="682" y="70" fill="#6e738d" font-size="10" font-weight="500" font-family="-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,sans-serif">Aug</text>
+  <text x="752" y="70" fill="#6e738d" font-size="10" font-weight="500" font-family="-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,sans-serif">Sep</text>
+  <text x="30" y="99" fill="#6e738d" font-size="10" font-weight="500" font-family="-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,sans-serif">Mon</text>
+  <text x="30" y="127" fill="#6e738d" font-size="10" font-weight="500" font-family="-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,sans-serif">Wed</text>
+  <text x="30" y="155" fill="#6e738d" font-size="10" font-weight="500" font-family="-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,sans-serif">Fri</text>
+  <rect x="52" y="78" width="11" height="11" rx="2" fill="#24273a"><title>2025-09-14: Inactive</title></rect>
+  <rect x="52" y="92" width="11" height="11" rx="2" fill="#24273a"><title>2025-09-15: Inactive</title></rect>
+  <rect x="52" y="106" width="11" height="11" rx="2" fill="#24273a"><title>2025-09-16: Inactive</title></rect>
+  <rect x="52" y="120" width="11" height="11" rx="2" fill="#24273a"><title>2025-09-17: Inactive</title></rect>
+  <rect x="52" y="134" width="11" height="11" rx="2" fill="#24273a"><title>2025-09-18: Inactive</title></rect>
+  <rect x="52" y="148" width="11" height="11" rx="2" fill="#24273a"><title>2025-09-19: Inactive</title></rect>
+  <rect x="52" y="162" width="11" height="11" rx="2" fill="#24273a"><title>2025-09-20: Inactive</title></rect>
+  <rect x="66" y="78" width="11" height="11" rx="2" fill="#24273a"><title>2025-09-21: Inactive</title></rect>
+  <rect x="66" y="92" width="11" height="11" rx="2" fill="#24273a"><title>2025-09-22: Inactive</title></rect>
+  <rect x="66" y="106" width="11" height="11" rx="2" fill="#24273a"><title>2025-09-23: Inactive</title></rect>
+  <rect x="66" y="120" width="11" height="11" rx="2" fill="#24273a"><title>2025-09-24: Inactive</title></rect>
+  <rect x="66" y="134" width="11" height="11" rx="2" fill="#24273a"><title>2025-09-25: Inactive</title></rect>
+  <rect x="66" y="148" width="11" height="11" rx="2" fill="#24273a"><title>2025-09-26: Inactive</title></rect>
+  <rect x="66" y="162" width="11" height="11" rx="2" fill="#24273a"><title>2025-09-27: Inactive</title></rect>
+  <rect x="80" y="78" width="11" height="11" rx="2" fill="#24273a"><title>2025-09-28: Inactive</title></rect>
+  <rect x="80" y="92" width="11" height="11" rx="2" fill="#24273a"><title>2025-09-29: Inactive</title></rect>
+  <rect x="80" y="106" width="11" height="11" rx="2" fill="#24273a"><title>2025-09-30: Inactive</title></rect>
+  <rect x="80" y="120" width="11" height="11" rx="2" fill="#24273a"><title>2025-10-01: Inactive</title></rect>
+  <rect x="80" y="134" width="11" height="11" rx="2" fill="#24273a"><title>2025-10-02: Inactive</title></rect>
+  <rect x="80" y="148" width="11" height="11" rx="2" fill="#24273a"><title>2025-10-03: Inactive</title></rect>
+  <rect x="80" y="162" width="11" height="11" rx="2" fill="#24273a"><title>2025-10-04: Inactive</title></rect>
+  <rect x="94" y="78" width="11" height="11" rx="2" fill="#24273a"><title>2025-10-05: Inactive</title></rect>
+  <rect x="94" y="92" width="11" height="11" rx="2" fill="#24273a"><title>2025-10-06: Inactive</title></rect>
+  <rect x="94" y="106" width="11" height="11" rx="2" fill="#24273a"><title>2025-10-07: Inactive</title></rect>
+  <rect x="94" y="120" width="11" height="11" rx="2" fill="#24273a"><title>2025-10-08: Inactive</title></rect>
+  <rect x="94" y="134" width="11" height="11" rx="2" fill="#24273a"><title>2025-10-09: Inactive</title></rect>
+  <rect x="94" y="148" width="11" height="11" rx="2" fill="#24273a"><title>2025-10-10: Inactive</title></rect>
+  <rect x="94" y="162" width="11" height="11" rx="2" fill="#24273a"><title>2025-10-11: Inactive</title></rect>
+  <rect x="108" y="78" width="11" height="11" rx="2" fill="#24273a"><title>2025-10-12: Inactive</title></rect>
+  <rect x="108" y="92" width="11" height="11" rx="2" fill="#24273a"><title>2025-10-13: Inactive</title></rect>
+  <rect x="108" y="106" width="11" height="11" rx="2" fill="#24273a"><title>2025-10-14: Inactive</title></rect>
+  <rect x="108" y="120" width="11" height="11" rx="2" fill="#24273a"><title>2025-10-15: Inactive</title></rect>
+  <rect x="108" y="134" width="11" height="11" rx="2" fill="#24273a"><title>2025-10-16: Inactive</title></rect>
+  <rect x="108" y="148" width="11" height="11" rx="2" fill="#24273a"><title>2025-10-17: Inactive</title></rect>
+  <rect x="108" y="162" width="11" height="11" rx="2" fill="#24273a"><title>2025-10-18: Inactive</title></rect>
+  <rect x="122" y="78" width="11" height="11" rx="2" fill="#24273a"><title>2025-10-19: Inactive</title></rect>
+  <rect x="122" y="92" width="11" height="11" rx="2" fill="#24273a"><title>2025-10-20: Inactive</title></rect>
+  <rect x="122" y="106" width="11" height="11" rx="2" fill="#24273a"><title>2025-10-21: Inactive</title></rect>
+  <rect x="122" y="120" width="11" height="11" rx="2" fill="#24273a"><title>2025-10-22: Inactive</title></rect>
+  <rect x="122" y="134" width="11" height="11" rx="2" fill="#24273a"><title>2025-10-23: Inactive</title></rect>
+  <rect x="122" y="148" width="11" height="11" rx="2" fill="#24273a"><title>2025-10-24: Inactive</title></rect>
+  <rect x="122" y="162" width="11" height="11" rx="2" fill="#24273a"><title>2025-10-25: Inactive</title></rect>
+  <rect x="136" y="78" width="11" height="11" rx="2" fill="#24273a"><title>2025-10-26: Inactive</title></rect>
+  <rect x="136" y="92" width="11" height="11" rx="2" fill="#24273a"><title>2025-10-27: Inactive</title></rect>
+  <rect x="136" y="106" width="11" height="11" rx="2" fill="#24273a"><title>2025-10-28: Inactive</title></rect>
+  <rect x="136" y="120" width="11" height="11" rx="2" fill="#24273a"><title>2025-10-29: Inactive</title></rect>
+  <rect x="136" y="134" width="11" height="11" rx="2" fill="#24273a"><title>2025-10-30: Inactive</title></rect>
+  <rect x="136" y="148" width="11" height="11" rx="2" fill="#24273a"><title>2025-10-31: Inactive</title></rect>
+  <rect x="136" y="162" width="11" height="11" rx="2" fill="#24273a"><title>2025-11-01: Inactive</title></rect>
+  <rect x="150" y="78" width="11" height="11" rx="2" fill="#24273a"><title>2025-11-02: Inactive</title></rect>
+  <rect x="150" y="92" width="11" height="11" rx="2" fill="#24273a"><title>2025-11-03: Inactive</title></rect>
+  <rect x="150" y="106" width="11" height="11" rx="2" fill="#24273a"><title>2025-11-04: Inactive</title></rect>
+  <rect x="150" y="120" width="11" height="11" rx="2" fill="#24273a"><title>2025-11-05: Inactive</title></rect>
+  <rect x="150" y="134" width="11" height="11" rx="2" fill="#24273a"><title>2025-11-06: Inactive</title></rect>
+  <rect x="150" y="148" width="11" height="11" rx="2" fill="#24273a"><title>2025-11-07: Inactive</title></rect>
+  <rect x="150" y="162" width="11" height="11" rx="2" fill="#24273a"><title>2025-11-08: Inactive</title></rect>
+  <rect x="164" y="78" width="11" height="11" rx="2" fill="#24273a"><title>2025-11-09: Inactive</title></rect>
+  <rect x="164" y="92" width="11" height="11" rx="2" fill="#24273a"><title>2025-11-10: Inactive</title></rect>
+  <rect x="164" y="106" width="11" height="11" rx="2" fill="#24273a"><title>2025-11-11: Inactive</title></rect>
+  <rect x="164" y="120" width="11" height="11" rx="2" fill="#24273a"><title>2025-11-12: Inactive</title></rect>
+  <rect x="164" y="134" width="11" height="11" rx="2" fill="#24273a"><title>2025-11-13: Inactive</title></rect>
+  <rect x="164" y="148" width="11" height="11" rx="2" fill="#24273a"><title>2025-11-14: Inactive</title></rect>
+  <rect x="164" y="162" width="11" height="11" rx="2" fill="#24273a"><title>2025-11-15: Inactive</title></rect>
+  <rect x="178" y="78" width="11" height="11" rx="2" fill="#24273a"><title>2025-11-16: Inactive</title></rect>
+  <rect x="178" y="92" width="11" height="11" rx="2" fill="#24273a"><title>2025-11-17: Inactive</title></rect>
+  <rect x="178" y="106" width="11" height="11" rx="2" fill="#24273a"><title>2025-11-18: Inactive</title></rect>
+  <rect x="178" y="120" width="11" height="11" rx="2" fill="#24273a"><title>2025-11-19: Inactive</title></rect>
+  <rect x="178" y="134" width="11" height="11" rx="2" fill="#24273a"><title>2025-11-20: Inactive</title></rect>
+  <rect x="178" y="148" width="11" height="11" rx="2" fill="#24273a"><title>2025-11-21: Inactive</title></rect>
+  <rect x="178" y="162" width="11" height="11" rx="2" fill="#24273a"><title>2025-11-22: Inactive</title></rect>
+  <rect x="192" y="78" width="11" height="11" rx="2" fill="#24273a"><title>2025-11-23: Inactive</title></rect>
+  <rect x="192" y="92" width="11" height="11" rx="2" fill="#24273a"><title>2025-11-24: Inactive</title></rect>
+  <rect x="192" y="106" width="11" height="11" rx="2" fill="#24273a"><title>2025-11-25: Inactive</title></rect>
+  <rect x="192" y="120" width="11" height="11" rx="2" fill="#24273a"><title>2025-11-26: Inactive</title></rect>
+  <rect x="192" y="134" width="11" height="11" rx="2" fill="#24273a"><title>2025-11-27: Inactive</title></rect>
+  <rect x="192" y="148" width="11" height="11" rx="2" fill="#24273a"><title>2025-11-28: Inactive</title></rect>
+  <rect x="192" y="162" width="11" height="11" rx="2" fill="#24273a"><title>2025-11-29: Inactive</title></rect>
+  <rect x="206" y="78" width="11" height="11" rx="2" fill="#24273a"><title>2025-11-30: Inactive</title></rect>
+  <rect x="206" y="92" width="11" height="11" rx="2" fill="#24273a"><title>2025-12-01: Inactive</title></rect>
+  <rect x="206" y="106" width="11" height="11" rx="2" fill="#24273a"><title>2025-12-02: Inactive</title></rect>
+  <rect x="206" y="120" width="11" height="11" rx="2" fill="#24273a"><title>2025-12-03: Inactive</title></rect>
+  <rect x="206" y="134" width="11" height="11" rx="2" fill="#24273a"><title>2025-12-04: Inactive</title></rect>
+  <rect x="206" y="148" width="11" height="11" rx="2" fill="#24273a"><title>2025-12-05: Inactive</title></rect>
+  <rect x="206" y="162" width="11" height="11" rx="2" fill="#24273a"><title>2025-12-06: Inactive</title></rect>
+  <rect x="220" y="78" width="11" height="11" rx="2" fill="#24273a"><title>2025-12-07: Inactive</title></rect>
+  <rect x="220" y="92" width="11" height="11" rx="2" fill="#24273a"><title>2025-12-08: Inactive</title></rect>
+  <rect x="220" y="106" width="11" height="11" rx="2" fill="#24273a"><title>2025-12-09: Inactive</title></rect>
+  <rect x="220" y="120" width="11" height="11" rx="2" fill="#24273a"><title>2025-12-10: Inactive</title></rect>
+  <rect x="220" y="134" width="11" height="11" rx="2" fill="#24273a"><title>2025-12-11: Inactive</title></rect>
+  <rect x="220" y="148" width="11" height="11" rx="2" fill="#24273a"><title>2025-12-12: Inactive</title></rect>
+  <rect x="220" y="162" width="11" height="11" rx="2" fill="#24273a"><title>2025-12-13: Inactive</title></rect>
+  <rect x="234" y="78" width="11" height="11" rx="2" fill="#24273a"><title>2025-12-14: Inactive</title></rect>
+  <rect x="234" y="92" width="11" height="11" rx="2" fill="#24273a"><title>2025-12-15: Inactive</title></rect>
+  <rect x="234" y="106" width="11" height="11" rx="2" fill="#24273a"><title>2025-12-16: Inactive</title></rect>
+  <rect x="234" y="120" width="11" height="11" rx="2" fill="#24273a"><title>2025-12-17: Inactive</title></rect>
+  <rect x="234" y="134" width="11" height="11" rx="2" fill="#24273a"><title>2025-12-18: Inactive</title></rect>
+  <rect x="234" y="148" width="11" height="11" rx="2" fill="#24273a"><title>2025-12-19: Inactive</title></rect>
+  <rect x="234" y="162" width="11" height="11" rx="2" fill="#24273a"><title>2025-12-20: Inactive</title></rect>
+  <rect x="248" y="78" width="11" height="11" rx="2" fill="#24273a"><title>2025-12-21: Inactive</title></rect>
+  <rect x="248" y="92" width="11" height="11" rx="2" fill="#24273a"><title>2025-12-22: Inactive</title></rect>
+  <rect x="248" y="106" width="11" height="11" rx="2" fill="#8bd5ca" fill-opacity="0.35"><title>2025-12-23: Light (&lt; 0.5× avg) · OpenCode</title></rect>
+  <rect x="248" y="120" width="11" height="11" rx="2" fill="#8bd5ca" fill-opacity="0.35"><title>2025-12-24: Light (&lt; 0.5× avg) · OpenCode</title></rect>
+  <rect x="248" y="134" width="11" height="11" rx="2" fill="#24273a"><title>2025-12-25: Inactive</title></rect>
+  <rect x="248" y="148" width="11" height="11" rx="2" fill="#24273a"><title>2025-12-26: Inactive</title></rect>
+  <rect x="248" y="162" width="11" height="11" rx="2" fill="#24273a"><title>2025-12-27: Inactive</title></rect>
+  <rect x="262" y="78" width="11" height="11" rx="2" fill="#24273a"><title>2025-12-28: Inactive</title></rect>
+  <rect x="262" y="92" width="11" height="11" rx="2" fill="#24273a"><title>2025-12-29: Inactive</title></rect>
+  <rect x="262" y="106" width="11" height="11" rx="2" fill="#8bd5ca" fill-opacity="0.35"><title>2025-12-30: Light (&lt; 0.5× avg) · OpenCode</title></rect>
+  <rect x="262" y="120" width="11" height="11" rx="2" fill="#24273a"><title>2025-12-31: Inactive</title></rect>
+  <rect x="262" y="134" width="11" height="11" rx="2" fill="#24273a"><title>2026-01-01: Inactive</title></rect>
+  <rect x="262" y="148" width="11" height="11" rx="2" fill="#24273a"><title>2026-01-02: Inactive</title></rect>
+  <rect x="262" y="162" width="11" height="11" rx="2" fill="#8bd5ca" fill-opacity="0.35"><title>2026-01-03: Light (&lt; 0.5× avg) · OpenCode</title></rect>
+  <rect x="276" y="78" width="11" height="11" rx="2" fill="#8bd5ca" fill-opacity="0.35"><title>2026-01-04: Light (&lt; 0.5× avg) · OpenCode</title></rect>
+  <rect x="276" y="92" width="11" height="11" rx="2" fill="#24273a"><title>2026-01-05: Inactive</title></rect>
+  <rect x="276" y="106" width="11" height="11" rx="2" fill="#8bd5ca" fill-opacity="0.35"><title>2026-01-06: Light (&lt; 0.5× avg) · OpenCode</title></rect>
+  <rect x="276" y="120" width="11" height="11" rx="2" fill="#24273a"><title>2026-01-07: Inactive</title></rect>
+  <rect x="276" y="134" width="11" height="11" rx="2" fill="#8aadf4" fill-opacity="0.35"><title>2026-01-08: Light (&lt; 0.5× avg) · Codex</title></rect>
+  <rect x="276" y="148" width="11" height="11" rx="2" fill="#f5a97f" fill-opacity="0.35"><title>2026-01-09: Light (&lt; 0.5× avg) · Claude Code</title></rect>
+  <rect x="276" y="162" width="11" height="11" rx="2" fill="#8bd5ca" fill-opacity="0.35"><title>2026-01-10: Light (&lt; 0.5× avg) · OpenCode</title></rect>
+  <rect x="290" y="78" width="11" height="11" rx="2" fill="#8bd5ca" fill-opacity="0.35"><title>2026-01-11: Light (&lt; 0.5× avg) · OpenCode</title></rect>
+  <rect x="290" y="92" width="11" height="11" rx="2" fill="#f5a97f" fill-opacity="0.35"><title>2026-01-12: Light (&lt; 0.5× avg) · Claude Code</title></rect>
+  <rect x="290" y="106" width="11" height="11" rx="2" fill="#f5a97f" fill-opacity="0.35"><title>2026-01-13: Light (&lt; 0.5× avg) · Claude Code</title></rect>
+  <rect x="290" y="120" width="11" height="11" rx="2" fill="#f5a97f" fill-opacity="0.35"><title>2026-01-14: Light (&lt; 0.5× avg) · Claude Code</title></rect>
+  <rect x="290" y="134" width="11" height="11" rx="2" fill="#f5a97f" fill-opacity="0.35"><title>2026-01-15: Light (&lt; 0.5× avg) · Claude Code</title></rect>
+  <rect x="290" y="148" width="11" height="11" rx="2" fill="#f5a97f" fill-opacity="0.35"><title>2026-01-16: Light (&lt; 0.5× avg) · Claude Code</title></rect>
+  <rect x="290" y="162" width="11" height="11" rx="2" fill="#8bd5ca" fill-opacity="0.6"><title>2026-01-17: Moderate (~1× avg) · OpenCode</title></rect>
+  <rect x="304" y="78" width="11" height="11" rx="2" fill="#8bd5ca" fill-opacity="0.6"><title>2026-01-18: Moderate (~1× avg) · OpenCode</title></rect>
+  <rect x="304" y="92" width="11" height="11" rx="2" fill="#8bd5ca" fill-opacity="0.6"><title>2026-01-19: Moderate (~1× avg) · OpenCode</title></rect>
+  <rect x="304" y="106" width="11" height="11" rx="2" fill="#8bd5ca" fill-opacity="0.35"><title>2026-01-20: Light (&lt; 0.5× avg) · OpenCode</title></rect>
+  <rect x="304" y="120" width="11" height="11" rx="2" fill="#8bd5ca" fill-opacity="0.35"><title>2026-01-21: Light (&lt; 0.5× avg) · OpenCode</title></rect>
+  <rect x="304" y="134" width="11" height="11" rx="2" fill="#f5a97f" fill-opacity="0.35"><title>2026-01-22: Light (&lt; 0.5× avg) · Claude Code</title></rect>
+  <rect x="304" y="148" width="11" height="11" rx="2" fill="#8bd5ca" fill-opacity="0.6"><title>2026-01-23: Moderate (~1× avg) · OpenCode</title></rect>
+  <rect x="304" y="162" width="11" height="11" rx="2" fill="#f5a97f" fill-opacity="0.35"><title>2026-01-24: Light (&lt; 0.5× avg) · Claude Code</title></rect>
+  <rect x="318" y="78" width="11" height="11" rx="2" fill="#f5a97f" fill-opacity="0.35"><title>2026-01-25: Light (&lt; 0.5× avg) · Claude Code</title></rect>
+  <rect x="318" y="92" width="11" height="11" rx="2" fill="#f5a97f" fill-opacity="0.35"><title>2026-01-26: Light (&lt; 0.5× avg) · Claude Code</title></rect>
+  <rect x="318" y="106" width="11" height="11" rx="2" fill="#f5a97f" fill-opacity="0.35"><title>2026-01-27: Light (&lt; 0.5× avg) · Claude Code</title></rect>
+  <rect x="318" y="120" width="11" height="11" rx="2" fill="#8bd5ca" fill-opacity="0.35"><title>2026-01-28: Light (&lt; 0.5× avg) · OpenCode</title></rect>
+  <rect x="318" y="134" width="11" height="11" rx="2" fill="#8bd5ca" fill-opacity="0.35"><title>2026-01-29: Light (&lt; 0.5× avg) · OpenCode</title></rect>
+  <rect x="318" y="148" width="11" height="11" rx="2" fill="#8bd5ca" fill-opacity="0.6"><title>2026-01-30: Moderate (~1× avg) · OpenCode</title></rect>
+  <rect x="318" y="162" width="11" height="11" rx="2" fill="#8bd5ca" fill-opacity="0.6"><title>2026-01-31: Moderate (~1× avg) · OpenCode</title></rect>
+  <rect x="332" y="78" width="11" height="11" rx="2" fill="#8bd5ca" fill-opacity="0.35"><title>2026-02-01: Light (&lt; 0.5× avg) · OpenCode</title></rect>
+  <rect x="332" y="92" width="11" height="11" rx="2" fill="#8bd5ca" fill-opacity="0.6"><title>2026-02-02: Moderate (~1× avg) · OpenCode</title></rect>
+  <rect x="332" y="106" width="11" height="11" rx="2" fill="#8bd5ca" fill-opacity="0.6"><title>2026-02-03: Moderate (~1× avg) · OpenCode</title></rect>
+  <rect x="332" y="120" width="11" height="11" rx="2" fill="#8bd5ca" fill-opacity="0.6"><title>2026-02-04: Moderate (~1× avg) · OpenCode</title></rect>
+  <rect x="332" y="134" width="11" height="11" rx="2" fill="#8bd5ca" fill-opacity="0.85"><title>2026-02-05: Elevated (~1.5× avg) · OpenCode</title></rect>
+  <rect x="332" y="148" width="11" height="11" rx="2" fill="#8bd5ca" fill-opacity="0.6"><title>2026-02-06: Moderate (~1× avg) · OpenCode</title></rect>
+  <rect x="332" y="162" width="11" height="11" rx="2" fill="#8bd5ca" fill-opacity="0.85"><title>2026-02-07: Elevated (~1.5× avg) · OpenCode</title></rect>
+  <rect x="346" y="78" width="11" height="11" rx="2" fill="#8bd5ca" fill-opacity="0.35"><title>2026-02-08: Light (&lt; 0.5× avg) · OpenCode</title></rect>
+  <rect x="346" y="92" width="11" height="11" rx="2" fill="#8bd5ca" fill-opacity="0.35"><title>2026-02-09: Light (&lt; 0.5× avg) · OpenCode</title></rect>
+  <rect x="346" y="106" width="11" height="11" rx="2" fill="#8bd5ca" fill-opacity="0.85"><title>2026-02-10: Elevated (~1.5× avg) · OpenCode</title></rect>
+  <rect x="346" y="120" width="11" height="11" rx="2" fill="#8bd5ca" fill-opacity="0.85"><title>2026-02-11: Elevated (~1.5× avg) · OpenCode</title></rect>
+  <rect x="346" y="134" width="11" height="11" rx="2" fill="#8bd5ca" fill-opacity="0.85"><title>2026-02-12: Elevated (~1.5× avg) · OpenCode</title></rect>
+  <rect x="346" y="148" width="11" height="11" rx="2" fill="#8bd5ca" fill-opacity="0.35"><title>2026-02-13: Light (&lt; 0.5× avg) · OpenCode</title></rect>
+  <rect x="346" y="162" width="11" height="11" rx="2" fill="#8bd5ca" fill-opacity="0.6"><title>2026-02-14: Moderate (~1× avg) · OpenCode</title></rect>
+  <rect x="360" y="78" width="11" height="11" rx="2" fill="#8bd5ca" fill-opacity="0.6"><title>2026-02-15: Moderate (~1× avg) · OpenCode</title></rect>
+  <rect x="360" y="92" width="11" height="11" rx="2" fill="#8bd5ca" fill-opacity="0.35"><title>2026-02-16: Light (&lt; 0.5× avg) · OpenCode</title></rect>
+  <rect x="360" y="106" width="11" height="11" rx="2" fill="#8bd5ca" fill-opacity="0.85"><title>2026-02-17: Elevated (~1.5× avg) · OpenCode</title></rect>
+  <rect x="360" y="120" width="11" height="11" rx="2" fill="#8bd5ca" fill-opacity="0.35"><title>2026-02-18: Light (&lt; 0.5× avg) · OpenCode</title></rect>
+  <rect x="360" y="134" width="11" height="11" rx="2" fill="#8bd5ca" fill-opacity="0.35"><title>2026-02-19: Light (&lt; 0.5× avg) · OpenCode</title></rect>
+  <rect x="360" y="148" width="11" height="11" rx="2" fill="#8bd5ca" fill-opacity="0.35"><title>2026-02-20: Light (&lt; 0.5× avg) · OpenCode</title></rect>
+  <rect x="360" y="162" width="11" height="11" rx="2" fill="#8bd5ca" fill-opacity="0.85"><title>2026-02-21: Elevated (~1.5× avg) · OpenCode</title></rect>
+  <rect x="374" y="78" width="11" height="11" rx="2" fill="#8bd5ca" fill-opacity="0.35"><title>2026-02-22: Light (&lt; 0.5× avg) · OpenCode</title></rect>
+  <rect x="374" y="92" width="11" height="11" rx="2" fill="#8bd5ca" fill-opacity="0.6"><title>2026-02-23: Moderate (~1× avg) · OpenCode</title></rect>
+  <rect x="374" y="106" width="11" height="11" rx="2" fill="#8bd5ca" fill-opacity="0.35"><title>2026-02-24: Light (&lt; 0.5× avg) · OpenCode</title></rect>
+  <rect x="374" y="120" width="11" height="11" rx="2" fill="#8bd5ca" fill-opacity="0.85"><title>2026-02-25: Elevated (~1.5× avg) · OpenCode</title></rect>
+  <rect x="374" y="134" width="11" height="11" rx="2" fill="#8bd5ca" fill-opacity="0.35"><title>2026-02-26: Light (&lt; 0.5× avg) · OpenCode</title></rect>
+  <rect x="374" y="148" width="11" height="11" rx="2" fill="#8bd5ca" fill-opacity="0.35"><title>2026-02-27: Light (&lt; 0.5× avg) · OpenCode</title></rect>
+  <rect x="374" y="162" width="11" height="11" rx="2" fill="#8bd5ca" fill-opacity="0.85"><title>2026-02-28: Elevated (~1.5× avg) · OpenCode</title></rect>
+  <rect x="388" y="78" width="11" height="11" rx="2" fill="#8bd5ca" fill-opacity="0.85"><title>2026-03-01: Elevated (~1.5× avg) · OpenCode</title></rect>
+  <rect x="388" y="92" width="11" height="11" rx="2" fill="#8aadf4" fill-opacity="0.35"><title>2026-03-02: Light (&lt; 0.5× avg) · Codex</title></rect>
+  <rect x="388" y="106" width="11" height="11" rx="2" fill="#8bd5ca" fill-opacity="0.35"><title>2026-03-03: Light (&lt; 0.5× avg) · OpenCode</title></rect>
+  <rect x="388" y="120" width="11" height="11" rx="2" fill="#8bd5ca" fill-opacity="0.35"><title>2026-03-04: Light (&lt; 0.5× avg) · OpenCode</title></rect>
+  <rect x="388" y="134" width="11" height="11" rx="2" fill="#24273a"><title>2026-03-05: Inactive</title></rect>
+  <rect x="388" y="148" width="11" height="11" rx="2" fill="#8bd5ca" fill-opacity="0.35"><title>2026-03-06: Light (&lt; 0.5× avg) · OpenCode</title></rect>
+  <rect x="388" y="162" width="11" height="11" rx="2" fill="#8bd5ca" fill-opacity="0.85"><title>2026-03-07: Elevated (~1.5× avg) · OpenCode</title></rect>
+  <rect x="402" y="78" width="11" height="11" rx="2" fill="#8aadf4" fill-opacity="0.6"><title>2026-03-08: Moderate (~1× avg) · Codex</title></rect>
+  <rect x="402" y="92" width="11" height="11" rx="2" fill="#24273a"><title>2026-03-09: Inactive</title></rect>
+  <rect x="402" y="106" width="11" height="11" rx="2" fill="#8aadf4" fill-opacity="0.6"><title>2026-03-10: Moderate (~1× avg) · Codex</title></rect>
+  <rect x="402" y="120" width="11" height="11" rx="2" fill="#8aadf4" fill-opacity="0.6"><title>2026-03-11: Moderate (~1× avg) · Codex</title></rect>
+  <rect x="402" y="134" width="11" height="11" rx="2" fill="#8aadf4" fill-opacity="0.6"><title>2026-03-12: Moderate (~1× avg) · Codex</title></rect>
+  <rect x="402" y="148" width="11" height="11" rx="2" fill="#8aadf4" fill-opacity="0.35"><title>2026-03-13: Light (&lt; 0.5× avg) · Codex</title></rect>
+  <rect x="402" y="162" width="11" height="11" rx="2" fill="#8aadf4" fill-opacity="0.35"><title>2026-03-14: Light (&lt; 0.5× avg) · Codex</title></rect>
+  <rect x="416" y="78" width="11" height="11" rx="2" fill="#8aadf4" fill-opacity="0.6"><title>2026-03-15: Moderate (~1× avg) · Codex</title></rect>
+  <rect x="416" y="92" width="11" height="11" rx="2" fill="#8bd5ca" fill-opacity="0.85"><title>2026-03-16: Elevated (~1.5× avg) · OpenCode</title></rect>
+  <rect x="416" y="106" width="11" height="11" rx="2" fill="#8bd5ca" fill-opacity="0.6"><title>2026-03-17: Moderate (~1× avg) · OpenCode</title></rect>
+  <rect x="416" y="120" width="11" height="11" rx="2" fill="#8aadf4" fill-opacity="1"><title>2026-03-18: Peak (&gt; 2× avg) · Codex</title></rect>
+  <rect x="416" y="134" width="11" height="11" rx="2" fill="#8aadf4" fill-opacity="0.35"><title>2026-03-19: Light (&lt; 0.5× avg) · Codex</title></rect>
+  <rect x="416" y="148" width="11" height="11" rx="2" fill="#8aadf4" fill-opacity="0.6"><title>2026-03-20: Moderate (~1× avg) · Codex</title></rect>
+  <rect x="416" y="162" width="11" height="11" rx="2" fill="#24273a"><title>2026-03-21: Inactive</title></rect>
+  <rect x="430" y="78" width="11" height="11" rx="2" fill="#8bd5ca" fill-opacity="0.6"><title>2026-03-22: Moderate (~1× avg) · OpenCode</title></rect>
+  <rect x="430" y="92" width="11" height="11" rx="2" fill="#f5a97f" fill-opacity="0.6"><title>2026-03-23: Moderate (~1× avg) · Claude Code</title></rect>
+  <rect x="430" y="106" width="11" height="11" rx="2" fill="#8aadf4" fill-opacity="0.6"><title>2026-03-24: Moderate (~1× avg) · Codex</title></rect>
+  <rect x="430" y="120" width="11" height="11" rx="2" fill="#8aadf4" fill-opacity="1"><title>2026-03-25: Peak (&gt; 2× avg) · Codex</title></rect>
+  <rect x="430" y="134" width="11" height="11" rx="2" fill="#8aadf4" fill-opacity="0.85"><title>2026-03-26: Elevated (~1.5× avg) · Codex</title></rect>
+  <rect x="430" y="148" width="11" height="11" rx="2" fill="#8aadf4" fill-opacity="0.35"><title>2026-03-27: Light (&lt; 0.5× avg) · Codex</title></rect>
+  <rect x="430" y="162" width="11" height="11" rx="2" fill="#8aadf4" fill-opacity="0.35"><title>2026-03-28: Light (&lt; 0.5× avg) · Codex</title></rect>
+  <rect x="444" y="78" width="11" height="11" rx="2" fill="#8aadf4" fill-opacity="0.35"><title>2026-03-29: Light (&lt; 0.5× avg) · Codex</title></rect>
+  <rect x="444" y="92" width="11" height="11" rx="2" fill="#8aadf4" fill-opacity="0.35"><title>2026-03-30: Light (&lt; 0.5× avg) · Codex</title></rect>
+  <rect x="444" y="106" width="11" height="11" rx="2" fill="#8aadf4" fill-opacity="0.35"><title>2026-03-31: Light (&lt; 0.5× avg) · Codex</title></rect>
+  <rect x="444" y="120" width="11" height="11" rx="2" fill="#8aadf4" fill-opacity="0.6"><title>2026-04-01: Moderate (~1× avg) · Codex</title></rect>
+  <rect x="444" y="134" width="11" height="11" rx="2" fill="#8aadf4" fill-opacity="0.6"><title>2026-04-02: Moderate (~1× avg) · Codex</title></rect>
+  <rect x="444" y="148" width="11" height="11" rx="2" fill="#8aadf4" fill-opacity="0.35"><title>2026-04-03: Light (&lt; 0.5× avg) · Codex</title></rect>
+  <rect x="444" y="162" width="11" height="11" rx="2" fill="#8aadf4" fill-opacity="0.35"><title>2026-04-04: Light (&lt; 0.5× avg) · Codex</title></rect>
+  <rect x="458" y="78" width="11" height="11" rx="2" fill="#8aadf4" fill-opacity="0.35"><title>2026-04-05: Light (&lt; 0.5× avg) · Codex</title></rect>
+  <rect x="458" y="92" width="11" height="11" rx="2" fill="#8aadf4" fill-opacity="0.6"><title>2026-04-06: Moderate (~1× avg) · Codex</title></rect>
+  <rect x="458" y="106" width="11" height="11" rx="2" fill="#8aadf4" fill-opacity="0.35"><title>2026-04-07: Light (&lt; 0.5× avg) · Codex</title></rect>
+  <rect x="458" y="120" width="11" height="11" rx="2" fill="#8bd5ca" fill-opacity="0.35"><title>2026-04-08: Light (&lt; 0.5× avg) · OpenCode</title></rect>
+  <rect x="458" y="134" width="11" height="11" rx="2" fill="#8bd5ca" fill-opacity="0.35"><title>2026-04-09: Light (&lt; 0.5× avg) · OpenCode</title></rect>
+  <rect x="458" y="148" width="11" height="11" rx="2" fill="#8aadf4" fill-opacity="0.85"><title>2026-04-10: Elevated (~1.5× avg) · Codex</title></rect>
+  <rect x="458" y="162" width="11" height="11" rx="2" fill="#8aadf4" fill-opacity="1"><title>2026-04-11: Peak (&gt; 2× avg) · Codex</title></rect>
+  <rect x="472" y="78" width="11" height="11" rx="2" fill="#8aadf4" fill-opacity="0.35"><title>2026-04-12: Light (&lt; 0.5× avg) · Codex</title></rect>
+  <rect x="472" y="92" width="11" height="11" rx="2" fill="#8aadf4" fill-opacity="0.85"><title>2026-04-13: Elevated (~1.5× avg) · Codex</title></rect>
+  <rect x="472" y="106" width="11" height="11" rx="2" fill="#8aadf4" fill-opacity="0.85"><title>2026-04-14: Elevated (~1.5× avg) · Codex</title></rect>
+  <rect x="472" y="120" width="11" height="11" rx="2" fill="#8bd5ca" fill-opacity="0.6"><title>2026-04-15: Moderate (~1× avg) · OpenCode</title></rect>
+  <rect x="472" y="134" width="11" height="11" rx="2" fill="#f5bde6" fill-opacity="0.6"><title>2026-04-16: Moderate (~1× avg) · Pi</title></rect>
+  <rect x="472" y="148" width="11" height="11" rx="2" fill="#f5bde6" fill-opacity="0.85"><title>2026-04-17: Elevated (~1.5× avg) · Pi</title></rect>
+  <rect x="472" y="162" width="11" height="11" rx="2" fill="#f5bde6" fill-opacity="0.6"><title>2026-04-18: Moderate (~1× avg) · Pi</title></rect>
+  <rect x="486" y="78" width="11" height="11" rx="2" fill="#f5bde6" fill-opacity="0.85"><title>2026-04-19: Elevated (~1.5× avg) · Pi</title></rect>
+  <rect x="486" y="92" width="11" height="11" rx="2" fill="#f5bde6" fill-opacity="0.35"><title>2026-04-20: Light (&lt; 0.5× avg) · Pi</title></rect>
+  <rect x="486" y="106" width="11" height="11" rx="2" fill="#f5bde6" fill-opacity="0.35"><title>2026-04-21: Light (&lt; 0.5× avg) · Pi</title></rect>
+  <rect x="486" y="120" width="11" height="11" rx="2" fill="#f5bde6" fill-opacity="0.35"><title>2026-04-22: Light (&lt; 0.5× avg) · Pi</title></rect>
+  <rect x="486" y="134" width="11" height="11" rx="2" fill="#f5bde6" fill-opacity="0.6"><title>2026-04-23: Moderate (~1× avg) · Pi</title></rect>
+  <rect x="486" y="148" width="11" height="11" rx="2" fill="#f5bde6" fill-opacity="0.6"><title>2026-04-24: Moderate (~1× avg) · Pi</title></rect>
+  <rect x="486" y="162" width="11" height="11" rx="2" fill="#f5bde6" fill-opacity="0.35"><title>2026-04-25: Light (&lt; 0.5× avg) · Pi</title></rect>
+  <rect x="500" y="78" width="11" height="11" rx="2" fill="#f5bde6" fill-opacity="0.35"><title>2026-04-26: Light (&lt; 0.5× avg) · Pi</title></rect>
+  <rect x="500" y="92" width="11" height="11" rx="2" fill="#f5bde6" fill-opacity="0.35"><title>2026-04-27: Light (&lt; 0.5× avg) · Pi</title></rect>
+  <rect x="500" y="106" width="11" height="11" rx="2" fill="#f5bde6" fill-opacity="0.85"><title>2026-04-28: Elevated (~1.5× avg) · Pi</title></rect>
+  <rect x="500" y="120" width="11" height="11" rx="2" fill="#f5bde6" fill-opacity="0.85"><title>2026-04-29: Elevated (~1.5× avg) · Pi</title></rect>
+  <rect x="500" y="134" width="11" height="11" rx="2" fill="#f5bde6" fill-opacity="0.35"><title>2026-04-30: Light (&lt; 0.5× avg) · Pi</title></rect>
+  <rect x="500" y="148" width="11" height="11" rx="2" fill="#f5bde6" fill-opacity="0.85"><title>2026-05-01: Elevated (~1.5× avg) · Pi</title></rect>
+  <rect x="500" y="162" width="11" height="11" rx="2" fill="#f5bde6" fill-opacity="0.85"><title>2026-05-02: Elevated (~1.5× avg) · Pi</title></rect>
+  <rect x="514" y="78" width="11" height="11" rx="2" fill="#f5bde6" fill-opacity="0.85"><title>2026-05-03: Elevated (~1.5× avg) · Pi</title></rect>
+  <rect x="514" y="92" width="11" height="11" rx="2" fill="#f5bde6" fill-opacity="1"><title>2026-05-04: Peak (&gt; 2× avg) · Pi</title></rect>
+  <rect x="514" y="106" width="11" height="11" rx="2" fill="#f5bde6" fill-opacity="0.35"><title>2026-05-05: Light (&lt; 0.5× avg) · Pi</title></rect>
+  <rect x="514" y="120" width="11" height="11" rx="2" fill="#f5bde6" fill-opacity="0.85"><title>2026-05-06: Elevated (~1.5× avg) · Pi</title></rect>
+  <rect x="514" y="134" width="11" height="11" rx="2" fill="#f5bde6" fill-opacity="0.85"><title>2026-05-07: Elevated (~1.5× avg) · Pi</title></rect>
+  <rect x="514" y="148" width="11" height="11" rx="2" fill="#f5bde6" fill-opacity="0.85"><title>2026-05-08: Elevated (~1.5× avg) · Pi</title></rect>
+  <rect x="514" y="162" width="11" height="11" rx="2" fill="#f5bde6" fill-opacity="0.85"><title>2026-05-09: Elevated (~1.5× avg) · Pi</title></rect>
+  <rect x="528" y="78" width="11" height="11" rx="2" fill="#f5bde6" fill-opacity="1"><title>2026-05-10: Peak (&gt; 2× avg) · Pi</title></rect>
+  <rect x="528" y="92" width="11" height="11" rx="2" fill="#f5bde6" fill-opacity="0.35"><title>2026-05-11: Light (&lt; 0.5× avg) · Pi</title></rect>
+  <rect x="528" y="106" width="11" height="11" rx="2" fill="#f5bde6" fill-opacity="0.85"><title>2026-05-12: Elevated (~1.5× avg) · Pi</title></rect>
+  <rect x="528" y="120" width="11" height="11" rx="2" fill="#f5bde6" fill-opacity="1"><title>2026-05-13: Peak (&gt; 2× avg) · Pi</title></rect>
+  <rect x="528" y="134" width="11" height="11" rx="2" fill="#f5bde6" fill-opacity="1"><title>2026-05-14: Peak (&gt; 2× avg) · Pi</title></rect>
+  <rect x="528" y="148" width="11" height="11" rx="2" fill="#f5bde6" fill-opacity="0.85"><title>2026-05-15: Elevated (~1.5× avg) · Pi</title></rect>
+  <rect x="528" y="162" width="11" height="11" rx="2" fill="#f5bde6" fill-opacity="0.6"><title>2026-05-16: Moderate (~1× avg) · Pi</title></rect>
+  <rect x="542" y="78" width="11" height="11" rx="2" fill="#f5bde6" fill-opacity="1"><title>2026-05-17: Peak (&gt; 2× avg) · Pi</title></rect>
+  <rect x="542" y="92" width="11" height="11" rx="2" fill="#f5bde6" fill-opacity="0.6"><title>2026-05-18: Moderate (~1× avg) · Pi</title></rect>
+  <rect x="542" y="106" width="11" height="11" rx="2" fill="#f5bde6" fill-opacity="0.85"><title>2026-05-19: Elevated (~1.5× avg) · Pi</title></rect>
+  <rect x="542" y="120" width="11" height="11" rx="2" fill="#f5bde6" fill-opacity="0.35"><title>2026-05-20: Light (&lt; 0.5× avg) · Pi</title></rect>
+  <rect x="542" y="134" width="11" height="11" rx="2" fill="#f5bde6" fill-opacity="0.35"><title>2026-05-21: Light (&lt; 0.5× avg) · Pi</title></rect>
+  <rect x="542" y="148" width="11" height="11" rx="2" fill="#f5bde6" fill-opacity="0.6"><title>2026-05-22: Moderate (~1× avg) · Pi</title></rect>
+  <rect x="542" y="162" width="11" height="11" rx="2" fill="#f5bde6" fill-opacity="0.6"><title>2026-05-23: Moderate (~1× avg) · Pi</title></rect>
+  <rect x="556" y="78" width="11" height="11" rx="2" fill="#f5bde6" fill-opacity="0.6"><title>2026-05-24: Moderate (~1× avg) · Pi</title></rect>
+  <rect x="556" y="92" width="11" height="11" rx="2" fill="#f5bde6" fill-opacity="0.85"><title>2026-05-25: Elevated (~1.5× avg) · Pi</title></rect>
+  <rect x="556" y="106" width="11" height="11" rx="2" fill="#f5bde6" fill-opacity="0.6"><title>2026-05-26: Moderate (~1× avg) · Pi</title></rect>
+  <rect x="556" y="120" width="11" height="11" rx="2" fill="#f5bde6" fill-opacity="0.35"><title>2026-05-27: Light (&lt; 0.5× avg) · Pi</title></rect>
+  <rect x="556" y="134" width="11" height="11" rx="2" fill="#f5bde6" fill-opacity="0.85"><title>2026-05-28: Elevated (~1.5× avg) · Pi</title></rect>
+  <rect x="556" y="148" width="11" height="11" rx="2" fill="#f5bde6" fill-opacity="0.85"><title>2026-05-29: Elevated (~1.5× avg) · Pi</title></rect>
+  <rect x="556" y="162" width="11" height="11" rx="2" fill="#f5bde6" fill-opacity="0.85"><title>2026-05-30: Elevated (~1.5× avg) · Pi</title></rect>
+  <rect x="570" y="78" width="11" height="11" rx="2" fill="#f5bde6" fill-opacity="0.85"><title>2026-05-31: Elevated (~1.5× avg) · Pi</title></rect>
+  <rect x="570" y="92" width="11" height="11" rx="2" fill="#f5bde6" fill-opacity="0.35"><title>2026-06-01: Light (&lt; 0.5× avg) · Pi</title></rect>
+  <rect x="570" y="106" width="11" height="11" rx="2" fill="#f5bde6" fill-opacity="0.6"><title>2026-06-02: Moderate (~1× avg) · Pi</title></rect>
+  <rect x="570" y="120" width="11" height="11" rx="2" fill="#f5bde6" fill-opacity="0.35"><title>2026-06-03: Light (&lt; 0.5× avg) · Pi</title></rect>
+  <rect x="570" y="134" width="11" height="11" rx="2" fill="#f5bde6" fill-opacity="0.35"><title>2026-06-04: Light (&lt; 0.5× avg) · Pi</title></rect>
+  <rect x="570" y="148" width="11" height="11" rx="2" fill="#f5bde6" fill-opacity="0.35"><title>2026-06-05: Light (&lt; 0.5× avg) · Pi</title></rect>
+  <rect x="570" y="162" width="11" height="11" rx="2" fill="#f5bde6" fill-opacity="0.6"><title>2026-06-06: Moderate (~1× avg) · Pi</title></rect>
+  <rect x="584" y="78" width="11" height="11" rx="2" fill="#f5bde6" fill-opacity="0.35"><title>2026-06-07: Light (&lt; 0.5× avg) · Pi</title></rect>
+  <rect x="584" y="92" width="11" height="11" rx="2" fill="#f5bde6" fill-opacity="1"><title>2026-06-08: Peak (&gt; 2× avg) · Pi</title></rect>
+  <rect x="584" y="106" width="11" height="11" rx="2" fill="#f5bde6" fill-opacity="0.85"><title>2026-06-09: Elevated (~1.5× avg) · Pi</title></rect>
+  <rect x="584" y="120" width="11" height="11" rx="2" fill="#f5bde6" fill-opacity="0.6"><title>2026-06-10: Moderate (~1× avg) · Pi</title></rect>
+  <rect x="584" y="134" width="11" height="11" rx="2" fill="#f5bde6" fill-opacity="0.6"><title>2026-06-11: Moderate (~1× avg) · Pi</title></rect>
+  <rect x="584" y="148" width="11" height="11" rx="2" fill="#f5bde6" fill-opacity="0.35"><title>2026-06-12: Light (&lt; 0.5× avg) · Pi</title></rect>
+  <rect x="584" y="162" width="11" height="11" rx="2" fill="#f5bde6" fill-opacity="0.35"><title>2026-06-13: Light (&lt; 0.5× avg) · Pi</title></rect>
+  <rect x="598" y="78" width="11" height="11" rx="2" fill="#24273a"><title>2026-06-14: Inactive</title></rect>
+  <rect x="598" y="92" width="11" height="11" rx="2" fill="#24273a"><title>2026-06-15: Inactive</title></rect>
+  <rect x="598" y="106" width="11" height="11" rx="2" fill="#24273a"><title>2026-06-16: Inactive</title></rect>
+  <rect x="598" y="120" width="11" height="11" rx="2" fill="#24273a"><title>2026-06-17: Inactive</title></rect>
+  <rect x="598" y="134" width="11" height="11" rx="2" fill="#24273a"><title>2026-06-18: Inactive</title></rect>
+  <rect x="598" y="148" width="11" height="11" rx="2" fill="#f5bde6" fill-opacity="0.35"><title>2026-06-19: Light (&lt; 0.5× avg) · Pi</title></rect>
+  <rect x="598" y="162" width="11" height="11" rx="2" fill="#f5bde6" fill-opacity="0.85"><title>2026-06-20: Elevated (~1.5× avg) · Pi</title></rect>
+  <rect x="612" y="78" width="11" height="11" rx="2" fill="#f5bde6" fill-opacity="0.85"><title>2026-06-21: Elevated (~1.5× avg) · Pi</title></rect>
+  <rect x="612" y="92" width="11" height="11" rx="2" fill="#f5bde6" fill-opacity="1"><title>2026-06-22: Peak (&gt; 2× avg) · Pi</title></rect>
+  <rect x="612" y="106" width="11" height="11" rx="2" fill="#f5bde6" fill-opacity="0.6"><title>2026-06-23: Moderate (~1× avg) · Pi</title></rect>
+  <rect x="612" y="120" width="11" height="11" rx="2" fill="#f5bde6" fill-opacity="0.85"><title>2026-06-24: Elevated (~1.5× avg) · Pi</title></rect>
+  <rect x="612" y="134" width="11" height="11" rx="2" fill="#f5bde6" fill-opacity="0.85"><title>2026-06-25: Elevated (~1.5× avg) · Pi</title></rect>
+  <rect x="612" y="148" width="11" height="11" rx="2" fill="#f5bde6" fill-opacity="0.85"><title>2026-06-26: Elevated (~1.5× avg) · Pi</title></rect>
+  <rect x="612" y="162" width="11" height="11" rx="2" fill="#f5bde6" fill-opacity="0.85"><title>2026-06-27: Elevated (~1.5× avg) · Pi</title></rect>
+  <rect x="626" y="78" width="11" height="11" rx="2" fill="#f5bde6" fill-opacity="0.6"><title>2026-06-28: Moderate (~1× avg) · Pi</title></rect>
+  <rect x="626" y="92" width="11" height="11" rx="2" fill="#f5bde6" fill-opacity="1"><title>2026-06-29: Peak (&gt; 2× avg) · Pi</title></rect>
+  <rect x="626" y="106" width="11" height="11" rx="2" fill="#f5bde6" fill-opacity="0.85"><title>2026-06-30: Elevated (~1.5× avg) · Pi</title></rect>
+  <rect x="626" y="120" width="11" height="11" rx="2" fill="#f5bde6" fill-opacity="1"><title>2026-07-01: Peak (&gt; 2× avg) · Pi</title></rect>
+  <rect x="626" y="134" width="11" height="11" rx="2" fill="#f5bde6" fill-opacity="0.85"><title>2026-07-02: Elevated (~1.5× avg) · Pi</title></rect>
+  <rect x="626" y="148" width="11" height="11" rx="2" fill="#f5bde6" fill-opacity="0.6"><title>2026-07-03: Moderate (~1× avg) · Pi</title></rect>
+  <rect x="626" y="162" width="11" height="11" rx="2" fill="#f5bde6" fill-opacity="0.6"><title>2026-07-04: Moderate (~1× avg) · Pi</title></rect>
+  <rect x="640" y="78" width="11" height="11" rx="2" fill="#f5bde6" fill-opacity="0.85"><title>2026-07-05: Elevated (~1.5× avg) · Pi</title></rect>
+  <rect x="640" y="92" width="11" height="11" rx="2" fill="#f5bde6" fill-opacity="0.85"><title>2026-07-06: Elevated (~1.5× avg) · Pi</title></rect>
+  <rect x="640" y="106" width="11" height="11" rx="2" fill="#f5bde6" fill-opacity="0.85"><title>2026-07-07: Elevated (~1.5× avg) · Pi</title></rect>
+  <rect x="640" y="120" width="11" height="11" rx="2" fill="#f5bde6" fill-opacity="0.35"><title>2026-07-08: Light (&lt; 0.5× avg) · Pi</title></rect>
+  <rect x="640" y="134" width="11" height="11" rx="2" fill="#f5bde6" fill-opacity="0.6"><title>2026-07-09: Moderate (~1× avg) · Pi</title></rect>
+  <rect x="640" y="148" width="11" height="11" rx="2" fill="#f5bde6" fill-opacity="0.85"><title>2026-07-10: Elevated (~1.5× avg) · Pi</title></rect>
+  <rect x="640" y="162" width="11" height="11" rx="2" fill="#f5bde6" fill-opacity="1"><title>2026-07-11: Peak (&gt; 2× avg) · Pi</title></rect>
+  <rect x="654" y="78" width="11" height="11" rx="2" fill="#f5bde6" fill-opacity="0.6"><title>2026-07-12: Moderate (~1× avg) · Pi</title></rect>
+  <rect x="654" y="92" width="11" height="11" rx="2" fill="#f5bde6" fill-opacity="0.6"><title>2026-07-13: Moderate (~1× avg) · Pi</title></rect>
+  <rect x="654" y="106" width="11" height="11" rx="2" fill="#f5bde6" fill-opacity="0.85"><title>2026-07-14: Elevated (~1.5× avg) · Pi</title></rect>
+  <rect x="654" y="120" width="11" height="11" rx="2" fill="#f5bde6" fill-opacity="0.85"><title>2026-07-15: Elevated (~1.5× avg) · Pi</title></rect>
+  <rect x="654" y="134" width="11" height="11" rx="2" fill="#f5bde6" fill-opacity="0.85"><title>2026-07-16: Elevated (~1.5× avg) · Pi</title></rect>
+  <rect x="654" y="148" width="11" height="11" rx="2" fill="#f5bde6" fill-opacity="0.6"><title>2026-07-17: Moderate (~1× avg) · Pi</title></rect>
+  <rect x="654" y="162" width="11" height="11" rx="2" fill="#f5bde6" fill-opacity="0.85"><title>2026-07-18: Elevated (~1.5× avg) · Pi</title></rect>
+  <rect x="668" y="78" width="11" height="11" rx="2" fill="#f5bde6" fill-opacity="0.85"><title>2026-07-19: Elevated (~1.5× avg) · Pi</title></rect>
+  <rect x="668" y="92" width="11" height="11" rx="2" fill="#f5bde6" fill-opacity="0.6"><title>2026-07-20: Moderate (~1× avg) · Pi</title></rect>
+  <rect x="668" y="106" width="11" height="11" rx="2" fill="#f5bde6" fill-opacity="0.6"><title>2026-07-21: Moderate (~1× avg) · Pi</title></rect>
+  <rect x="668" y="120" width="11" height="11" rx="2" fill="#f5bde6" fill-opacity="1"><title>2026-07-22: Peak (&gt; 2× avg) · Pi</title></rect>
+  <rect x="668" y="134" width="11" height="11" rx="2" fill="#f5bde6" fill-opacity="0.85"><title>2026-07-23: Elevated (~1.5× avg) · Pi</title></rect>
+  <rect x="668" y="148" width="11" height="11" rx="2" fill="#f5bde6" fill-opacity="0.85"><title>2026-07-24: Elevated (~1.5× avg) · Pi</title></rect>
+  <rect x="668" y="162" width="11" height="11" rx="2" fill="#f5bde6" fill-opacity="0.6"><title>2026-07-25: Moderate (~1× avg) · Pi</title></rect>
+  <rect x="682" y="78" width="11" height="11" rx="2" fill="#f5bde6" fill-opacity="0.35"><title>2026-07-26: Light (&lt; 0.5× avg) · Pi</title></rect>
+  <rect x="682" y="92" width="11" height="11" rx="2" fill="#f5bde6" fill-opacity="0.6"><title>2026-07-27: Moderate (~1× avg) · Pi</title></rect>
+  <rect x="682" y="106" width="11" height="11" rx="2" fill="#f5bde6" fill-opacity="0.85"><title>2026-07-28: Elevated (~1.5× avg) · Pi</title></rect>
+  <rect x="682" y="120" width="11" height="11" rx="2" fill="#f5bde6" fill-opacity="0.85"><title>2026-07-29: Elevated (~1.5× avg) · Pi</title></rect>
+  <rect x="682" y="134" width="11" height="11" rx="2" fill="#f5bde6" fill-opacity="0.85"><title>2026-07-30: Elevated (~1.5× avg) · Pi</title></rect>
+  <rect x="682" y="148" width="11" height="11" rx="2" fill="#f5bde6" fill-opacity="0.85"><title>2026-07-31: Elevated (~1.5× avg) · Pi</title></rect>
+  <rect x="682" y="162" width="11" height="11" rx="2" fill="#f5bde6" fill-opacity="0.85"><title>2026-08-01: Elevated (~1.5× avg) · Pi</title></rect>
+  <rect x="696" y="78" width="11" height="11" rx="2" fill="#f5bde6" fill-opacity="0.6"><title>2026-08-02: Moderate (~1× avg) · Pi</title></rect>
+  <rect x="696" y="92" width="11" height="11" rx="2" fill="#f5bde6" fill-opacity="0.85"><title>2026-08-03: Elevated (~1.5× avg) · Pi</title></rect>
+  <rect x="696" y="106" width="11" height="11" rx="2" fill="#f5bde6" fill-opacity="1"><title>2026-08-04: Peak (&gt; 2× avg) · Pi</title></rect>
+  <rect x="696" y="120" width="11" height="11" rx="2" fill="#f5bde6" fill-opacity="0.85"><title>2026-08-05: Elevated (~1.5× avg) · Pi</title></rect>
+  <rect x="696" y="134" width="11" height="11" rx="2" fill="#f5bde6" fill-opacity="1"><title>2026-08-06: Peak (&gt; 2× avg) · Pi</title></rect>
+  <rect x="696" y="148" width="11" height="11" rx="2" fill="#f5bde6" fill-opacity="1"><title>2026-08-07: Peak (&gt; 2× avg) · Pi</title></rect>
+  <rect x="696" y="162" width="11" height="11" rx="2" fill="#f5bde6" fill-opacity="0.85"><title>2026-08-08: Elevated (~1.5× avg) · Pi</title></rect>
+  <rect x="710" y="78" width="11" height="11" rx="2" fill="#f5bde6" fill-opacity="1"><title>2026-08-09: Peak (&gt; 2× avg) · Pi</title></rect>
+  <rect x="710" y="92" width="11" height="11" rx="2" fill="#f5bde6" fill-opacity="1"><title>2026-08-10: Peak (&gt; 2× avg) · Pi</title></rect>
+  <rect x="710" y="106" width="11" height="11" rx="2" fill="#f5bde6" fill-opacity="1"><title>2026-08-11: Peak (&gt; 2× avg) · Pi</title></rect>
+  <rect x="710" y="120" width="11" height="11" rx="2" fill="#f5bde6" fill-opacity="0.85"><title>2026-08-12: Elevated (~1.5× avg) · Pi</title></rect>
+  <rect x="710" y="134" width="11" height="11" rx="2" fill="#f5bde6" fill-opacity="0.6"><title>2026-08-13: Moderate (~1× avg) · Pi</title></rect>
+  <rect x="710" y="148" width="11" height="11" rx="2" fill="#f5bde6" fill-opacity="0.6"><title>2026-08-14: Moderate (~1× avg) · Pi</title></rect>
+  <rect x="710" y="162" width="11" height="11" rx="2" fill="#f5bde6" fill-opacity="0.35"><title>2026-08-15: Light (&lt; 0.5× avg) · Pi</title></rect>
+  <rect x="724" y="78" width="11" height="11" rx="2" fill="#f5bde6" fill-opacity="0.85"><title>2026-08-16: Elevated (~1.5× avg) · Pi</title></rect>
+  <rect x="724" y="92" width="11" height="11" rx="2" fill="#f5bde6" fill-opacity="0.6"><title>2026-08-17: Moderate (~1× avg) · Pi</title></rect>
+  <rect x="724" y="106" width="11" height="11" rx="2" fill="#f5bde6" fill-opacity="0.6"><title>2026-08-18: Moderate (~1× avg) · Pi</title></rect>
+  <rect x="724" y="120" width="11" height="11" rx="2" fill="#f5bde6" fill-opacity="0.85"><title>2026-08-19: Elevated (~1.5× avg) · Pi</title></rect>
+  <rect x="724" y="134" width="11" height="11" rx="2" fill="#f5bde6" fill-opacity="0.6"><title>2026-08-20: Moderate (~1× avg) · Pi</title></rect>
+  <rect x="724" y="148" width="11" height="11" rx="2" fill="#f5bde6" fill-opacity="1"><title>2026-08-21: Peak (&gt; 2× avg) · Pi</title></rect>
+  <rect x="724" y="162" width="11" height="11" rx="2" fill="#f5bde6" fill-opacity="0.85"><title>2026-08-22: Elevated (~1.5× avg) · Pi</title></rect>
+  <rect x="738" y="78" width="11" height="11" rx="2" fill="#f5bde6" fill-opacity="1"><title>2026-08-23: Peak (&gt; 2× avg) · Pi</title></rect>
+  <rect x="738" y="92" width="11" height="11" rx="2" fill="#f5bde6" fill-opacity="0.85"><title>2026-08-24: Elevated (~1.5× avg) · Pi</title></rect>
+  <rect x="738" y="106" width="11" height="11" rx="2" fill="#f5bde6" fill-opacity="1"><title>2026-08-25: Peak (&gt; 2× avg) · Pi</title></rect>
+  <rect x="738" y="120" width="11" height="11" rx="2" fill="#f5bde6" fill-opacity="1"><title>2026-08-26: Peak (&gt; 2× avg) · Pi</title></rect>
+  <rect x="738" y="134" width="11" height="11" rx="2" fill="#f5bde6" fill-opacity="1"><title>2026-08-27: Peak (&gt; 2× avg) · Pi</title></rect>
+  <rect x="738" y="148" width="11" height="11" rx="2" fill="#f5bde6" fill-opacity="0.85"><title>2026-08-28: Elevated (~1.5× avg) · Pi</title></rect>
+  <rect x="738" y="162" width="11" height="11" rx="2" fill="#f5bde6" fill-opacity="1"><title>2026-08-29: Peak (&gt; 2× avg) · Pi</title></rect>
+  <rect x="752" y="78" width="11" height="11" rx="2" fill="#f5bde6" fill-opacity="0.85"><title>2026-08-30: Elevated (~1.5× avg) · Pi</title></rect>
+  <rect x="752" y="92" width="11" height="11" rx="2" fill="#f5bde6" fill-opacity="0.85"><title>2026-08-31: Elevated (~1.5× avg) · Pi</title></rect>
+  <rect x="752" y="106" width="11" height="11" rx="2" fill="#f5bde6" fill-opacity="0.85"><title>2026-09-01: Elevated (~1.5× avg) · Pi</title></rect>
+  <rect x="752" y="120" width="11" height="11" rx="2" fill="#f5bde6" fill-opacity="0.85"><title>2026-09-02: Elevated (~1.5× avg) · Pi</title></rect>
+  <rect x="752" y="134" width="11" height="11" rx="2" fill="#f5bde6" fill-opacity="0.35"><title>2026-09-03: Light (&lt; 0.5× avg) · Pi</title></rect>
+  <rect x="752" y="148" width="11" height="11" rx="2" fill="#c6a0f6" fill-opacity="1"><title>2026-09-04: Peak (&gt; 2× avg) · OMP</title></rect>
+  <rect x="752" y="162" width="11" height="11" rx="2" fill="#c6a0f6" fill-opacity="0.6"><title>2026-09-05: Moderate (~1× avg) · OMP</title></rect>
+  <rect x="766" y="78" width="11" height="11" rx="2" fill="#c6a0f6" fill-opacity="0.35"><title>2026-09-06: Light (&lt; 0.5× avg) · OMP</title></rect>
+  <rect x="766" y="92" width="11" height="11" rx="2" fill="#c6a0f6" fill-opacity="0.6"><title>2026-09-07: Moderate (~1× avg) · OMP</title></rect>
+  <rect x="766" y="106" width="11" height="11" rx="2" fill="#c6a0f6" fill-opacity="1"><title>2026-09-08: Peak (&gt; 2× avg) · OMP</title></rect>
+  <rect x="766" y="120" width="11" height="11" rx="2" fill="#c6a0f6" fill-opacity="0.85"><title>2026-09-09: Elevated (~1.5× avg) · OMP</title></rect>
+  <rect x="766" y="134" width="11" height="11" rx="2" fill="#c6a0f6" fill-opacity="1"><title>2026-09-10: Peak (&gt; 2× avg) · OMP</title></rect>
+  <rect x="766" y="148" width="11" height="11" rx="2" fill="#c6a0f6" fill-opacity="0.85"><title>2026-09-11: Elevated (~1.5× avg) · OMP</title></rect>
+  <rect x="766" y="162" width="11" height="11" rx="2" fill="#c6a0f6" fill-opacity="1"><title>2026-09-12: Peak (&gt; 2× avg) · OMP</title></rect>
+  <rect x="780" y="78" width="11" height="11" rx="2" fill="#c6a0f6" fill-opacity="1"><title>2026-09-13: Peak (&gt; 2× avg) · OMP</title></rect>
+  <rect x="780" y="92" width="11" height="11" rx="2" fill="#c6a0f6" fill-opacity="1"><title>2026-09-14: Peak (&gt; 2× avg) · OMP</title></rect>
+  <rect x="780" y="106" width="11" height="11" rx="2" fill="#c6a0f6" fill-opacity="0.85"><title>2026-09-15: Elevated (~1.5× avg) · OMP</title></rect>
+  <rect x="780" y="120" width="11" height="11" rx="2" fill="#c6a0f6" fill-opacity="1"><title>2026-09-16: Peak (&gt; 2× avg) · OMP</title></rect>
+  <rect x="780" y="134" width="11" height="11" rx="2" fill="#c6a0f6" fill-opacity="1"><title>2026-09-17: Peak (&gt; 2× avg) · OMP</title></rect>
+  <rect x="780" y="148" width="11" height="11" rx="2" fill="#c6a0f6" fill-opacity="0.6"><title>2026-09-18: Moderate (~1× avg) · OMP</title></rect>
+  <rect x="780" y="162" width="11" height="11" rx="2" fill="#c6a0f6" fill-opacity="1"><title>2026-09-19: Peak (&gt; 2× avg) · OMP</title></rect>
+  <text x="30" y="198" fill="#6e738d" font-size="11" font-family="-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,sans-serif">Harness:</text>
+  <circle cx="102" cy="194" r="4.5" fill="#c6a0f6"/>
+  <text x="112" y="198" fill="#cad3f5" font-size="11" font-family="-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,sans-serif">OMP</text>
+  <circle cx="160" cy="194" r="4.5" fill="#f5bde6"/>
+  <text x="170" y="198" fill="#cad3f5" font-size="11" font-family="-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,sans-serif">Pi</text>
+  <circle cx="200" cy="194" r="4.5" fill="#f5a97f"/>
+  <text x="210" y="198" fill="#cad3f5" font-size="11" font-family="-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,sans-serif">Claude</text>
+  <circle cx="265" cy="194" r="4.5" fill="#8aadf4"/>
+  <text x="275" y="198" fill="#cad3f5" font-size="11" font-family="-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,sans-serif">Codex</text>
+  <circle cx="330" cy="194" r="4.5" fill="#8bd5ca"/>
+  <text x="340" y="198" fill="#cad3f5" font-size="11" font-family="-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,sans-serif">OpenCode</text>
+  <text x="636" y="198" fill="#6e738d" font-size="11" font-family="-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,sans-serif">Intensity:</text>
+  <text x="690" y="198" fill="#6e738d" font-size="10" font-family="-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,sans-serif">&lt; 0.5×</text>
+  <rect x="726" y="189" width="11" height="11" rx="2" fill="#c6a0f6" fill-opacity="0.35"/>
+  <rect x="740" y="189" width="11" height="11" rx="2" fill="#c6a0f6" fill-opacity="0.60"/>
+  <rect x="754" y="189" width="11" height="11" rx="2" fill="#c6a0f6" fill-opacity="0.85"/>
+  <rect x="768" y="189" width="11" height="11" rx="2" fill="#c6a0f6" fill-opacity="1.0"/>
+  <text x="784" y="198" fill="#6e738d" font-size="10" font-family="-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,sans-serif">&gt; 2× avg</text>
+</svg>
