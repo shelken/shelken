@@ -68,9 +68,6 @@ temp/
 preview.html
 .readme-preview.html
 
-# ccusage 原始 JSON：含 totalCost/cost/costUSD 等费用字段，不进公开仓
-usage/data/
-
 .playwright-cli
 
 # Usage cards 生成产物由 sync-push 推送至独立孤儿分支 assets，不进 main 历史
