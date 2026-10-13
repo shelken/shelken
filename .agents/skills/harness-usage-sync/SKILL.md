@@ -31,10 +31,10 @@ Entrypoint: `scripts/harness-usage.ts`
    **Done when:** `~/.session-stats/<client>/` 下 `daily[]` 与 `sessions[]` 非空。
 
    合并语义（关键，勿改）：
-   - `daily.json` 仅覆盖当天，历史日缺席即冻结 —— 原始 session 删除后历史不丢
-   - `sessions.json` 按 `sessionId` upsert，已删 session 保留
-   - 写入为 `tmp` + rename 原子替换；存档损坏时直接报错中止，**勿删文件绕过**，
-     应从备份还原（该目录是唯一副本）
+   - `daily.json` 同日单调取大：跨零点后的完整扫描会补全昨日，日志被清理时保留存档值
+   - `sessions.json` 按 `sessionId` 单调 upsert，已删 session 保留
+   - 写入为 `tmp` + rename 原子替换；存档或扫描条目非法（缺 `date`/`sessionId`、同日重复键）
+     直接报错中止，不静默丢条目
 
 2. **Render** SVG + README
 
@@ -63,6 +63,6 @@ Entrypoint: `scripts/harness-usage.ts`
 
 - Token = input + output + cache
 - Codex JSON 用 `models` 映射为 `modelBreakdowns`
-- 删除旧 session 前先备份 `~/.session-stats/`；数据冻结后 session 可清理，但 session 级新增分析能力依赖 `sessions.json`
+- 历史数据在 session 删除后只剩 `~/.session-stats/`；session 级分析（按项目、按 session）依赖 `sessions.json`
 - 定时任务：`just sync-push`（launchd `task-profile-usage`，0:04 / 12:04）
 - 强调色 Macchiato：omp mauve / pi pink / claude peach / codex blue / opencode teal
