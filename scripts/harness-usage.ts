@@ -250,54 +250,106 @@ function readStoredJson(path: string): Record<string, unknown> | null {
 /**
  * 存档是唯一副本：tmp+rename 原子替换，避免写中断留下截断文件。
  * 唯一 tmp 名，防定时任务与手工 sync 并发时互相搬走对方的临时文件。
+ * 覆盖前把上一代移到 .bak，逻辑或工具出错时可回滚一代。
  */
 function writeStoredJson(path: string, data: unknown): void {
   const tmp = `${path}.${process.pid}.tmp`;
   writeFileSync(tmp, JSON.stringify(data, null, 2) + "\n", "utf-8");
+  if (existsSync(path)) renameSync(path, `${path}.bak`);
   renameSync(tmp, path);
 }
 
-function localToday(): string {
-  const now = new Date();
-  const p = (n: number) => String(n).padStart(2, "0");
-  return `${now.getFullYear()}-${p(now.getMonth() + 1)}-${p(now.getDate())}`;
+function tokenSum(rec: Record<string, unknown>): number {
+  return (
+    ["inputTokens", "outputTokens", "cacheReadTokens", "cacheCreationTokens"].reduce(
+      (acc, k) => acc + (Number(rec[k]) || 0),
+      0
+    ) || Number(rec.totalTokens) || 0
+  );
 }
 
 /**
- * 日数据仅覆盖当天:历史日的 session 可能已删除,重扫值不完整,以已存为准。
+ * 存档与扫描条目必须完整可用：键非法或重复即中止，
+ * 不允许合并 Map 静默折叠掉唯一副本里的历史记录。
+ */
+export function assertArchiveEntries(
+  file: "daily" | "sessions",
+  source: string,
+  entries: Record<string, unknown>[],
+  key: "date" | "sessionId"
+): void {
+  const bad = entries.filter((e) => typeof e?.[key] !== "string" || !e[key]);
+  if (bad.length > 0) {
+    throw new UsageError(
+      `${source} 的 ${file} 有 ${bad.length} 条记录缺少合法 ${key}，拒绝写入以免丢历史`
+    );
+  }
+  const seen = new Set<string>();
+  const dupes = entries.filter((e) => {
+    const k = e[key] as string;
+    const dup = seen.has(k);
+    seen.add(k);
+    return dup;
+  });
+  if (dupes.length > 0) {
+    throw new UsageError(
+      `${source} 的 ${file} 有 ${dupes.length} 条重复 ${key}（如 ${String(dupes[0][key])}），` +
+        `合并会静默折叠丢数据；如需导入多源存档，请先用 mergeDailyRecords 求和归并`
+    );
+  }
+}
+
+function readStoredArray(
+  path: string,
+  file: "daily" | "sessions",
+  key: "date" | "sessionId"
+): Record<string, unknown>[] {
+  const stored = readStoredJson(path);
+  if (stored === null) return [];
+  const value = stored[file];
+  if (!Array.isArray(value)) {
+    throw new UsageError(`存档 ${path} 的 ${file} 字段不是数组，拒绝写入以免丢历史`);
+  }
+  const entries = value as Record<string, unknown>[];
+  assertArchiveEntries(file, `存档 ${path}`, entries, key);
+  return entries;
+}
+
+/**
+ * 单调合并：token 只增不减。
+ * session 清理后重扫值变小 → 保留存档较大值；
+ * 但当天跑完后的次日扫描（定时任务 00:04 / 12:04）必须能补全当天缺的半天，
+ * 因此不能按「是否今天」判定，否则历史日会永久冻结在 12:04 的部分快照。
  */
 export function mergeDailyScans(
   stored: Record<string, unknown>[],
-  scanned: Record<string, unknown>[],
-  today = localToday()
+  scanned: Record<string, unknown>[]
 ): Record<string, unknown>[] {
   const byDate = new Map<string, Record<string, unknown>>();
-  for (const d of stored) {
-    if (typeof d.date === "string") byDate.set(d.date, d);
-  }
+  for (const d of stored) byDate.set(d.date as string, d);
   for (const d of scanned) {
-    const date = d.date;
-    if (typeof date !== "string") continue;
-    if (date === today || !byDate.has(date)) byDate.set(date, d);
+    const prev = byDate.get(d.date as string);
+    if (!prev || tokenSum(d) >= tokenSum(prev)) byDate.set(d.date as string, d);
   }
   return [...byDate.values()].sort((a, b) => String(a.date).localeCompare(String(b.date)));
 }
 
 /**
- * session 按 sessionId upsert:活跃 session 刷新,已删 session 保留。
+ * session 同样单调：活跃 session 增长即刷新，已删/截断的保留存档值。
  */
 export function mergeSessionScans(
   stored: Record<string, unknown>[],
   scanned: Record<string, unknown>[]
 ): Record<string, unknown>[] {
   const byId = new Map<string, Record<string, unknown>>();
-  for (const s of stored) {
-    if (typeof s.sessionId === "string") byId.set(s.sessionId, s);
-  }
+  for (const s of stored) byId.set(s.sessionId as string, s);
   for (const s of scanned) {
-    if (typeof s.sessionId === "string") byId.set(s.sessionId, s);
+    const prev = byId.get(s.sessionId as string);
+    if (!prev || tokenSum(s) >= tokenSum(prev)) byId.set(s.sessionId as string, s);
   }
-  return [...byId.values()].sort((a, b) => String(a.lastActivity).localeCompare(String(b.lastActivity)));
+  return [...byId.values()].sort((a, b) =>
+    String(a.lastActivity ?? "").localeCompare(String(b.lastActivity ?? ""))
+  );
 }
 
 export async function exportClient(client: Client): Promise<string | null> {
@@ -305,24 +357,26 @@ export async function exportClient(client: Client): Promise<string | null> {
   const dailyData = await runCcusage(client, "daily");
   const sessionData = await runCcusage(client, "session");
 
-  const daily = Array.isArray(dailyData.daily) ? dailyData.daily : [];
-  const sessions = Array.isArray(sessionData.sessions) ? sessionData.sessions : [];
+  const daily = Array.isArray(dailyData.daily)
+    ? (dailyData.daily as Record<string, unknown>[])
+    : [];
+  const sessions = Array.isArray(sessionData.sessions)
+    ? (sessionData.sessions as Record<string, unknown>[])
+    : [];
   const dailyOut = dataPath(client, "daily");
   const sessionsOut = dataPath(client, "sessions");
+
+  assertArchiveEntries("daily", `ccusage ${client} 扫描`, daily, "date");
+  assertArchiveEntries("sessions", `ccusage ${client} 扫描`, sessions, "sessionId");
 
   if (daily.length === 0 && sessions.length === 0) {
     console.warn(`[WARN] ${client}: 扫描为空，跳过写入`);
     return null;
   }
 
-  const storedDaily = readStoredJson(dailyOut);
-  const storedSessions = readStoredJson(sessionsOut);
-  const mergedDaily = mergeDailyScans(
-    Array.isArray(storedDaily?.daily) ? (storedDaily.daily as Record<string, unknown>[]) : [],
-    daily
-  );
+  const mergedDaily = mergeDailyScans(readStoredArray(dailyOut, "daily", "date"), daily);
   const mergedSessions = mergeSessionScans(
-    Array.isArray(storedSessions?.sessions) ? (storedSessions.sessions as Record<string, unknown>[]) : [],
+    readStoredArray(sessionsOut, "sessions", "sessionId"),
     sessions
   );
 
