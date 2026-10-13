@@ -14,16 +14,16 @@ default:
 # ── 用量与卡片 ──────────────────────────────────────────
 
 # 本地同步用量（导出 + 渲染，不提交推送）
-sync-usage client="all" name="mio":
-	{{ bun }} {{ root }}/scripts/harness-usage.ts sync --client {{ client }} --name {{ name }}
+sync-usage client="all":
+	{{ bun }} {{ root }}/scripts/harness-usage.ts sync --client {{ client }}
 
 # 自动化同步入口（导出 + 渲染 + 提交推送，供定时任务无感调用）
-sync-push client="all" name="mio":
-	{{ bun }} {{ root }}/scripts/harness-usage.ts sync --client {{ client }} --name {{ name }} --push
+sync-push client="all":
+	{{ bun }} {{ root }}/scripts/harness-usage.ts sync --client {{ client }} --push
 
-# 仅导出客户端 JSON 数据 → usage/data/
-export-usage client="all" name="mio":
-	{{ bun }} {{ root }}/scripts/harness-usage.ts export --client {{ client }} --name {{ name }}
+# 仅导出客户端 JSON 数据 → ~/.session-stats/<client>/
+export-usage client="all":
+	{{ bun }} {{ root }}/scripts/harness-usage.ts export --client {{ client }}
 
 # 仅渲染 assets/usage/*.svg + 更新 README
 render-usage:

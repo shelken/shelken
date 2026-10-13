@@ -1,14 +1,14 @@
 #!/usr/bin/env bun
 /**
- * 多 Harness 用量：ccusage 导出 JSON，渲染 assets/usage/*.svg，同步到 README。
+ * 多 Harness 编码助手用量：ccusage 导出 → ~/.session-stats/<client>/{daily,sessions}.json（增量冻结），渲染 assets/usage/*.svg，同步 README。
  *
  * 用法:
- *   bun scripts/harness-usage.ts export [--client omp|pi|claude|codex|opencode|all] [--name mio]
+ *   bun scripts/harness-usage.ts export [--client omp|pi|claude|codex|opencode|all]
  *   bun scripts/harness-usage.ts render
- *   bun scripts/harness-usage.ts sync [--client all] [--name mio] [--commit] [--push]
+ *   bun scripts/harness-usage.ts sync [--client all] [--commit] [--push]
  */
 
-import { existsSync, mkdirSync, readFileSync, rmSync, writeFileSync } from "node:fs";
+import { existsSync, mkdirSync, readFileSync, renameSync, rmSync, writeFileSync } from "node:fs";
 import { homedir, tmpdir } from "node:os";
 import { dirname, join, resolve } from "node:path";
 import { fileURLToPath } from "node:url";
@@ -41,9 +41,8 @@ import {
   mergeDailyRecords,
   loadClientDays,
   loadUsageDataset,
-  loadAllClientDays,
   aggregateUsage,
-  getAggregateUsage,
+  SESSION_STATS_DIR,
 } from "./usage/store";
 
 import {
@@ -83,9 +82,7 @@ export {
   mergeDailyRecords,
   loadClientDays,
   loadUsageDataset,
-  loadAllClientDays,
   aggregateUsage,
-  getAggregateUsage,
   type TextOptions,
   escapeXml,
   svgText,
@@ -96,8 +93,7 @@ const __dirname = dirname(fileURLToPath(import.meta.url));
 export const ROOT = resolve(__dirname, "..");
 export const ASSETS_DIR = join(ROOT, "assets");
 export const CARDS_DIR = join(ASSETS_DIR, "usage");
-export const USAGE_DIR = join(ROOT, "usage");
-export const DATA_DIR = join(USAGE_DIR, "data");
+
 export const README_PATH = join(ROOT, "README.md");
 
 export const START_MARKER = "<!-- HARNESS-USAGE:START -->";
@@ -113,7 +109,10 @@ export function die(msg: string, code = 1): never {
 }
 
 export function ensureDirs(): void {
-  mkdirSync(DATA_DIR, { recursive: true });
+  mkdirSync(SESSION_STATS_DIR, { recursive: true });
+  for (const c of CLIENTS) {
+    mkdirSync(join(SESSION_STATS_DIR, c), { recursive: true });
+  }
   mkdirSync(CARDS_DIR, { recursive: true });
 }
 
@@ -154,7 +153,7 @@ export function patchReadme(rendered: string[] = ["omp", "history"]): void {
  * 向后兼容导出的 buildHistorySvg：入参缺省时使用当前数据集
  */
 export function buildHistorySvg(allClientDays?: Record<Client, DailyRecord[]>): string {
-  const days = allClientDays || loadUsageDataset(DATA_DIR);
+  const days = allClientDays || loadUsageDataset();
   return renderHistorySvg(days);
 }
 
@@ -165,13 +164,13 @@ export function buildHarnessSvg(
   clientDays?: Record<Client, DailyRecord[]>,
   injectedAgg?: AggregateUsage | null
 ): string {
-  const days = clientDays || loadUsageDataset(DATA_DIR);
+  const days = clientDays || loadUsageDataset();
   const agg = injectedAgg !== undefined ? injectedAgg : aggregateUsage(days);
   if (!agg) return "";
   return renderHarnessSvg(days, agg);
 }
 
-export function ccusageCmd(client: Client): string[] {
+export function ccusageCmd(client: Client, sub: "daily" | "session"): string[] {
   const localBin = join(ROOT, "node_modules", ".bin", "ccusage");
   const hasLocal = existsSync(localBin);
   const hasGlobal = Bun.which("ccusage");
@@ -186,14 +185,17 @@ export function ccusageCmd(client: Client): string[] {
 
     const agentDir = candidateDirs.find((d) => existsSync(d)) || join(home, ".omp", "agent");
     const sessionsDir = join(agentDir, "sessions");
-    return [...base, "pi", "daily", "--pi-path", sessionsDir, "--json", "--offline"];
+    return [...base, "pi", sub, "--pi-path", sessionsDir, "--json", "--offline"];
   }
 
-  return [...base, client, "daily", "--json", "--offline"];
+  return [...base, client, sub, "--json", "--offline"];
 }
 
-export async function runCcusage(client: Client): Promise<Record<string, unknown>> {
-  const cmd = ccusageCmd(client);
+export async function runCcusage(
+  client: Client,
+  sub: "daily" | "session"
+): Promise<Record<string, unknown>> {
+  const cmd = ccusageCmd(client, sub);
   const proc = Bun.spawn(cmd, {
     cwd: ROOT,
     stdout: "pipe",
@@ -205,56 +207,189 @@ export async function runCcusage(client: Client): Promise<Record<string, unknown
   const stderr = (await new Response(proc.stderr).text()).trim();
 
   if (code !== 0) {
-    throw new UsageError(`ccusage ${client} 失败（退出码 ${code}）\n${stderr || stdout}`);
+    throw new UsageError(`ccusage ${client} ${sub} 失败（退出码 ${code}）\n${stderr || stdout}`);
   }
 
   if (!stdout) {
-    throw new UsageError(`ccusage ${client} 输出为空`);
+    throw new UsageError(`ccusage ${client} ${sub} 输出为空`);
   }
 
   try {
     const data = JSON.parse(stdout);
-    if (!data || !Array.isArray(data.daily)) {
-      throw new UsageError(`ccusage ${client}: daily[] 缺失`);
+    const key = sub === "daily" ? "daily" : "sessions";
+    if (!data || !Array.isArray(data[key])) {
+      throw new UsageError(`ccusage ${client} ${sub}: ${key}[] 缺失`);
     }
     return data;
   } catch (err: unknown) {
     if (err instanceof UsageError) throw err;
-    throw new UsageError(`ccusage ${client} JSON 无效: ${err}`);
+    throw new UsageError(`ccusage ${client} ${sub} JSON 无效: ${err}`);
   }
 }
 
-export function dataPath(client: Client, name?: string): string {
-  if (client === "omp" || client === "pi") {
-    const device = name || "mio";
-    if (!/^[A-Za-z0-9_-]+$/.test(device)) {
-      throw new UsageError(`非法 name: ${device}`);
-    }
-    return join(DATA_DIR, `${client}-${device}.json`);
-  }
-  return join(DATA_DIR, `${client}.json`);
+export function dataPath(client: Client, file: "daily" | "sessions"): string {
+  return join(SESSION_STATS_DIR, client, `${file}.json`);
 }
 
-export async function exportClient(client: Client, name = "mio"): Promise<string | null> {
+function readStoredJson(path: string): Record<string, unknown> | null {
+  if (!existsSync(path)) return null;
+  let data: unknown;
+  try {
+    data = JSON.parse(readFileSync(path, "utf-8"));
+  } catch (err: unknown) {
+    const msg = err instanceof Error ? err.message : String(err);
+    throw new UsageError(
+      `存档损坏，拒绝覆盖以免丢历史: ${path}\n${msg}\n修复或恢复该文件后重试（可从备份还原，勿直接删除）`
+    );
+  }
+  return data && typeof data === "object" && !Array.isArray(data)
+    ? (data as Record<string, unknown>)
+    : null;
+}
+
+/**
+ * tmp+rename 原子替换，避免写中断留下截断文件。
+ * 唯一 tmp 名，防定时任务与手工 sync 并发时互相搬走对方的临时文件。
+ */
+function writeStoredJson(path: string, data: unknown): void {
+  const tmp = `${path}.${process.pid}.tmp`;
+  writeFileSync(tmp, JSON.stringify(data, null, 2) + "\n", "utf-8");
+  renameSync(tmp, path);
+}
+
+function tokenSum(rec: Record<string, unknown>): number {
+  return (
+    ["inputTokens", "outputTokens", "cacheReadTokens", "cacheCreationTokens"].reduce(
+      (acc, k) => acc + (Number(rec[k]) || 0),
+      0
+    ) || Number(rec.totalTokens) || 0
+  );
+}
+
+/**
+ * 存档与扫描条目必须完整可用：键非法或重复即中止，
+ * 不允许合并 Map 静默折叠掉唯一副本里的历史记录。
+ */
+export function assertArchiveEntries(
+  file: "daily" | "sessions",
+  source: string,
+  entries: Record<string, unknown>[],
+  key: "date" | "sessionId"
+): void {
+  const bad = entries.filter((e) => typeof e?.[key] !== "string" || !e[key]);
+  if (bad.length > 0) {
+    throw new UsageError(
+      `${source} 的 ${file} 有 ${bad.length} 条记录缺少合法 ${key}，拒绝写入以免丢历史`
+    );
+  }
+  const seen = new Set<string>();
+  const dupes = entries.filter((e) => {
+    const k = e[key] as string;
+    const dup = seen.has(k);
+    seen.add(k);
+    return dup;
+  });
+  if (dupes.length > 0) {
+    throw new UsageError(
+      `${source} 的 ${file} 有 ${dupes.length} 条重复 ${key}（如 ${String(dupes[0][key])}），` +
+        `合并会静默折叠丢数据；如需导入多源存档，请先用 mergeDailyRecords 求和归并`
+    );
+  }
+}
+
+function readStoredArray(
+  path: string,
+  file: "daily" | "sessions",
+  key: "date" | "sessionId"
+): Record<string, unknown>[] {
+  const stored = readStoredJson(path);
+  if (stored === null) return [];
+  const value = stored[file];
+  if (!Array.isArray(value)) {
+    throw new UsageError(`存档 ${path} 的 ${file} 字段不是数组，拒绝写入以免丢历史`);
+  }
+  const entries = value as Record<string, unknown>[];
+  assertArchiveEntries(file, `存档 ${path}`, entries, key);
+  return entries;
+}
+
+/**
+ * 单调合并：token 只增不减。
+ * session 清理后重扫值变小 → 保留存档较大值；
+ * 但当天跑完后的次日扫描（定时任务 00:04 / 12:04）必须能补全当天缺的半天，
+ * 因此不能按「是否今天」判定，否则历史日会永久冻结在 12:04 的部分快照。
+ */
+export function mergeDailyScans(
+  stored: Record<string, unknown>[],
+  scanned: Record<string, unknown>[]
+): Record<string, unknown>[] {
+  const byDate = new Map<string, Record<string, unknown>>();
+  for (const d of stored) byDate.set(d.date as string, d);
+  for (const d of scanned) {
+    const prev = byDate.get(d.date as string);
+    if (!prev || tokenSum(d) >= tokenSum(prev)) byDate.set(d.date as string, d);
+  }
+  return [...byDate.values()].sort((a, b) => String(a.date).localeCompare(String(b.date)));
+}
+
+/**
+ * session 同样单调：活跃 session 增长即刷新，已删/截断的保留存档值。
+ */
+export function mergeSessionScans(
+  stored: Record<string, unknown>[],
+  scanned: Record<string, unknown>[]
+): Record<string, unknown>[] {
+  const byId = new Map<string, Record<string, unknown>>();
+  for (const s of stored) byId.set(s.sessionId as string, s);
+  for (const s of scanned) {
+    const prev = byId.get(s.sessionId as string);
+    if (!prev || tokenSum(s) >= tokenSum(prev)) byId.set(s.sessionId as string, s);
+  }
+  return [...byId.values()].sort((a, b) =>
+    String(a.lastActivity ?? "").localeCompare(String(b.lastActivity ?? ""))
+  );
+}
+
+export async function exportClient(client: Client): Promise<string | null> {
   ensureDirs();
-  const data = await runCcusage(client);
-  const daily = Array.isArray(data.daily) ? data.daily : [];
-  const out = dataPath(client, name);
+  const dailyData = await runCcusage(client, "daily");
+  const sessionData = await runCcusage(client, "session");
 
-  if (daily.length === 0) {
-    console.warn(`[WARN] ${client}: daily 为空，跳过写入 ${out}`);
+  const daily = Array.isArray(dailyData.daily)
+    ? (dailyData.daily as Record<string, unknown>[])
+    : [];
+  const sessions = Array.isArray(sessionData.sessions)
+    ? (sessionData.sessions as Record<string, unknown>[])
+    : [];
+  const dailyOut = dataPath(client, "daily");
+  const sessionsOut = dataPath(client, "sessions");
+
+  assertArchiveEntries("daily", `ccusage ${client} 扫描`, daily, "date");
+  assertArchiveEntries("sessions", `ccusage ${client} 扫描`, sessions, "sessionId");
+
+  if (daily.length === 0 && sessions.length === 0) {
+    console.warn(`[WARN] ${client}: 扫描为空，跳过写入`);
     return null;
   }
 
-  writeFileSync(out, JSON.stringify(data, null, 2) + "\n", "utf-8");
-  const total = daily.reduce((acc, d) => acc + (Number(d.totalTokens) || 0), 0);
-  const relOut = out.startsWith(ROOT) ? out.slice(ROOT.length + 1) : out;
-  console.log(`✓ ${relOut}  days=${daily.length}  totalTokens=${total.toLocaleString("en-US")}`);
-  return out;
+  const mergedDaily = mergeDailyScans(readStoredArray(dailyOut, "daily", "date"), daily);
+  const mergedSessions = mergeSessionScans(
+    readStoredArray(sessionsOut, "sessions", "sessionId"),
+    sessions
+  );
+
+  writeStoredJson(dailyOut, { daily: mergedDaily });
+  writeStoredJson(sessionsOut, { sessions: mergedSessions });
+
+  const total = mergedDaily.reduce((acc, d) => acc + (Number(d.totalTokens) || 0), 0);
+  console.log(
+    `✓ ${client}: days=${mergedDaily.length} sessions=${mergedSessions.length} totalTokens=${total.toLocaleString("en-US")}`
+  );
+  return dailyOut;
 }
 
-export async function exportAll(name = "mio"): Promise<string[]> {
-  const results = await Promise.all(CLIENTS.map((c) => exportClient(c, name)));
+export async function exportAll(): Promise<string[]> {
+  const results = await Promise.all(CLIENTS.map((c) => exportClient(c)));
   return results.filter((p): p is string => Boolean(p));
 }
 
@@ -263,7 +398,7 @@ export async function exportAll(name = "mio"): Promise<string[]> {
  */
 export async function render(): Promise<string[]> {
   ensureDirs();
-  const allClientDays = loadUsageDataset(DATA_DIR);
+  const allClientDays = loadUsageDataset();
   const agg = aggregateUsage(allClientDays);
 
   await renderVibeSnake({ agg });
@@ -414,9 +549,9 @@ export async function main(): Promise<void> {
 多 Harness 编码助手用量导出与 SVG 渲染 (TypeScript / Bun)
 
 用法:
-  bun scripts/harness-usage.ts export [--client omp|pi|claude|codex|opencode|all] [--name mio]
+  bun scripts/harness-usage.ts export [--client omp|pi|claude|codex|opencode|all]
   bun scripts/harness-usage.ts render
-  bun scripts/harness-usage.ts sync [--client all] [--name mio] [--commit] [--push]
+  bun scripts/harness-usage.ts sync [--client all] [--commit] [--push]
 `);
     return;
   }
@@ -424,15 +559,14 @@ export async function main(): Promise<void> {
   try {
     if (cmd === "export") {
       const client = parseOption(args, "--client", "all");
-      const name = parseOption(args, "--name", "mio");
       if (client !== "all" && !CLIENTS.includes(client as Client)) {
         die(`未知 client: ${client}`);
       }
 
       if (client === "all") {
-        await exportAll(name);
+        await exportAll();
       } else {
-        await exportClient(client as Client, name);
+        await exportClient(client as Client);
       }
     } else if (cmd === "render") {
       await render();
@@ -440,7 +574,6 @@ export async function main(): Promise<void> {
       const isPush = args.includes("--push");
       const isCommit = args.includes("--commit") || isPush;
       const client = parseOption(args, "--client", "all");
-      const name = parseOption(args, "--name", "mio");
       if (client !== "all" && !CLIENTS.includes(client as Client)) {
         die(`未知 client: ${client}`);
       }
@@ -449,9 +582,9 @@ export async function main(): Promise<void> {
         await gitPull();
       }
       if (client === "all") {
-        await exportAll(name);
+        await exportAll();
       } else {
-        await exportClient(client as Client, name);
+        await exportClient(client as Client);
       }
       await render();
 

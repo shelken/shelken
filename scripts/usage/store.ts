@@ -1,5 +1,6 @@
-import { existsSync, readdirSync, readFileSync } from "node:fs";
-import { dirname, join, resolve } from "node:path";
+import { existsSync, readFileSync } from "node:fs";
+import { homedir } from "node:os";
+import { dirname, join } from "node:path";
 import { fileURLToPath } from "node:url";
 import {
   CLIENTS,
@@ -12,8 +13,7 @@ import {
 } from "./types";
 
 const __dirname = dirname(fileURLToPath(import.meta.url));
-export const ROOT_DIR = resolve(__dirname, "../..");
-export const DEFAULT_DATA_DIR = join(ROOT_DIR, "usage", "data");
+export const SESSION_STATS_DIR = join(homedir(), ".session-stats");
 
 /**
  * 清除模型名称前缀，如 [pi]、[omp]
@@ -354,48 +354,25 @@ export function mergeDailyRecords(days: DailyRecord[]): DailyRecord[] {
 }
 
 /**
- * 从磁盘读取指定客户端的日用量数据（支持单机或按机名分片）
+ * 从 ~/.session-stats/<client>/daily.json 读取日用量数据
+ * (历史日在导出时已冻结,原始 session 删除不影响)
  */
-export function loadClientDays(client: Client, dataDir: string = DEFAULT_DATA_DIR): DailyRecord[] {
-  if (!existsSync(dataDir)) {
-    throw new UsageError(`数据目录不存在: ${dataDir}`);
-  }
-
-  const files: string[] = [];
-
-  if (client === "omp" || client === "pi") {
-    const matched = readdirSync(dataDir)
-      .filter((f) => f.startsWith(`${client}-`) && f.endsWith(".json"))
-      .sort();
-    files.push(...matched.map((f) => join(dataDir, f)));
-    const fallback = join(dataDir, `${client}.json`);
-    if (existsSync(fallback) && !files.includes(fallback)) {
-      files.push(fallback);
-    }
-    if (files.length === 0) {
-      throw new UsageError(`没有 ${dataDir}/${client}-*.json, 先 export --client ${client}`);
-    }
-  } else {
-    const f = join(dataDir, `${client}.json`);
-    if (!existsSync(f)) {
-      throw new UsageError(`没有 ${dataDir}/${client}.json, 先 export --client ${client}`);
-    }
-    files.push(f);
+export function loadClientDays(client: Client, dataDir: string = SESSION_STATS_DIR): DailyRecord[] {
+  const file = join(dataDir, client, "daily.json");
+  if (!existsSync(file)) {
+    throw new UsageError(`没有 ${file}, 先 export --client ${client}`);
   }
 
   const days: DailyRecord[] = [];
-  for (const f of files) {
-    try {
-      const content = readFileSync(f, "utf-8");
-      const data = JSON.parse(content);
-      const rawDaily = Array.isArray(data.daily) ? data.daily : [];
-      for (const raw of rawDaily) {
-        days.push(normalizeDay(raw));
-      }
-    } catch (err: unknown) {
-      const msg = err instanceof Error ? err.message : String(err);
-      throw new UsageError(`解析 ${f} 失败: ${msg}`);
+  try {
+    const data = JSON.parse(readFileSync(file, "utf-8"));
+    const rawDaily = Array.isArray(data.daily) ? data.daily : [];
+    for (const raw of rawDaily) {
+      days.push(normalizeDay(raw));
     }
+  } catch (err: unknown) {
+    const msg = err instanceof Error ? err.message : String(err);
+    throw new UsageError(`解析 ${file} 失败: ${msg}`);
   }
 
   return mergeDailyRecords(days);
@@ -404,7 +381,7 @@ export function loadClientDays(client: Client, dataDir: string = DEFAULT_DATA_DI
 /**
  * 加载全量客户端数据集
  */
-export function loadUsageDataset(dataDir: string = DEFAULT_DATA_DIR): Record<Client, DailyRecord[]> {
+export function loadUsageDataset(dataDir: string = SESSION_STATS_DIR): Record<Client, DailyRecord[]> {
   const result = {} as Record<Client, DailyRecord[]>;
   for (const c of CLIENTS) {
     try {
@@ -416,8 +393,6 @@ export function loadUsageDataset(dataDir: string = DEFAULT_DATA_DIR): Record<Cli
   return result;
 }
 
-// 别名兼容
-export const loadAllClientDays = loadUsageDataset;
 
 /**
  * 聚合全客户端不可变指标（深模块核心接口）
@@ -465,5 +440,3 @@ export function aggregateUsage(clientDays: Record<Client, DailyRecord[]>): Aggre
   };
 }
 
-// 别名兼容
-export const getAggregateUsage = aggregateUsage;
