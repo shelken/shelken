@@ -248,10 +248,11 @@ function readStoredJson(path: string): Record<string, unknown> | null {
 }
 
 /**
- * 存档是唯一副本，tmp+rename 原子替换，避免写中断留下截断文件。
+ * 存档是唯一副本：tmp+rename 原子替换，避免写中断留下截断文件。
+ * 唯一 tmp 名，防定时任务与手工 sync 并发时互相搬走对方的临时文件。
  */
 function writeStoredJson(path: string, data: unknown): void {
-  const tmp = `${path}.tmp`;
+  const tmp = `${path}.${process.pid}.tmp`;
   writeFileSync(tmp, JSON.stringify(data, null, 2) + "\n", "utf-8");
   renameSync(tmp, path);
 }
