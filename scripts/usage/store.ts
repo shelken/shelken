@@ -65,28 +65,80 @@ export function filterLastNDays(days: DailyRecord[], n: number): DailyRecord[] {
 }
 
 /**
+ * 过滤出最近 N 个月的记录：以该客户端最近有记录的日期为终点向前回溯 N 个月。
+ * 按客户端各自取终点，避免已停用的 harness 被陈旧高用量模型长期占榜。
+ */
+export function filterLastMonths(days: DailyRecord[], months: number): DailyRecord[] {
+  if (days.length === 0) return [];
+  const sorted = [...days].sort((a, b) => a.date.localeCompare(b.date));
+  const anchor =
+    [...sorted].reverse().find((d) => dayTokens(d) > 0)?.date ?? sorted[sorted.length - 1].date;
+
+  const [y, m, d] = anchor.split("-").map(Number);
+  const monthsBack = y * 12 + (m - 1) - months;
+  const targetY = Math.floor(monthsBack / 12);
+  const targetM = (monthsBack % 12) + 1;
+  const lastDayOfTarget = new Date(Date.UTC(targetY, targetM, 0)).getUTCDate();
+  const cutoff = `${targetY}-${String(targetM).padStart(2, "0")}-${String(
+    Math.min(d, lastDayOfTarget)
+  ).padStart(2, "0")}`;
+
+  return sorted.filter((x) => x.date >= cutoff && x.date <= anchor);
+}
+
+interface ModelTotal {
+  name: string;
+  tokens: number;
+}
+
+/**
+ * 按清洗后的小写模型名归并汇总 Token，保留首次出现的原始名称
+ */
+function collectModelTotals(days: DailyRecord[]): Map<string, ModelTotal> {
+  const totals = new Map<string, ModelTotal>();
+  for (const d of days) {
+    for (const m of d.modelBreakdowns || []) {
+      const name = cleanModelName(m.modelName || "unknown");
+      const key = name.toLowerCase();
+      const entry = totals.get(key) || { name, tokens: 0 };
+      entry.tokens += modelTokens(m);
+      totals.set(key, entry);
+    }
+  }
+  return totals;
+}
+
+/**
  * 模型 Token 贡献排行榜，按清洗后的模型名称归并汇总
  */
 export function rankModels(days: DailyRecord[], top = 5): [string, number][] {
-  const totals: Record<string, number> = {};
-  const displayNames: Record<string, string> = {};
+  return [...collectModelTotals(days).values()]
+    .sort((a, b) => b.tokens - a.tokens)
+    .slice(0, top)
+    .map((e) => [e.name, e.tokens]);
+}
 
-  for (const d of days) {
-    for (const m of d.modelBreakdowns || []) {
-      const raw = cleanModelName(m.modelName || "unknown");
-      const lower = raw.toLowerCase();
-      const tok = modelTokens(m);
-      totals[lower] = (totals[lower] || 0) + tok;
-      if (!displayNames[lower]) {
-        displayNames[lower] = raw;
-      }
-    }
-  }
+export interface ModelRanking {
+  models: [string, number][];
+  windowed: boolean;
+}
 
-  return Object.entries(totals)
-    .map(([k, v]) => [displayNames[k] || k, v] as [string, number])
-    .sort((a, b) => b[1] - a[1])
-    .slice(0, top);
+/**
+ * TOP N 模型排行：窗口内模型数达到 N 个时只统计窗口（各客户端自最近有记录日起回溯），
+ * 不足 N 个则直接退回全周期统计。两种策略都按 token 单调递减。
+ */
+export function rankTopModels(days: DailyRecord[], top = 5, windowMonths = 3): ModelRanking {
+  const windowTotals = collectModelTotals(filterLastMonths(days, windowMonths));
+  const windowed = windowTotals.size >= top;
+  const totals = windowed ? windowTotals : collectModelTotals(days);
+
+  return {
+    models: [...totals.values()]
+      .sort((a, b) => b.tokens - a.tokens)
+      .slice(0, top)
+      .map((e) => [e.name, e.tokens]),
+    windowed,
+  };
 }
 
 function formatNumberString(s: string): string {

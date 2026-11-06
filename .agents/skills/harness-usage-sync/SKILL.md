@@ -50,6 +50,7 @@ Entrypoint: `scripts/harness-usage.ts`
    - `assets/usage/omp.svg` 当前主力客户端卡片
    - `assets/usage/history.svg` 2×2 历史 4 大生态归档卡片（Pi, Codex, OpenCode, Claude Code）
    - 全部 + 模型排行；**无费用**
+   - TOP 5 MODELS：各客户端各自以「最近有记录日」为终点回溯 `USAGE_CONFIG.topModelsWindowMonths` 个月（3）；窗口内模型不足 5 个时直接改用全周期统计；标题按实际策略标注 `3mo` 或 `all`，卡片其余指标和日期仍为全周期
    - README `HARNESS-USAGE` 嵌入上述 4 张卡片（`assets` 分支 raw URL）
 
 3. **Preview**（GitHub API，非 grip）

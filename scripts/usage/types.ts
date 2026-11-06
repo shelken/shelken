@@ -37,6 +37,8 @@ export const PALETTE = {
 } as const;
 
 export const USAGE_CONFIG = {
+  // 模型排行窗口（月）：以各客户端最近有记录的日期为终点向前回溯；窗口内模型不足 N 个时退回全周期
+  topModelsWindowMonths: 3,
   // 单客户端卡片（如 omp.svg）
   clientCard: {
     width: 846,

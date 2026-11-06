@@ -12,7 +12,7 @@ import {
   dayTokens,
   filterLastNDays,
   fmtTokens,
-  rankModels,
+  rankTopModels,
   sumTokens,
 } from "./store";
 
@@ -47,6 +47,11 @@ export function svgText(x: number, y: number, body: string, opts: TextOptions): 
   return `<text ${attrs}>${escapeXml(body)}</text>`;
 }
 
+function modelRankLabel(windowed: boolean): string {
+  const period = windowed ? `${USAGE_CONFIG.topModelsWindowMonths}mo` : "all";
+  return `TOP 5 · ${period}`;
+}
+
 /**
  * 构造单客户端卡片 SVG（如 omp.svg）
  */
@@ -60,7 +65,11 @@ export function buildClientSvg(days: DailyRecord[], client: Client): string {
   const t40 = sumTokens(d40);
 
   const cfg = USAGE_CONFIG.clientCard;
-  const topModels = rankModels(days, cfg.topModels);
+  const { models: topModels, windowed } = rankTopModels(
+    days,
+    cfg.topModels,
+    USAGE_CONFIG.topModelsWindowMonths
+  );
 
   const dates = days.map((d) => d.date).sort();
   const fr = dates[0] || "—";
@@ -140,11 +149,11 @@ export function buildClientSvg(days: DailyRecord[], client: Client): string {
     svgText(490, 187, fmtTokens(t7), { fill: A, size: 12, weight: "700", anchor: "end" }),
     svgText(275, 206, "Recent 40d", { fill: PALETTE.sub, size: 12 }),
     svgText(490, 206, fmtTokens(t40), { fill: A, size: 12, weight: "700", anchor: "end" }),
-    // Col 3: TOP 5 MODELS (535 ~ 816)
-    svgText(535, 74, "TOP 5 MODELS", { fill: PALETTE.foot, size: 10, weight: "700", spacing: "1.2" }),
+    // Col 3: TOP 5 MODELS (535 ~ 816) —— 仅此栏用窗口数据，其余指标均为全周期
+    svgText(535, 74, modelRankLabel(windowed), { fill: PALETTE.foot, size: 10, weight: "700", spacing: "1.2" }),
   ];
 
-  const maxModelTokens = topModels[0]?.[1] || 1;
+  const maxModelTokens = topModels.reduce((max, [, tok]) => Math.max(max, tok), 0) || 1;
 
   if (topModels.length === 0) {
     parts.push(svgText(535, 120, "No model breakdown available", { fill: PALETTE.foot, size: 12 }));
@@ -239,8 +248,12 @@ export function buildHistorySvg(allClientDays: Record<Client, DailyRecord[]>): s
     const dates = days.map((d) => d.date).sort();
     const dSpan = dates.length ? `${dates[0]} · ${dates[dates.length - 1]}` : "-";
 
-    const topModels = rankModels(days, cfg.topModels);
-    const maxModelTok = topModels[0]?.[1] || 1;
+    const { models: topModels, windowed } = rankTopModels(
+      days,
+      cfg.topModels,
+      USAGE_CONFIG.topModelsWindowMonths
+    );
+    const maxModelTok = topModels.reduce((max, [, tok]) => Math.max(max, tok), 0) || 1;
 
     const accent = ACCENT[c];
     const title = TITLE[c];
@@ -266,7 +279,7 @@ export function buildHistorySvg(allClientDays: Record<Client, DailyRecord[]>): s
     // --- 右子栏：TOP 5 MODELS + 日期区间 ---
     const mx = qx + 158;
     lines.push(
-      `  ${svgText(mx, qy + 12, "TOP 5 MODELS", { fill: PALETTE.foot, size: 10, weight: "700", spacing: "1.1" })}`,
+      `  ${svgText(mx, qy + 12, modelRankLabel(windowed), { fill: PALETTE.foot, size: 10, weight: "700", spacing: "1.1" })}`,
       `  ${svgText(qx + cfg.quadrantWidth, qy + 12, dSpan, { fill: PALETTE.foot, size: 10, anchor: "end" })}`
     );
 

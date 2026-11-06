@@ -15,6 +15,8 @@ import {
   aggregateUsage,
   fmtTokens,
   rankModels,
+  filterLastMonths,
+  rankTopModels,
 } from "./usage/store";
 import {
   buildClientSvg,
@@ -242,6 +244,110 @@ describe("UsageStore - 时序连续打卡与全量聚合", () => {
   });
 });
 
+describe("UsageStore - 模型排行窗口（最近有记录日回溯 N 月）", () => {
+  const day = (date: string, tokens: number, model: string): DailyRecord => ({
+    date,
+    inputTokens: tokens,
+    outputTokens: 0,
+    cacheReadTokens: 0,
+    cacheCreationTokens: 0,
+    totalTokens: tokens,
+    totalCost: 0,
+    modelBreakdowns: [
+      {
+        modelName: model,
+        inputTokens: tokens,
+        outputTokens: 0,
+        cacheReadTokens: 0,
+        cacheCreationTokens: 0,
+        cost: 0,
+      },
+    ],
+  });
+
+  it("以各客户端最近有记录日回溯 N 个月，排除窗口外天数", () => {
+    const days = [
+      day("2026-01-10", 5_000_000, "stale-model"),
+      day("2026-08-09", 1_000_000, "outside"),
+      day("2026-08-10", 1_000_000, "fresh-model"),
+      day("2026-11-10", 9_000_000, "newest-model"),
+    ];
+
+    const window = filterLastMonths(days, 3);
+    expect(window.map((d) => d.date)).toEqual(["2026-08-10", "2026-11-10"]);
+    expect(rankModels(window, 5)).toEqual([
+      ["newest-model", 9_000_000],
+      ["fresh-model", 1_000_000],
+    ]);
+  });
+
+  it("窗口终点取最近有记录的日期，不受尾部零用量日影响", () => {
+    const days = [day("2026-06-01", 100, "a"), day("2026-09-01", 100, "b"), {
+      ...day("2026-10-01", 0, ""),
+      modelBreakdowns: [],
+    }];
+
+    expect(filterLastMonths(days, 3).map((d) => d.date)).toEqual(["2026-06-01", "2026-09-01"]);
+  });
+
+  it("月末回溯时钳制到目标月份最后一天", () => {
+    const days = [
+      day("2026-02-27", 100, "too-old"),
+      day("2026-02-28", 100, "kept"),
+      day("2026-05-31", 100, "anchor"),
+    ];
+
+    expect(filterLastMonths(days, 3).map((d) => d.date)).toEqual(["2026-02-28", "2026-05-31"]);
+  });
+
+  it("空数据集返回空数组", () => {
+    expect(filterLastMonths([], 3)).toEqual([]);
+  });
+
+  it("窗口内模型不足 N 个时直接退回全周期统计", () => {
+    const days = [
+      day("2026-01-05", 8_000_000, "legacy-a"),
+      day("2026-01-06", 6_000_000, "legacy-b"),
+      day("2026-11-01", 100, "fresh-a"),
+      day("2026-11-02", 50, "fresh-b"),
+    ];
+
+    const { models, windowed } = rankTopModels(days, 5, 3);
+    expect(windowed).toBe(false);
+    expect(models).toEqual([
+      ["legacy-a", 8_000_000],
+      ["legacy-b", 6_000_000],
+      ["fresh-a", 100],
+      ["fresh-b", 50],
+    ]);
+    const values = models.map(([, tokens]) => tokens);
+    expect([...values].sort((a, b) => b - a)).toEqual(values);
+  });
+
+  it("模型名大小写与 [pi]/[omp] 前缀归并到同一行", () => {
+    const days = [
+      day("2026-11-01", 1_000, "GPT-5.6-sol"),
+      day("2026-11-02", 2_000, "gpt-5.6-sol"),
+      day("2026-11-03", 4_000, "[omp] GPT-5.6-SOL"),
+    ];
+
+    const { models } = rankTopModels(days, 5, 3);
+    expect(models).toEqual([["GPT-5.6-sol", 7_000]]);
+  });
+
+  it("窗口内已满 N 个模型时只用窗口，不引入窗口外模型", () => {
+    const days = [
+      day("2026-01-05", 99_000_000, "legacy"),
+      ...["a", "b", "c", "d", "e"].map((name, i) => day(`2026-11-0${i + 1}`, 100 - i, name)),
+    ];
+
+    const { models, windowed } = rankTopModels(days, 5, 3);
+    expect(windowed).toBe(true);
+    expect(models.map(([name]) => name)).toEqual(["a", "b", "c", "d", "e"]);
+    expect(models.some(([name]) => name === "legacy")).toBe(false);
+  });
+});
+
 describe("Card Visualizers - SVG 渲染适配器", () => {
   it("buildClientSvg 渲染符合 Catppuccin 规范的单客户端卡片", () => {
     const days: DailyRecord[] = [
@@ -268,7 +374,146 @@ describe("Card Visualizers - SVG 渲染适配器", () => {
     expect(svg).toContain("@shelken");
     expect(svg).toContain("gpt-5.6-sol");
     expect(svg).toContain("TOKEN COMPOSITION");
-    expect(svg).toContain("TOP 5 MODELS");
+    expect(svg).toContain("TOP 5 · all");
+  });
+
+  it("buildClientSvg 在窗口内模型足够时标注 3mo", () => {
+    const days: DailyRecord[] = ["a", "b", "c", "d", "e"].map((name, i) => ({
+      date: `2026-11-0${i + 1}`,
+      inputTokens: 100 - i,
+      outputTokens: 0,
+      cacheReadTokens: 0,
+      cacheCreationTokens: 0,
+      totalTokens: 100 - i,
+      totalCost: 0,
+      modelBreakdowns: [
+        { modelName: name, inputTokens: 100 - i, outputTokens: 0, cacheReadTokens: 0, cacheCreationTokens: 0, cost: 0 },
+      ],
+    }));
+
+    const svg = buildClientSvg(days, "omp");
+    expect(svg).toContain("TOP 5 · 3mo");
+    expect(svg).not.toContain("TOP 5 · all");
+  });
+
+  it("buildClientSvg 在窗口内模型不足时退回全周期，榜单按 token 单调递减", () => {
+    const breakdown = (modelName: string, tokens: number): ModelBreakdown => ({
+      modelName,
+      inputTokens: tokens,
+      outputTokens: 0,
+      cacheReadTokens: 0,
+      cacheCreationTokens: 0,
+      cost: 0,
+    });
+    const days: DailyRecord[] = [
+      {
+        date: "2026-01-01",
+        inputTokens: 5_000_000,
+        outputTokens: 0,
+        cacheReadTokens: 0,
+        cacheCreationTokens: 0,
+        totalTokens: 5_000_000,
+        totalCost: 0,
+        modelBreakdowns: [breakdown("legacy-model", 5_000_000)],
+      },
+      {
+        date: "2026-09-01",
+        inputTokens: 200,
+        outputTokens: 0,
+        cacheReadTokens: 0,
+        cacheCreationTokens: 0,
+        totalTokens: 200,
+        totalCost: 0,
+        modelBreakdowns: [breakdown("mid-model", 200)],
+      },
+      {
+        date: "2026-11-05",
+        inputTokens: 100,
+        outputTokens: 0,
+        cacheReadTokens: 0,
+        cacheCreationTokens: 0,
+        totalTokens: 100,
+        totalCost: 0,
+        modelBreakdowns: [breakdown("fresh-model", 100)],
+      },
+    ];
+
+    const svg = buildClientSvg(days, "omp");
+    expect(svg).toContain("TOP 5 · all");
+    expect(svg).toContain("2026-01-01 · 2026-11-05");
+    expect(svg).toContain("mid-model");
+    expect(svg).toContain("fresh-model");
+    expect(svg).toContain("legacy-model");
+    expect(svg.indexOf("legacy-model")).toBeLessThan(svg.indexOf("mid-model"));
+    expect(svg.indexOf("mid-model")).toBeLessThan(svg.indexOf("fresh-model"));
+    // 模型排行栏（x=705, height=6, 轨道宽 55）柱子不得超过轨道宽度
+    const barWidths = [...svg.matchAll(/<rect x="705" y="[-\d.]+" width="([\d.]+)" height="6"/g)].map((m) => Number(m[1]));
+    expect(barWidths.length).toBeGreaterThan(0);
+    expect(Math.max(...barWidths)).toBeLessThanOrEqual(55);
+  });
+
+  it("buildClientSvg 走 3 个月窗口时，跨窗口的模型只计窗口内 token", () => {
+    const rec = (date: string, modelName: string, tokens: number): DailyRecord => ({
+      date,
+      inputTokens: tokens,
+      outputTokens: 0,
+      cacheReadTokens: 0,
+      cacheCreationTokens: 0,
+      totalTokens: tokens,
+      totalCost: 0,
+      modelBreakdowns: [
+        { modelName, inputTokens: tokens, outputTokens: 0, cacheReadTokens: 0, cacheCreationTokens: 0, cost: 0 },
+      ],
+    });
+    const days = [
+      rec("2026-01-01", "old-model", 100_000_000),
+      rec("2026-06-01", "model-e", 50_000_000),
+      rec("2026-11-01", "model-a", 5_000_000),
+      rec("2026-11-02", "model-b", 4_000_000),
+      rec("2026-11-03", "model-c", 3_000_000),
+      rec("2026-11-04", "model-d", 2_000_000),
+      rec("2026-11-05", "model-e", 1_000_000),
+    ];
+
+    const svg = buildClientSvg(days, "omp");
+    expect(svg).toContain("TOP 5 · 3mo");
+    expect(svg).toContain("model-e");
+    expect(svg).toContain("1.0M");
+    expect(svg).not.toContain("51.0M");
+    expect(svg).not.toContain("old-model");
+    expect(svg).toContain("2026-01-01 · 2026-11-05");
+  });
+
+  it("buildHistorySvg 退回全周期后的柱子按显示项最大值归一化，不溢出象限", () => {
+    const day = (date: string, tokens: number, model: string): DailyRecord => ({
+      date,
+      inputTokens: tokens,
+      outputTokens: 0,
+      cacheReadTokens: 0,
+      cacheCreationTokens: 0,
+      totalTokens: tokens,
+      totalCost: 0,
+      modelBreakdowns: [
+        { modelName: model, inputTokens: tokens, outputTokens: 0, cacheReadTokens: 0, cacheCreationTokens: 0, cost: 0 },
+      ],
+    });
+    const data: Record<Client, DailyRecord[]> = {
+      omp: [],
+      pi: [day("2026-01-01", 5_000_000_000, "legacy-model"), day("2026-11-01", 100, "fresh-model")],
+      codex: [],
+      opencode: [],
+      claude: [],
+    };
+
+    const svg = buildHistorySvg(data);
+    expect(svg).toContain("TOP 5 · all");
+    expect(svg).toContain("fresh-model");
+    expect(svg).toContain("legacy-model");
+    expect(svg.indexOf("legacy-model")).toBeLessThan(svg.indexOf("fresh-model"));
+
+    const barWidths = [...svg.matchAll(/<rect[^>]*width="([\d.]+)"[^>]*height="6"/g)].map((m) => Number(m[1]));
+    expect(barWidths.length).toBeGreaterThan(0);
+    expect(Math.max(...barWidths)).toBeLessThanOrEqual(46);
   });
 
   it("buildHistorySvg 正确渲染 4 象限历史生态归档", () => {

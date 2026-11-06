@@ -39,7 +39,7 @@
   - **标准化 (`normalizeDay`)**: 吸收多客户端原始 JSON 中的格式差异（如缺省字段、字段命名兼容）。
   - **跨节点合并 (`mergeDailyRecords`)**: 支持多台工作机（如 `mio`, `sakamoto`）导出的同客户端同日数据按模型粒度深度合并与去重。
   - **时序与打卡 (`calculateStreaks`)**: 准确计算连续打卡、断签识别，鲁棒处理跨年与闰年。
-  - **排行榜与过滤 (`rankModels`, `filterLastNDays`)**: 模型名称前缀清洗（`cleanModelName`）与 Token 降序排行。
+  - **排行榜与过滤 (`rankModels`, `rankTopModels`, `filterLastNDays`, `filterLastMonths`)**: 模型名称前缀清洗（`cleanModelName`）与 Token 降序排行；`filterLastMonths` 以各客户端最近有记录日回溯窗口，`rankTopModels` 在窗口内模型数达到 N 个时只统计窗口，不足则直接退回全周期，两种策略均按 token 单调递减。
   - **聚合构建 (`aggregateUsage`)**: 纯函数组装生成只读不可变的 `AggregateUsage` 契约对象。
   - **外部适配 (`loadClientDays`, `loadUsageDataset`)**: 边界层文件读取适配器。
 
@@ -48,7 +48,7 @@
   - 纯函数渲染器：接受不可变数据，输出符合 W3C 标准的 SVG 字符串。
   - 视觉规范：严格使用 Catppuccin Macchiato 主题配色体系与 `USAGE_CONFIG` 布局度量。
   - 卡片族：
-    - `buildClientSvg`: 单客户端综合卡片（如 `omp.svg`），展示统计指标、模型排名前 5 与最近 30 天迷你热力走势。
+    - `buildClientSvg`: 单客户端综合卡片（如 `omp.svg`），展示统计指标、模型排名前 5（窗口见 `USAGE_CONFIG.topModelsWindowMonths`，只有此栏用窗口数据，其余指标与日期均为全周期）与最近 30 天迷你热力走势。
     - `buildHistorySvg`: 2×2 历史生态归档卡片（`history.svg`），按象限排版历史客户端用量。
     - `buildHarnessSvg`: 全周期 GitHub 风格年度热力图（`harness.svg`）。
 - **`Vibe Snake` (`scripts/vibe-snake.ts`)**:
