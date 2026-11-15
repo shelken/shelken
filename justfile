@@ -43,6 +43,10 @@ build-badges:
 preview *args:
 	{{ bun }} {{ root }}/scripts/gh-preview.ts {{ args }}
 
+# 静态检查 (oxlint + anti-slop，CI 同款)
+lint *args:
+	{{ bun }}x oxlint {{ args }}
+
 # 运行测试 (bun test)
 test *args:
 	{{ bun }} test {{ args }}
