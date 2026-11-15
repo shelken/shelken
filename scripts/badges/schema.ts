@@ -18,8 +18,8 @@ const RawBadgeItemSchema = z.union([
 const RawBadgeGroupSchema = z.looseObject({
   title: z.string(),
   slug: z.string().nullish(),
-  items: z.array(RawBadgeItemSchema).optional(),
-  badges: z.array(RawBadgeItemSchema).optional(),
+  items: z.array(RawBadgeItemSchema).nullish(),
+  badges: z.array(RawBadgeItemSchema).nullish(),
 });
 
 export const RawBadgeConfigSchema = z.union([

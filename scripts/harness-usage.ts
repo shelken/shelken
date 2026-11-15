@@ -289,11 +289,11 @@ function writeStoredJson(path: string, data: DailyFile | SessionsFile): void {
 }
 
 interface TokenFields {
-  inputTokens?: number;
-  outputTokens?: number;
-  cacheReadTokens?: number;
-  cacheCreationTokens?: number;
-  totalTokens?: number;
+  inputTokens?: number | null;
+  outputTokens?: number | null;
+  cacheReadTokens?: number | null;
+  cacheCreationTokens?: number | null;
+  totalTokens?: number | null;
 }
 
 function tokenSum(rec: TokenFields): number {

@@ -5,7 +5,7 @@ import { z } from "zod";
  * 条目用 looseObject 保留未知字段，存档写回时不丢 ccusage 新增的信息。
  */
 
-const tokenCount = z.number().optional();
+const tokenCount = z.number().nullish();
 
 const tokenFields = {
   inputTokens: tokenCount,
@@ -16,7 +16,7 @@ const tokenFields = {
 };
 
 const ModelStatsSchema = z.looseObject({
-  modelName: z.string().optional(),
+  modelName: z.string().nullish(),
   inputTokens: tokenCount,
   outputTokens: tokenCount,
   cacheReadTokens: tokenCount,
@@ -29,10 +29,10 @@ export const ArchiveDaySchema = z.looseObject({
   ...tokenFields,
   totalCost: tokenCount,
   cost: tokenCount,
-  modelBreakdowns: z.array(ModelStatsSchema).optional(),
+  modelBreakdowns: z.array(ModelStatsSchema).nullish(),
   // 旧版 ccusage：模型名数组，或「模型名 → 统计」字典
-  models: z.union([z.array(z.string()), z.record(z.string(), ModelStatsSchema.nullish())]).optional(),
-  modelsUsed: z.array(z.string()).optional(),
+  models: z.union([z.array(z.string()), z.record(z.string(), ModelStatsSchema.nullish())]).nullish(),
+  modelsUsed: z.array(z.string()).nullish(),
 });
 
 export const ArchiveSessionSchema = z.looseObject({

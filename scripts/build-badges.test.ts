@@ -131,7 +131,7 @@ describe("BadgeStore - 配置归一化与加载", () => {
     );
   });
 
-  it("YAML 里的空值 slug / name 视为未填写", () => {
+  it("YAML 里的空值 slug / name / items 视为未填写", () => {
     const dir = mkdtempSync(join(tmpdir(), "badge-config-"));
     const path = join(dir, "nulls.yaml");
 
@@ -142,6 +142,10 @@ describe("BadgeStore - 配置归一化与加载", () => {
       );
 
       expect(loadBadgeConfig(path)).toEqual([{ slug: "languages", title: "Languages", items: [["Bun", "peach", null]] }]);
+
+      // items 为空值时回退到 badges
+      writeFileSync(path, "groups:\n  - title: Languages\n    items: null\n    badges:\n      - [Bun, peach]\n");
+      expect(loadBadgeConfig(path)[0].items).toEqual([["Bun", "peach", null]]);
     } finally {
       rmSync(dir, { recursive: true, force: true });
     }

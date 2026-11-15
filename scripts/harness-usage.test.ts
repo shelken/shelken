@@ -186,6 +186,27 @@ describe("UsageStore - 存档边界校验", () => {
     });
   });
 
+  it("字段为 null 视为缺省，模型明细回退到 models 字典", () => {
+    withArchive(
+      [
+        {
+          date: "2026-11-01",
+          inputTokens: null,
+          outputTokens: 4,
+          cost: null,
+          modelBreakdowns: null,
+          models: { "m-a": null, "m-b": { inputTokens: 5 } },
+          modelsUsed: null,
+        },
+      ],
+      (dir) => {
+        const [day] = loadClientDays("omp", dir);
+        expect(day.totalTokens).toBe(5);
+        expect(day.modelBreakdowns.map((m) => m.modelName).sort()).toEqual(["m-a", "m-b"]);
+      }
+    );
+  });
+
   it("合法存档按日读入并归一化", () => {
     withArchive([{ date: "2026-11-01", inputTokens: 12, outputTokens: 3 }, { date: "2026-11-02", totalTokens: 7 }], (dir) => {
       expect(loadClientDays("omp", dir).map((d) => d.totalTokens)).toEqual([15, 7]);
