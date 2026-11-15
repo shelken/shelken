@@ -47,10 +47,12 @@ export async function renderVibeSnake(options?: {
   clientDays?: Record<Client, DailyRecord[]>;
 }): Promise<string | null> {
   const outFile = options?.outFile || OUT_FILE;
+
   const agg =
     options?.agg !== undefined
       ? options.agg
       : aggregateUsage(options?.clientDays || loadUsageDataset());
+
   if (!agg) return null;
 
   const {
@@ -69,6 +71,7 @@ export async function renderVibeSnake(options?: {
   const weeks: Week[] = [];
   let curWeek: Week = { contributionDays: [] };
   const cur = new Date(startDate);
+
   while (cur <= latestDate) {
     const iso = cur.toISOString().slice(0, 10);
     const weekday = cur.getUTCDay();
@@ -76,8 +79,10 @@ export async function renderVibeSnake(options?: {
 
     let level: ContributionDay["contributionLevel"] = "NONE";
     let levelNum = 0;
+
     if (count > 0) {
       const ratio = count / avgTokens;
+
       if (ratio >= 1.8) {
         level = "FOURTH_QUARTILE";
         levelNum = 4;
@@ -115,6 +120,7 @@ export async function renderVibeSnake(options?: {
   try {
     globalThis.fetch = async (url: string | URL | Request, opts?: unknown) => {
       const urlStr = typeof url === "string" ? url : url instanceof URL ? url.toString() : (url as Request).url;
+
       if (urlStr.includes("api.github.com/graphql")) {
         return new Response(
           JSON.stringify({
@@ -131,11 +137,13 @@ export async function renderVibeSnake(options?: {
           { status: 200, headers: { "Content-Type": "application/json" } }
         );
       }
+
       return origFetch(url, opts as RequestInit);
     };
 
     console.log = (...args: unknown[]) => {
       const msg = String(args[0] || "");
+
       if (
         msg.includes("fetching user contribution") ||
         msg.includes("computing best route") ||
@@ -143,6 +151,7 @@ export async function renderVibeSnake(options?: {
       ) {
         return;
       }
+
       origLog(...args);
     };
 
@@ -180,6 +189,7 @@ export async function renderVibeSnake(options?: {
     if (results[0]) {
       const rawSvg = results[0];
       const origOpen = rawSvg.match(/<svg view[bB]ox="[^"]+" width="(\d+)" height="(\d+)"[^>]*>/);
+
       if (origOpen) {
         const newSvgOpen =
           '<svg viewBox="-16 -80 880 248" width="880" height="248" ' +
@@ -204,9 +214,11 @@ export async function renderVibeSnake(options?: {
         writeFileSync(outFile, svgWithHeader, "utf-8");
         const rel = outFile.startsWith(ROOT) ? outFile.slice(ROOT.length + 1) : outFile;
         console.log(`✓ ${rel}`);
+
         return outFile;
       }
     }
+
     return null;
   } finally {
     globalThis.fetch = origFetch;

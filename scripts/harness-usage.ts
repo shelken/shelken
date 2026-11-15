@@ -106,6 +106,7 @@ export const START_MARKER = "<!-- HARNESS-USAGE:START -->";
 export const END_MARKER = "<!-- HARNESS-USAGE:END -->";
 
 export const USAGE_ASSETS_BRANCH = "assets";
+
 export const USAGE_ASSETS_RAW_BASE =
   "https://raw.githubusercontent.com/shelken/shelken/assets/assets/usage";
 
@@ -116,9 +117,11 @@ export function die(msg: string, code = 1): never {
 
 export function ensureDirs(): void {
   mkdirSync(SESSION_STATS_DIR, { recursive: true });
+
   for (const c of CLIENTS) {
     mkdirSync(join(SESSION_STATS_DIR, c), { recursive: true });
   }
+
   mkdirSync(CARDS_DIR, { recursive: true });
 }
 
@@ -131,13 +134,17 @@ export function patchReadme(rendered: string[] = [...PRIMARY_CLIENTS, "history"]
     ...PRIMARY_CLIENTS.map((c): [string, string] => [c, TITLE[c]]),
     ["history", "History"],
   ];
+
   const alwaysShown = new Set(["vibe-snake", "harness"]);
+
   for (const [slug, alt] of cards) {
     if (!existsSync(join(CARDS_DIR, `${slug}.svg`))) continue;
+
     if (!alwaysShown.has(slug) && !rendered.includes(slug)) continue;
     const url = `${USAGE_ASSETS_RAW_BASE}/${slug}.svg`;
     lines.push(`<a href="${url}"><img class="usage-card" width="100%" src="${url}" alt="${alt}" /></a>`, "");
   }
+
   lines.push(END_MARKER);
   const block = lines.join("\n");
 
@@ -157,6 +164,7 @@ export function patchReadme(rendered: string[] = [...PRIMARY_CLIENTS, "history"]
  */
 export function buildHistorySvg(allClientDays?: Record<Client, DailyRecord[]>): string {
   const days = allClientDays || loadUsageDataset();
+
   return renderHistorySvg(days);
 }
 
@@ -169,14 +177,18 @@ export function buildHarnessSvg(
 ): string {
   const days = clientDays || loadUsageDataset();
   const agg = injectedAgg !== undefined ? injectedAgg : aggregateUsage(days);
+
   if (!agg) return "";
+
   return renderHarnessSvg(days, agg);
 }
 
 export function ccusageCmd(client: Client, sub: "daily" | "session"): string[] {
   const base = ["mise", "exec", "--", "ccusage"];
+
   if (client === "omp") {
     const home = homedir();
+
     const candidateDirs = [
       process.env.PI_CODING_AGENT_DIR,
       process.env.OMP_AGENT_DIR,
@@ -185,6 +197,7 @@ export function ccusageCmd(client: Client, sub: "daily" | "session"): string[] {
 
     const agentDir = candidateDirs.find((d) => existsSync(d)) || join(home, ".omp", "agent");
     const sessionsDir = join(agentDir, "sessions");
+
     return [...base, "pi", sub, "--pi-path", sessionsDir, "--json", "--offline"];
   }
 
@@ -196,6 +209,7 @@ export async function runCcusage(
   sub: "daily" | "session"
 ): Promise<Record<string, unknown>> {
   const cmd = ccusageCmd(client, sub);
+
   const proc = Bun.spawn(cmd, {
     cwd: ROOT,
     stdout: "pipe",
@@ -217,9 +231,11 @@ export async function runCcusage(
   try {
     const data = JSON.parse(stdout);
     const key = sub === "daily" ? "daily" : "sessions";
+
     if (!data || !Array.isArray(data[key])) {
       throw new UsageError(`ccusage ${client} ${sub}: ${key}[] 缺失`);
     }
+
     return data;
   } catch (err: unknown) {
     if (err instanceof UsageError) throw err;
@@ -234,6 +250,7 @@ export function dataPath(client: Client, file: "daily" | "sessions"): string {
 function readStoredJson(path: string): Record<string, unknown> | null {
   if (!existsSync(path)) return null;
   let data: unknown;
+
   try {
     data = JSON.parse(readFileSync(path, "utf-8"));
   } catch (err: unknown) {
@@ -242,6 +259,7 @@ function readStoredJson(path: string): Record<string, unknown> | null {
       `存档损坏，拒绝覆盖以免丢历史: ${path}\n${msg}\n修复或恢复该文件后重试（可从备份还原，勿直接删除）`
     );
   }
+
   return data && typeof data === "object" && !Array.isArray(data)
     ? (data as Record<string, unknown>)
     : null;
@@ -277,18 +295,23 @@ export function assertArchiveEntries(
   key: "date" | "sessionId"
 ): void {
   const bad = entries.filter((e) => typeof e?.[key] !== "string" || !e[key]);
+
   if (bad.length > 0) {
     throw new UsageError(
       `${source} 的 ${file} 有 ${bad.length} 条记录缺少合法 ${key}，拒绝写入以免丢历史`
     );
   }
+
   const seen = new Set<string>();
+
   const dupes = entries.filter((e) => {
     const k = e[key] as string;
     const dup = seen.has(k);
     seen.add(k);
+
     return dup;
   });
+
   if (dupes.length > 0) {
     throw new UsageError(
       `${source} 的 ${file} 有 ${dupes.length} 条重复 ${key}（如 ${String(dupes[0][key])}），` +
@@ -303,13 +326,17 @@ function readStoredArray(
   key: "date" | "sessionId"
 ): Record<string, unknown>[] {
   const stored = readStoredJson(path);
+
   if (stored === null) return [];
   const value = stored[file];
+
   if (!Array.isArray(value)) {
     throw new UsageError(`存档 ${path} 的 ${file} 字段不是数组，拒绝写入以免丢历史`);
   }
+
   const entries = value as Record<string, unknown>[];
   assertArchiveEntries(file, `存档 ${path}`, entries, key);
+
   return entries;
 }
 
@@ -324,11 +351,15 @@ export function mergeDailyScans(
   scanned: Record<string, unknown>[]
 ): Record<string, unknown>[] {
   const byDate = new Map<string, Record<string, unknown>>();
+
   for (const d of stored) byDate.set(d.date as string, d);
+
   for (const d of scanned) {
     const prev = byDate.get(d.date as string);
+
     if (!prev || tokenSum(d) >= tokenSum(prev)) byDate.set(d.date as string, d);
   }
+
   return [...byDate.values()].sort((a, b) => String(a.date).localeCompare(String(b.date)));
 }
 
@@ -340,11 +371,15 @@ export function mergeSessionScans(
   scanned: Record<string, unknown>[]
 ): Record<string, unknown>[] {
   const byId = new Map<string, Record<string, unknown>>();
+
   for (const s of stored) byId.set(s.sessionId as string, s);
+
   for (const s of scanned) {
     const prev = byId.get(s.sessionId as string);
+
     if (!prev || tokenSum(s) >= tokenSum(prev)) byId.set(s.sessionId as string, s);
   }
+
   return [...byId.values()].sort((a, b) =>
     String(a.lastActivity ?? "").localeCompare(String(b.lastActivity ?? ""))
   );
@@ -358,9 +393,11 @@ export async function exportClient(client: Client): Promise<string | null> {
   const daily = Array.isArray(dailyData.daily)
     ? (dailyData.daily as Record<string, unknown>[])
     : [];
+
   const sessions = Array.isArray(sessionData.sessions)
     ? (sessionData.sessions as Record<string, unknown>[])
     : [];
+
   const dailyOut = dataPath(client, "daily");
   const sessionsOut = dataPath(client, "sessions");
 
@@ -369,10 +406,12 @@ export async function exportClient(client: Client): Promise<string | null> {
 
   if (daily.length === 0 && sessions.length === 0) {
     console.warn(`[WARN] ${client}: 扫描为空，跳过写入`);
+
     return null;
   }
 
   const mergedDaily = mergeDailyScans(readStoredArray(dailyOut, "daily", "date"), daily);
+
   const mergedSessions = mergeSessionScans(
     readStoredArray(sessionsOut, "sessions", "sessionId"),
     sessions
@@ -385,11 +424,13 @@ export async function exportClient(client: Client): Promise<string | null> {
   console.log(
     `✓ ${client}: days=${mergedDaily.length} sessions=${mergedSessions.length} totalTokens=${total.toLocaleString("en-US")}`
   );
+
   return dailyOut;
 }
 
 export async function exportAll(): Promise<string[]> {
   const results = await Promise.all(CLIENTS.map((c) => exportClient(c)));
+
   return results.filter((p): p is string => Boolean(p));
 }
 
@@ -404,6 +445,7 @@ export async function render(): Promise<string[]> {
   await renderVibeSnake({ agg });
 
   const harnessSvg = agg ? renderHarnessSvg(allClientDays, agg) : "";
+
   if (harnessSvg) {
     writeFileSync(join(CARDS_DIR, "harness.svg"), harnessSvg, "utf-8");
     console.log("✓ assets/usage/harness.svg");
@@ -414,6 +456,7 @@ export async function render(): Promise<string[]> {
   // 主力客户端：各出一张单客户端卡片
   for (const client of PRIMARY_CLIENTS) {
     const days = allClientDays[client] || [];
+
     if (days.length === 0) continue;
     writeFileSync(join(CARDS_DIR, `${client}.svg`), buildClientSvg(days, client), "utf-8");
     rendered.push(client);
@@ -428,6 +471,7 @@ export async function render(): Promise<string[]> {
 
   patchReadme(rendered);
   console.log(`✓ README  cards=${rendered.join(",")}`);
+
   return rendered;
 }
 
@@ -437,6 +481,7 @@ export async function runGit(args: string[], okCodes = [0]): Promise<string> {
     stdout: "pipe",
     stderr: "pipe",
   });
+
   const code = await proc.exited;
   const stdout = (await new Response(proc.stdout).text()).trim();
   const stderr = (await new Response(proc.stderr).text()).trim();
@@ -444,6 +489,7 @@ export async function runGit(args: string[], okCodes = [0]): Promise<string> {
   if (!okCodes.includes(code)) {
     throw new UsageError(`Git 命令失败（退出码 ${code}）\n命令: git ${args.join(" ")}\n${stderr || stdout}`);
   }
+
   return stdout;
 }
 
@@ -454,10 +500,13 @@ export async function gitPull(): Promise<void> {
 
 export async function gitCommit(paths: string[], msg: string): Promise<boolean> {
   const diff = await runGit(["diff", "--cached", "--name-only", "--", ...paths], [0, 1]);
+
   if (!diff) {
     const status = await runGit(["status", "--porcelain", "--", ...paths]);
+
     if (!status) {
       console.log("-> 无变更需提交");
+
       return false;
     }
   }
@@ -465,6 +514,7 @@ export async function gitCommit(paths: string[], msg: string): Promise<boolean> 
   await runGit(["add", "--", ...paths]);
   await runGit(["commit", "-m", msg, "--", ...paths]);
   console.log("✓ committed");
+
   return true;
 }
 
@@ -496,12 +546,15 @@ export async function pushUsageAssets(options?: {
       stdout: "pipe",
       stderr: "pipe",
     });
+
     const code = await proc.exited;
     const stdout = (await new Response(proc.stdout).text()).trim();
     const stderr = (await new Response(proc.stderr).text()).trim();
+
     if (!okCodes.includes(code)) {
       throw new UsageError(`Git 命令失败（退出码 ${code}）\n命令: git ${args.join(" ")}\n${stderr || stdout}`);
     }
+
     return stdout;
   };
 
@@ -529,14 +582,18 @@ export async function pushUsageAssets(options?: {
 
 function parseOption(args: string[], flag: string, defaultValue?: string): string {
   const idx = args.indexOf(flag);
+
   if (idx === -1) {
     if (defaultValue !== undefined) return defaultValue;
     throw new UsageError(`缺少选项 ${flag}`);
   }
+
   const val = args[idx + 1];
+
   if (!val || val.startsWith("-")) {
     throw new UsageError(`选项 ${flag} 缺少有效参数值`);
   }
+
   return val;
 }
 
@@ -553,12 +610,14 @@ export async function main(): Promise<void> {
   bun scripts/harness-usage.ts render
   bun scripts/harness-usage.ts sync [--client all] [--commit] [--push]
 `);
+
     return;
   }
 
   try {
     if (cmd === "export") {
       const client = parseOption(args, "--client", "all");
+
       if (client !== "all" && !CLIENTS.includes(client as Client)) {
         die(`未知 client: ${client}`);
       }
@@ -574,6 +633,7 @@ export async function main(): Promise<void> {
       const isPush = args.includes("--push");
       const isCommit = args.includes("--commit") || isPush;
       const client = parseOption(args, "--client", "all");
+
       if (client !== "all" && !CLIENTS.includes(client as Client)) {
         die(`未知 client: ${client}`);
       }
@@ -581,11 +641,13 @@ export async function main(): Promise<void> {
       if (isPush) {
         await gitPull();
       }
+
       if (client === "all") {
         await exportAll();
       } else {
         await exportClient(client as Client);
       }
+
       await render();
 
       if (isCommit || isPush) {
@@ -596,8 +658,10 @@ export async function main(): Promise<void> {
         });
 
         const hasReadmeDiff = await runGit(["status", "--porcelain", "--", README_PATH]);
+
         if (hasReadmeDiff) {
           await gitCommit([README_PATH], `docs: update usage card references in README`);
+
           if (isPush) {
             await gitPush();
           }

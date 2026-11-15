@@ -35,19 +35,25 @@ export function escapeXml(str: string): string {
 
 export function svgText(x: number, y: number, body: string, opts: TextOptions): string {
   let attrs = `x="${x}" y="${y}" fill="${opts.fill}" font-size="${opts.size}"`;
+
   if (opts.weight !== undefined) {
     if (opts.weight) attrs += ` font-weight="${opts.weight}"`;
   } else {
     attrs += ` font-weight="400"`;
   }
+
   attrs += ` font-family="${opts.font || PALETTE.font}"`;
+
   if (opts.anchor) attrs += ` text-anchor="${opts.anchor}"`;
+
   if (opts.spacing) attrs += ` letter-spacing="${opts.spacing}"`;
+
   return `<text ${attrs}>${escapeXml(body)}</text>`;
 }
 
 function modelRankLabel(windowed: boolean): string {
   const period = windowed ? `${USAGE_CONFIG.topModelsWindowMonths}mo` : "all";
+
   return `TOP 5 · ${period}`;
 }
 
@@ -64,6 +70,7 @@ export function buildClientSvg(days: DailyRecord[], client: Client): string {
   const t40 = sumTokens(d40);
 
   const cfg = USAGE_CONFIG.clientCard;
+
   const { models: topModels, windowed } = rankTopModels(
     days,
     cfg.topModels,
@@ -95,8 +102,11 @@ export function buildClientSvg(days: DailyRecord[], client: Client): string {
   let crSegW = totalDenom > 0 ? Math.floor((cr * compBarW) / totalDenom) : 0;
   let inpSegW = totalDenom > 0 ? Math.floor((inp * compBarW) / totalDenom) : 0;
   let outSegW = compBarW - crSegW - inpSegW;
+
   if (cr > 0 && crSegW < 3) crSegW = 3;
+
   if (inp > 0 && inpSegW < 3) inpSegW = 3;
+
   if (out > 0 && outSegW < 3) outSegW = 3;
 
   const W = cfg.width;
@@ -197,16 +207,21 @@ export function buildHistorySvg(allClientDays: Record<Client, DailyRecord[]>): s
   let totalTokensAll = 0;
   const allDates: string[] = [];
   const uniqueActiveDates = new Set<string>();
+
   for (const c of cfg.clients) {
     const days = daysMap[c] || [];
+
     for (const d of days) {
       totalTokensAll += dayTokens(d);
+
       if (d.date) {
         allDates.push(d.date);
+
         if (dayTokens(d) > 0) uniqueActiveDates.add(d.date);
       }
     }
   }
+
   allDates.sort();
   const minDate = allDates[0] || "";
   const maxDate = allDates[allDates.length - 1] || "";
@@ -258,6 +273,7 @@ export function buildHistorySvg(allClientDays: Record<Client, DailyRecord[]>): s
       cfg.topModels,
       USAGE_CONFIG.topModelsWindowMonths
     );
+
     const maxModelTok = topModels.reduce((max, [, tok]) => Math.max(max, tok), 0) || 1;
 
     const accent = ACCENT[c];
@@ -291,6 +307,7 @@ export function buildHistorySvg(allClientDays: Record<Client, DailyRecord[]>): s
     let my = qy + 198;
     const barMaxW = 46;
     const barX = qx + 128;
+
     for (const [mName, mTok] of topModels) {
       const displayName = mName.length <= 20 ? mName : `${mName.slice(0, 19)}…`;
       const barW = Math.max(2, Math.round(barMaxW * (mTok / maxModelTok)));
@@ -305,6 +322,7 @@ export function buildHistorySvg(allClientDays: Record<Client, DailyRecord[]>): s
   });
 
   lines.push("</svg>\n");
+
   return lines.join("\n");
 }
 
@@ -335,15 +353,19 @@ export function buildHarnessSvg(
   const monthNames = ["Jan", "Feb", "Mar", "Apr", "May", "Jun", "Jul", "Aug", "Sep", "Oct", "Nov", "Dec"];
 
   let wIdx = 0;
+
   for (let cur = new Date(startDate); cur <= latestDate; cur.setUTCDate(cur.getUTCDate() + 1)) {
     const dW = cur.getUTCDay();
+
     if (cur.getUTCDate() === 1 || cur.getTime() === startDate.getTime()) {
       const mStr = monthNames[cur.getUTCMonth()];
+
       if (monthsSeen[mStr] === undefined || wIdx - monthsSeen[mStr] >= 3) {
         monthsLabels.push([wIdx, mStr]);
         monthsSeen[mStr] = wIdx;
       }
     }
+
     if (dW === 6) {
       wIdx++;
     }
@@ -411,8 +433,10 @@ export function buildHarnessSvg(
       }
 
       const clientMap = clientDailyTokens[iso] || {};
+
       const topClient =
         (Object.entries(clientMap).sort((a, b) => b[1] - a[1])[0]?.[0] as Client) || "omp";
+
       const clientLabel = TITLE[topClient] || topClient;
       const tip = `${iso}: ${tierName} · ${clientLabel}`;
       const baseColor = ACCENT[topClient] || "#c6a0f6";
@@ -436,6 +460,7 @@ export function buildHarnessSvg(
   ];
 
   lines.push(`  ${svgText(30, 198, "Harness:", { fill: PALETTE.foot, size: 11, font: harnessFont, weight: "" })}`);
+
   for (const [c, label, cx] of legends) {
     lines.push(
       `  <circle cx="${cx}" cy="194" r="4.5" fill="${ACCENT[c]}"/>`,

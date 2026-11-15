@@ -18,20 +18,25 @@ function getGitHubToken(): string | null {
   if (process.env.GITHUB_TOKEN) {
     return process.env.GITHUB_TOKEN;
   }
+
   try {
     const proc = Bun.spawnSync(["gh", "auth", "token"]);
+
     if (proc.exitCode === 0) {
       const tok = proc.stdout.toString().trim();
+
       if (tok) return tok;
     }
   } catch {
     // gh cli not installed or no auth
   }
+
   return null;
 }
 
 export async function renderMarkdown(md: string, context?: string | null): Promise<string> {
   const payload: Record<string, string> = { text: md, mode: "gfm" };
+
   if (context) {
     payload.context = context;
   }
@@ -43,6 +48,7 @@ export async function renderMarkdown(md: string, context?: string | null): Promi
   };
 
   const token = getGitHubToken();
+
   if (token) {
     headers.Authorization = `Bearer ${token}`;
   }
@@ -155,9 +161,11 @@ export function rewriteForLocalPreview(html: string): string {
     /https:\/\/raw\.githubusercontent\.com\/[^/]+\/[^/]+\/[^/]+\/(assets\/usage\/[^"'\s>]+)/g,
     (match, relPath) => {
       const localFile = join(ROOT, relPath);
+
       if (existsSync(localFile)) {
         return `/${relPath}`;
       }
+
       return match;
     }
   );
@@ -187,6 +195,7 @@ export async function main(): Promise<void> {
 
   for (let i = 0; i < args.length; i++) {
     const a = args[i];
+
     if (a === "--port" && args[i + 1]) {
       port = parseInt(args[++i], 10) || DEFAULT_PORT;
     } else if (a === "--light") {
@@ -215,19 +224,23 @@ export async function main(): Promise<void> {
     fetch(req) {
       const reqUrl = new URL(req.url);
       let pathname = decodeURIComponent(reqUrl.pathname);
+
       if (pathname === "/" || pathname === "") {
         pathname = `/${htmlName}`;
       }
 
       const filePath = resolve(ROOT, pathname.replace(/^\/+/, ""));
+
       if (!filePath.startsWith(ROOT)) {
         return new Response("Forbidden", { status: 403 });
       }
 
       if (existsSync(filePath)) {
         const file = Bun.file(filePath);
+
         return new Response(file);
       }
+
       return new Response("Not Found", { status: 404 });
     },
   });

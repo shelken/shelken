@@ -33,6 +33,7 @@ describe("session-stats 存档合并（对抗审查 B1/B2/B4 回归）", () => {
       [tok("2026-10-12", 500), tok("2026-10-13", 700)],
       [tok("2026-10-12", 10), tok("2026-10-14", 300)]
     );
+
     expect(merged.map((d) => d.date)).toEqual(["2026-10-12", "2026-10-13", "2026-10-14"]);
     expect(merged.map((d) => d.totalTokens)).toEqual([500, 700, 300]);
   });
@@ -45,10 +46,12 @@ describe("session-stats 存档合并（对抗审查 B1/B2/B4 回归）", () => {
 
   it("session 单调 upsert：活跃 session 刷新、已删 session 保留、新 session 插入", () => {
     const s = (id: string, n: number) => ({ sessionId: id, inputTokens: n });
+
     const merged = mergeSessionScans(
       [s("a", 100), s("gone", 50)],
       [s("a", 300), s("new", 10)]
     );
+
     const byId = Object.fromEntries(merged.map((x) => [x.sessionId, x.inputTokens]));
     expect(byId).toEqual({ a: 300, gone: 50, new: 10 });
   });

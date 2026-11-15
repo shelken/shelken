@@ -227,6 +227,7 @@ describe("UsageStore - 时序连续打卡与全量聚合", () => {
 
     const agg = aggregateUsage(mockDataset);
     expect(agg).not.toBeNull();
+
     if (!agg) return;
 
     expect(agg.totalTokens).toBe(173_500);
@@ -403,6 +404,7 @@ describe("Card Visualizers - SVG 渲染适配器", () => {
       cacheCreationTokens: 0,
       cost: 0,
     });
+
     const days: DailyRecord[] = [
       {
         date: "2026-01-01",
@@ -463,6 +465,7 @@ describe("Card Visualizers - SVG 渲染适配器", () => {
         { modelName, inputTokens: tokens, outputTokens: 0, cacheReadTokens: 0, cacheCreationTokens: 0, cost: 0 },
       ],
     });
+
     const days = [
       rec("2026-01-01", "old-model", 100_000_000),
       rec("2026-06-01", "model-e", 50_000_000),
@@ -495,6 +498,7 @@ describe("Card Visualizers - SVG 渲染适配器", () => {
         { modelName: model, inputTokens: tokens, outputTokens: 0, cacheReadTokens: 0, cacheCreationTokens: 0, cost: 0 },
       ],
     });
+
     const data: Record<Client, DailyRecord[]> = {
       omp: [],
       pi: [],
@@ -619,6 +623,7 @@ describe("Orphan Branch & Local Preview - 孤儿分支契约与本地预览回�
 
   it("pushUsageAssets 在 commitOnly 模式下生成无父级节点的纯净孤儿提交", async () => {
     const testBranch = `test-orphan-${Date.now()}`;
+
     try {
       const commitSha = await pushUsageAssets({
         branch: testBranch,

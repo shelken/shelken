@@ -49,6 +49,7 @@ import {
   parseSvg,
   composeBadges as syncComposeBadges,
 } from "./badges/layout";
+
 // 向后兼容导出
 export {
   PAL,
@@ -86,6 +87,7 @@ export { DEFAULT_CONFIG_PATH };
 
 // 供向后兼容外部引用
 export const GROUPS: BadgeGroup[] = existsSync(DEFAULT_CONFIG_PATH) ? loadBadgeConfig(DEFAULT_CONFIG_PATH) : [];
+
 /**
  * 向后兼容导出的 composeBadges：
  * 允许外部遗留调用者使用 await composeBadges(items)（不传 badgeMap 时自动预取）；
@@ -96,18 +98,22 @@ export async function composeBadges(
   badgeMap?: Map<string, string>
 ): Promise<string> {
   const map = badgeMap ?? (await fetchBadges(items, { cacheDir: CACHE_DIR }));
+
   return syncComposeBadges(items, map);
 }
 
 export function patchReadme(built: [title: string, relPath: string][]): void {
   const lines = ["### Tech stack", ""];
+
   for (const [title, rel] of built) {
     lines.push(`**${title}**`, "", `<img alt="${title}" src="${rel}" />`, "");
   }
+
   const block = lines.join("\n").trimEnd() + "\n";
 
   const text = readFileSync(README, "utf-8");
   const target = "### Tech stack";
+
   if (!text.includes(target)) {
     throw new Error("README missing ### Tech stack");
   }

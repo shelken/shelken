@@ -95,6 +95,7 @@ describe("BadgeStore - 配置归一化与加载", () => {
       title: "Observability & Tracing",
       items: [["OpenTelemetry", "blue", "opentelemetry"]],
     };
+
     const group = normalizeBadgeGroup(raw, 0);
     expect(group.title).toBe("Observability & Tracing");
     expect(group.slug).toBe("observability-tracing");
@@ -115,6 +116,7 @@ describe("BadgeStore - 配置归一化与加载", () => {
       "automation-vision",
       "macos-agent",
     ];
+
     expect(groups.map((g) => g.slug)).toEqual(expectedSlugs);
 
     const langGroup = groups.find((g) => g.slug === "languages");
@@ -133,6 +135,7 @@ describe("BadgeStore - 配置归一化与加载", () => {
 describe("BadgeStore - 资产获取与双适配器缓存", () => {
   it("优先从本地磁盘缓存读取，无需网络请求", async () => {
     const tmp = mkdtempSync(join(tmpdir(), "badges-cache-test-"));
+
     try {
       const item: BadgeItem = ["MockTool", "blue", null];
       const url = getBadgeUrl(item);
@@ -157,15 +160,18 @@ describe("BadgeStore - 资产获取与双适配器缓存", () => {
     const tmp = mkdtempSync(join(tmpdir(), "badges-dedup-test-"));
     let fetchCount = 0;
     const origFetch = globalThis.fetch;
+
     try {
       globalThis.fetch = async () => {
         fetchCount++;
+
         return new Response('<svg width="80" height="28" xmlns="http://www.w3.org/2000/svg"><g/></svg>', {
           status: 200,
         });
       };
 
       const item: BadgeItem = ["DuplicateLang", "blue", "dup"];
+
       const map = await fetchBadges([item, item, item], {
         cacheDir: tmp,
         useCache: false,
@@ -182,6 +188,7 @@ describe("BadgeStore - 资产获取与双适配器缓存", () => {
   it("当远程抓取遇到 HTTP 异常时，Worker 严格抛出 BadgeFetchError 并携带具体 URL", async () => {
     const tmp = mkdtempSync(join(tmpdir(), "badges-err-test-"));
     const origFetch = globalThis.fetch;
+
     try {
       globalThis.fetch = async () => {
         return new Response("Not Found", { status: 404 });
@@ -202,6 +209,7 @@ describe("BadgeStore - 资产获取与双适配器缓存", () => {
         await fetchBadges([item], { cacheDir: tmp, useCache: false, retries: 1 });
       } catch (err) {
         expect(err instanceof BadgeFetchError).toBeTrue();
+
         if (err instanceof BadgeFetchError) {
           expect(err.url).toBe(url);
           expect(err.message).toContain(url);

@@ -3,7 +3,9 @@
  */
 
 export const CLIENTS = ["omp", "pi", "claude", "codex", "opencode"] as const;
+
 export type Client = (typeof CLIENTS)[number];
+
 // 主力客户端各自独占一张单客户端卡片（<client>.svg）
 export const PRIMARY_CLIENTS: Client[] = ["omp", "pi"];
 export const HISTORICAL_CLIENTS: Client[] = ["codex", "opencode", "claude"];

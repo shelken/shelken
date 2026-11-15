@@ -41,6 +41,7 @@ export function dayTokens(d: DailyRecord): number {
   if (typeof d.totalTokens === "number" && d.totalTokens > 0) {
     return d.totalTokens;
   }
+
   return (d.modelBreakdowns || []).reduce((acc, m) => acc + modelTokens(m), 0);
 }
 
@@ -61,6 +62,7 @@ export function filterLastNDays(days: DailyRecord[], n: number): DailyRecord[] {
   const cutoff = new Date(latest);
   cutoff.setUTCDate(cutoff.getUTCDate() - (n - 1));
   const cutoffStr = cutoff.toISOString().slice(0, 10);
+
   return sorted.filter((d) => d.date >= cutoffStr);
 }
 
@@ -71,6 +73,7 @@ export function filterLastNDays(days: DailyRecord[], n: number): DailyRecord[] {
 export function filterLastMonths(days: DailyRecord[], months: number): DailyRecord[] {
   if (days.length === 0) return [];
   const sorted = [...days].sort((a, b) => a.date.localeCompare(b.date));
+
   const anchor =
     [...sorted].reverse().find((d) => dayTokens(d) > 0)?.date ?? sorted[sorted.length - 1].date;
 
@@ -79,6 +82,7 @@ export function filterLastMonths(days: DailyRecord[], months: number): DailyReco
   const targetY = Math.floor(monthsBack / 12);
   const targetM = (monthsBack % 12) + 1;
   const lastDayOfTarget = new Date(Date.UTC(targetY, targetM, 0)).getUTCDate();
+
   const cutoff = `${targetY}-${String(targetM).padStart(2, "0")}-${String(
     Math.min(d, lastDayOfTarget)
   ).padStart(2, "0")}`;
@@ -96,6 +100,7 @@ interface ModelTotal {
  */
 function collectModelTotals(days: DailyRecord[]): Map<string, ModelTotal> {
   const totals = new Map<string, ModelTotal>();
+
   for (const d of days) {
     for (const m of d.modelBreakdowns || []) {
       const name = cleanModelName(m.modelName || "unknown");
@@ -105,6 +110,7 @@ function collectModelTotals(days: DailyRecord[]): Map<string, ModelTotal> {
       totals.set(key, entry);
     }
   }
+
   return totals;
 }
 
@@ -144,8 +150,10 @@ export function rankTopModels(days: DailyRecord[], top = 5, windowMonths = 3): M
 function formatNumberString(s: string): string {
   if (s.includes(".")) {
     const [whole, frac] = s.split(".");
+
     return `${Number(whole).toLocaleString("en-US")}.${frac}`;
   }
+
   return Number(s).toLocaleString("en-US");
 }
 
@@ -159,10 +167,12 @@ export function fmtTokens(n: number): string {
   if (m >= 1000) {
     const b = m / 1000;
     const body = b >= 100 ? b.toFixed(0) : b >= 10 ? b.toFixed(1) : b.toFixed(2);
+
     return `${formatNumberString(body)}B`;
   }
 
   let body: string;
+
   if (m >= 100) body = m.toFixed(0);
   else if (m >= 1) body = m.toFixed(1);
   else body = m.toFixed(2);
@@ -175,6 +185,7 @@ export function fmtTokens(n: number): string {
  */
 export function calculateStreaks(dailyTokens: Record<string, number>): StreakStats {
   const dates = Object.keys(dailyTokens).sort();
+
   if (dates.length === 0) return { currentStreak: 0, maxStreak: 0 };
 
   let maxStreak = 0;
@@ -183,15 +194,19 @@ export function calculateStreaks(dailyTokens: Record<string, number>): StreakSta
 
   for (const dStr of dates) {
     const count = dailyTokens[dStr];
+
     if (count > 0) {
       const curDate = new Date(`${dStr}T00:00:00Z`);
+
       if (prevDate) {
         const diffDays = Math.round((curDate.getTime() - prevDate.getTime()) / 86400000);
         tempStreak = diffDays === 1 ? tempStreak + 1 : 1;
       } else {
         tempStreak = 1;
       }
+
       prevDate = curDate;
+
       if (tempStreak > maxStreak) maxStreak = tempStreak;
     }
   }
@@ -206,8 +221,10 @@ export function calculateStreaks(dailyTokens: Record<string, number>): StreakSta
 
     if (daysSinceActive <= 1) {
       let checkDate = new Date(activeDate);
+
       while (true) {
         const iso = checkDate.toISOString().slice(0, 10);
+
         if ((dailyTokens[iso] || 0) > 0) {
           currentStreak++;
           checkDate.setUTCDate(checkDate.getUTCDate() - 1);
@@ -226,6 +243,7 @@ export function calculateStreaks(dailyTokens: Record<string, number>): StreakSta
  */
 export function normalizeDay(raw: Record<string, unknown>): DailyRecord {
   const dateVal = raw.date;
+
   if (!dateVal || typeof dateVal !== "string") {
     throw new UsageError(`Record missing 'date': ${JSON.stringify(raw)}`);
   }
@@ -279,6 +297,7 @@ export function normalizeDay(raw: Record<string, unknown>): DailyRecord {
   }
 
   let totalTokens = Number(raw.totalTokens) || 0;
+
   if (totalTokens === 0) {
     const sumBreakdowns = modelBreakdowns.reduce((acc, m) => acc + modelTokens(m), 0);
     const sumDay = inputTokens + outputTokens + cacheReadTokens + cacheCreationTokens;
@@ -330,6 +349,7 @@ export function mergeDailyRecords(days: DailyRecord[]): DailyRecord[] {
 
   for (const d of days) {
     const dt = d.date;
+
     if (!byDate[dt]) {
       byDate[dt] = {
         date: dt,
@@ -353,6 +373,7 @@ export function mergeDailyRecords(days: DailyRecord[]): DailyRecord[] {
 
     for (const m of d.modelBreakdowns || []) {
       const mName = m.modelName || "";
+
       if (!t.models[mName]) {
         t.models[mName] = {
           inputTokens: 0,
@@ -362,6 +383,7 @@ export function mergeDailyRecords(days: DailyRecord[]): DailyRecord[] {
           cost: 0,
         };
       }
+
       const mTarget = t.models[mName];
       mTarget.inputTokens += m.inputTokens || 0;
       mTarget.outputTokens += m.outputTokens || 0;
@@ -372,6 +394,7 @@ export function mergeDailyRecords(days: DailyRecord[]): DailyRecord[] {
   }
 
   const merged: DailyRecord[] = [];
+
   for (const dt of Object.keys(byDate).sort()) {
     const item = byDate[dt];
     const breakdowns: ModelBreakdown[] = [];
@@ -411,14 +434,17 @@ export function mergeDailyRecords(days: DailyRecord[]): DailyRecord[] {
  */
 export function loadClientDays(client: Client, dataDir: string = SESSION_STATS_DIR): DailyRecord[] {
   const file = join(dataDir, client, "daily.json");
+
   if (!existsSync(file)) {
     throw new UsageError(`没有 ${file}, 先 export --client ${client}`);
   }
 
   const days: DailyRecord[] = [];
+
   try {
     const data = JSON.parse(readFileSync(file, "utf-8"));
     const rawDaily = Array.isArray(data.daily) ? data.daily : [];
+
     for (const raw of rawDaily) {
       days.push(normalizeDay(raw));
     }
@@ -435,6 +461,7 @@ export function loadClientDays(client: Client, dataDir: string = SESSION_STATS_D
  */
 export function loadUsageDataset(dataDir: string = SESSION_STATS_DIR): Record<Client, DailyRecord[]> {
   const result = {} as Record<Client, DailyRecord[]>;
+
   for (const c of CLIENTS) {
     try {
       result[c] = loadClientDays(c, dataDir);
@@ -442,6 +469,7 @@ export function loadUsageDataset(dataDir: string = SESSION_STATS_DIR): Record<Cl
       result[c] = [];
     }
   }
+
   return result;
 }
 
@@ -458,14 +486,17 @@ export function aggregateUsage(clientDays: Record<Client, DailyRecord[]>): Aggre
       if (!d.date) continue;
       const tok = dayTokens(d);
       dailyTokens[d.date] = (dailyTokens[d.date] || 0) + tok;
+
       if (!clientDailyTokens[d.date]) {
         clientDailyTokens[d.date] = {};
       }
+
       clientDailyTokens[d.date][c] = (clientDailyTokens[d.date][c] || 0) + tok;
     }
   }
 
   const allDates = Object.keys(dailyTokens).sort();
+
   if (allDates.length === 0) return null;
 
   const latestDate = new Date(`${allDates[allDates.length - 1]}T00:00:00Z`);
