@@ -9,7 +9,6 @@
       },
       "devDependencies": {
         "@oxlint/plugins": "1.93.0",
-        "ccusage": "^20.0.23",
         "oxlint": "^1.93.0",
         "oxlint-plugin-anti-slop": "github:dmmulroy/anti-slop#13909c9e07590f5a85d93c62712259fe14a883f7",
       },
@@ -19,18 +18,6 @@
     "@oxlint/plugins": "1.93.0",
   },
   "packages": {
-    "@ccusage/ccusage-darwin-arm64": ["@ccusage/ccusage-darwin-arm64@20.0.23", "", { "os": "darwin", "cpu": "arm64" }, "sha512-nNab2ZG5RfGAIlnNXkbc5qVxIYLazJpwVA2+12ISEG2jso+yQGjUVtxWQc8Ygr0s4HSoXE8Ulvku/tfYN6dlcg=="],
-
-    "@ccusage/ccusage-darwin-x64": ["@ccusage/ccusage-darwin-x64@20.0.23", "", { "os": "darwin", "cpu": "x64" }, "sha512-R5IA7nCg4Ery4r3gbWN2ALxZsp3waryohhlCNsPXREAiIP0cGwpOzYo4JDsnaxqXb4OY4rRr7NZWTiiPtGop0g=="],
-
-    "@ccusage/ccusage-linux-arm64": ["@ccusage/ccusage-linux-arm64@20.0.23", "", { "os": "linux", "cpu": "arm64" }, "sha512-w2P2fjvH2uAbEInHTBtqNf+uE80kOwsXJS0jhzlXLDw0TRMA6s7F292tK/Knc24MfIy1gHy/qjaQbZiO875HVg=="],
-
-    "@ccusage/ccusage-linux-x64": ["@ccusage/ccusage-linux-x64@20.0.23", "", { "os": "linux", "cpu": "x64" }, "sha512-ueWwPu5Me+7MlrtwouwbQvv5Xqk5Qx2OvUsT/izt8Maamc0uc5neBimEOn5bAcw8rOYLuyrCZXtIGqdL8WXxEA=="],
-
-    "@ccusage/ccusage-win32-arm64": ["@ccusage/ccusage-win32-arm64@20.0.23", "", { "os": "win32", "cpu": "arm64" }, "sha512-CTpYR4p6qdr/OHXHERYrG/pmJAdjDEOTF0LWurUgWwIXVohBAucIs3H5vFKyrjssqXVcN2Dszu+8rULQNJwB4w=="],
-
-    "@ccusage/ccusage-win32-x64": ["@ccusage/ccusage-win32-x64@20.0.23", "", { "os": "win32", "cpu": "x64" }, "sha512-i5aHoXaEF4VsneBgISJfoOrIQqvrvV9r7V9/vS0lstBz5pe8MVb5R5Of215cmNmRRHdReySFtoJCEoXCgX68HA=="],
-
     "@oxlint/binding-android-arm-eabi": ["@oxlint/binding-android-arm-eabi@1.93.0", "", { "os": "android", "cpu": "arm" }, "sha512-KKw70pbD5Pvq3G2lJ+WQ71XPMjCmg37rkSe2+mDqCRP3PoTSdDMuEi4UOnE8JBtyNM7bek61EC2s0Jt7S7u+Sg=="],
 
     "@oxlint/binding-android-arm64": ["@oxlint/binding-android-arm64@1.93.0", "", { "os": "android", "cpu": "arm64" }, "sha512-fvr1fTUZGelwRxKDt64pf28aL1WaWgviwz3X+E/FcRYvrlEahH0NECRz/c1SY+K+KWmZk5uAf6h1kQnyBkp/2A=="],
@@ -70,8 +57,6 @@
     "@oxlint/binding-win32-x64-msvc": ["@oxlint/binding-win32-x64-msvc@1.93.0", "", { "os": "win32", "cpu": "x64" }, "sha512-ZzzIIVs/Qkm8trUWYKF0OYub5ALlv50/3gsEZbKAvWgz+yNJX6uRmQ8ySPXU2Q0/Y9m4JCOjhpmC8XUYbPHX5Q=="],
 
     "@oxlint/plugins": ["@oxlint/plugins@1.93.0", "", {}, "sha512-bKWQI1g9jn8bWUZsvhbOLfgva576Fbp1KwoTNSUCMdT9tlTAvQS2JkifX1UrhPPdyN4GHvM20HhvIMqqU1yotQ=="],
-
-    "ccusage": ["ccusage@20.0.23", "", { "optionalDependencies": { "@ccusage/ccusage-darwin-arm64": "20.0.23", "@ccusage/ccusage-darwin-x64": "20.0.23", "@ccusage/ccusage-linux-arm64": "20.0.23", "@ccusage/ccusage-linux-x64": "20.0.23", "@ccusage/ccusage-win32-arm64": "20.0.23", "@ccusage/ccusage-win32-x64": "20.0.23" }, "bin": { "ccusage": "./src/cli.js" } }, "sha512-hOyGMpcX3alt9yq6xT+3VU8fp2B5eYuaew3kyOZgBxLkkf6Sa/LSDdA8+72uPQeFd6x+bzN5Sbw7lywMuLtZJw=="],
 
     "generate-snake-animation": ["generate-snake-animation@3.5.0", "", { "peerDependencies": { "canvas": "3.2.0", "gif-encoder-2": "1.0.5", "gifsicle": "5.3.0" }, "optionalPeers": ["canvas", "gif-encoder-2", "gifsicle"], "bin": { "generate-snake-animation": "cli.js" } }, "sha512-65fbvqG7hfrJgCI7YA9l80MyWJGpY37dcfjNOB/VPfup3qMlRejKUvCAYXxrIRyzi/3TkfEybBr+iCOAqQyV+Q=="],
 

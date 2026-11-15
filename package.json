@@ -10,7 +10,6 @@
   },
   "devDependencies": {
     "@oxlint/plugins": "1.93.0",
-    "ccusage": "^20.0.23",
     "oxlint": "^1.93.0",
     "oxlint-plugin-anti-slop": "github:dmmulroy/anti-slop#13909c9e07590f5a85d93c62712259fe14a883f7"
   },
