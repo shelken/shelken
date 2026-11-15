@@ -17,6 +17,7 @@ import {
   CLIENTS,
   type Client,
   HISTORICAL_CLIENTS,
+  PRIMARY_CLIENTS,
   ACCENT,
   TITLE,
   PALETTE,
@@ -63,6 +64,7 @@ export {
   CLIENTS,
   type Client,
   HISTORICAL_CLIENTS,
+  PRIMARY_CLIENTS,
   ACCENT,
   TITLE,
   PALETTE,
@@ -120,24 +122,21 @@ export function ensureDirs(): void {
   mkdirSync(CARDS_DIR, { recursive: true });
 }
 
-export function patchReadme(rendered: string[] = ["omp", "history"]): void {
+export function patchReadme(rendered: string[] = [...PRIMARY_CLIENTS, "history"]): void {
   const lines: string[] = [START_MARKER, ""];
 
-  if (existsSync(join(CARDS_DIR, "vibe-snake.svg"))) {
-    const url = `${USAGE_ASSETS_RAW_BASE}/vibe-snake.svg`;
-    lines.push(`<a href="${url}"><img class="usage-card" width="100%" src="${url}" alt="Vibe Activity" /></a>`, "");
-  }
-  if (existsSync(join(CARDS_DIR, "harness.svg"))) {
-    const url = `${USAGE_ASSETS_RAW_BASE}/harness.svg`;
-    lines.push(`<a href="${url}"><img class="usage-card" width="100%" src="${url}" alt="Harness" /></a>`, "");
-  }
-  if (existsSync(join(CARDS_DIR, "omp.svg")) && rendered.includes("omp")) {
-    const url = `${USAGE_ASSETS_RAW_BASE}/omp.svg`;
-    lines.push(`<a href="${url}"><img class="usage-card" width="100%" src="${url}" alt="OMP" /></a>`, "");
-  }
-  if (existsSync(join(CARDS_DIR, "history.svg")) && rendered.includes("history")) {
-    const url = `${USAGE_ASSETS_RAW_BASE}/history.svg`;
-    lines.push(`<a href="${url}"><img class="usage-card" width="100%" src="${url}" alt="History" /></a>`, "");
+  const cards: [slug: string, alt: string][] = [
+    ["vibe-snake", "Vibe Activity"],
+    ["harness", "Harness"],
+    ...PRIMARY_CLIENTS.map((c): [string, string] => [c, TITLE[c]]),
+    ["history", "History"],
+  ];
+  const alwaysShown = new Set(["vibe-snake", "harness"]);
+  for (const [slug, alt] of cards) {
+    if (!existsSync(join(CARDS_DIR, `${slug}.svg`))) continue;
+    if (!alwaysShown.has(slug) && !rendered.includes(slug)) continue;
+    const url = `${USAGE_ASSETS_RAW_BASE}/${slug}.svg`;
+    lines.push(`<a href="${url}"><img class="usage-card" width="100%" src="${url}" alt="${alt}" /></a>`, "");
   }
   lines.push(END_MARKER);
   const block = lines.join("\n");
@@ -415,20 +414,20 @@ export async function render(): Promise<string[]> {
 
   const rendered: string[] = [];
 
-  // 主力客户端 (omp)
-  const ompDays = allClientDays.omp || [];
-  if (ompDays.length > 0) {
-    const outPath = join(CARDS_DIR, "omp.svg");
-    writeFileSync(outPath, buildClientSvg(ompDays, "omp"), "utf-8");
-    rendered.push("omp");
-    console.log(`✓ assets/usage/omp.svg  days=${ompDays.length}  total=${fmtTokens(sumTokens(ompDays))}`);
+  // 主力客户端：各出一张单客户端卡片
+  for (const client of PRIMARY_CLIENTS) {
+    const days = allClientDays[client] || [];
+    if (days.length === 0) continue;
+    writeFileSync(join(CARDS_DIR, `${client}.svg`), buildClientSvg(days, client), "utf-8");
+    rendered.push(client);
+    console.log(`✓ assets/usage/${client}.svg  days=${days.length}  total=${fmtTokens(sumTokens(days))}`);
   }
 
-  // 历史 4 大生态 2×2 归档卡片 (pi, codex, opencode, claude)
+  // 历史生态 1×3 归档卡片 (codex, opencode, claude)
   const historySvg = renderHistorySvg(allClientDays);
   writeFileSync(join(CARDS_DIR, "history.svg"), historySvg, "utf-8");
   rendered.push("history");
-  console.log("✓ assets/usage/history.svg (2×2 历史归档)");
+  console.log("✓ assets/usage/history.svg (1×3 历史归档)");
 
   patchReadme(rendered);
   console.log(`✓ README  cards=${rendered.join(",")}`);
