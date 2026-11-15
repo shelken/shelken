@@ -8,8 +8,8 @@ import { z } from "zod";
 const RawBadgeItemSchema = z.union([
   z.tuple([z.string(), z.string(), z.string().nullish()]),
   z.looseObject({
-    name: z.string().optional(),
-    label: z.string().optional(),
+    name: z.string().nullish(),
+    label: z.string().nullish(),
     color: z.string(),
     logo: z.string().nullish(),
   }),
@@ -17,7 +17,7 @@ const RawBadgeItemSchema = z.union([
 
 const RawBadgeGroupSchema = z.looseObject({
   title: z.string(),
-  slug: z.string().optional(),
+  slug: z.string().nullish(),
   items: z.array(RawBadgeItemSchema).optional(),
   badges: z.array(RawBadgeItemSchema).optional(),
 });

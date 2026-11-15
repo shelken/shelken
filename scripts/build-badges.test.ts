@@ -131,6 +131,22 @@ describe("BadgeStore - 配置归一化与加载", () => {
     );
   });
 
+  it("YAML 里的空值 slug / name 视为未填写", () => {
+    const dir = mkdtempSync(join(tmpdir(), "badge-config-"));
+    const path = join(dir, "nulls.yaml");
+
+    try {
+      writeFileSync(
+        path,
+        "groups:\n  - title: Languages\n    slug: null\n    items:\n      - {name: null, label: Bun, color: peach}\n"
+      );
+
+      expect(loadBadgeConfig(path)).toEqual([{ slug: "languages", title: "Languages", items: [["Bun", "peach", null]] }]);
+    } finally {
+      rmSync(dir, { recursive: true, force: true });
+    }
+  });
+
   it("配置结构非法时在边界报错并带上文件路径", () => {
     const dir = mkdtempSync(join(tmpdir(), "badge-config-"));
     const path = join(dir, "bad.yaml");

@@ -442,7 +442,9 @@ export function loadUsageDataset(dataDir: string = SESSION_STATS_DIR): Record<Cl
   for (const c of CLIENTS) {
     try {
       result[c] = loadClientDays(c, dataDir);
-    } catch {
+    } catch (err: unknown) {
+      const msg = err instanceof Error ? err.message : String(err);
+      console.warn(`[WARN] ${c}: 存档无法读取，该客户端按空数据渲染\n${msg}`);
       result[c] = [];
     }
   }

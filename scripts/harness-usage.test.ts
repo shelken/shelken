@@ -10,6 +10,8 @@ import {
 import {
   normalizeDay,
   mergeDailyRecords,
+  loadClientDays,
+  loadUsageDataset,
   calculateStreaks,
   aggregateUsage,
   rankModels,
@@ -21,7 +23,9 @@ import {
   buildHistorySvg,
   buildHarnessSvg,
 } from "./usage/cards";
-import { readFileSync } from "node:fs";
+import { mkdirSync, mkdtempSync, readFileSync, rmSync, writeFileSync } from "node:fs";
+import { tmpdir } from "node:os";
+import { join } from "node:path";
 import {
   USAGE_ASSETS_BRANCH,
   USAGE_ASSETS_RAW_BASE,
@@ -146,6 +150,46 @@ describe("UsageStore - 跨节点与多数据源标准化及深度合并", () => 
 
     expect(day.modelBreakdowns[1].modelName).toBe("gpt-5.6-sol");
     expect(day.modelBreakdowns[1].inputTokens).toBe(5_000);
+  });
+});
+
+describe("UsageStore - 存档边界校验", () => {
+  const withArchive = (daily: object[], run: (dir: string) => void) => {
+    const dir = mkdtempSync(join(tmpdir(), "usage-archive-"));
+
+    try {
+      mkdirSync(join(dir, "omp"));
+      writeFileSync(join(dir, "omp", "daily.json"), JSON.stringify({ daily }));
+      run(dir);
+    } finally {
+      rmSync(dir, { recursive: true, force: true });
+    }
+  };
+
+  it("token 字段必须是数字：字符串被拒绝，数据集对该客户端警告后按空渲染（缺失存档同样警告）", () => {
+    withArchive([{ date: "2026-11-01", inputTokens: "12" }], (dir) => {
+      expect(() => loadClientDays("omp", dir)).toThrow("解析");
+
+      const warn = console.warn;
+      const warnings: string[] = [];
+      console.warn = (msg: string) => warnings.push(msg);
+
+      try {
+        expect(loadUsageDataset(dir).omp).toEqual([]);
+      } finally {
+        console.warn = warn;
+      }
+
+      const rejected = warnings.filter((w) => w.includes("解析"));
+      expect(rejected.length).toBe(1);
+      expect(rejected[0]).toContain("omp");
+    });
+  });
+
+  it("合法存档按日读入并归一化", () => {
+    withArchive([{ date: "2026-11-01", inputTokens: 12, outputTokens: 3 }, { date: "2026-11-02", totalTokens: 7 }], (dir) => {
+      expect(loadClientDays("omp", dir).map((d) => d.totalTokens)).toEqual([15, 7]);
+    });
   });
 });
 
