@@ -174,10 +174,7 @@ export function buildHarnessSvg(
 }
 
 export function ccusageCmd(client: Client, sub: "daily" | "session"): string[] {
-  const localBin = join(ROOT, "node_modules", ".bin", "ccusage");
-  const hasLocal = existsSync(localBin);
-  const hasGlobal = Bun.which("ccusage");
-  const base = hasLocal ? [localBin] : hasGlobal ? ["ccusage"] : ["bunx", "ccusage"];
+  const base = ["mise", "exec", "--", "ccusage"];
   if (client === "omp") {
     const home = homedir();
     const candidateDirs = [
