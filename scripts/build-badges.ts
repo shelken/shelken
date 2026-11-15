@@ -32,7 +32,6 @@ import {
 } from "./badges/types";
 
 import {
-  ROOT_DIR,
   DEFAULT_CONFIG_PATH,
   DEFAULT_CACHE_DIR,
   slugify,

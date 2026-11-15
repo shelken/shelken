@@ -8,7 +8,6 @@ import {
   USAGE_CONFIG,
 } from "./types";
 import {
-  cleanModelName,
   dayTokens,
   filterLastNDays,
   fmtTokens,
