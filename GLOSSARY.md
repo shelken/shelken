@@ -37,7 +37,8 @@
 ### 1.3 核心引擎 (UsageStore)
 - **定位**: 纯内存数据处理引擎，吸收数据源格式差异与数学计算复杂度，与文件系统和视觉呈现完全解耦。
 - **核心职责**:
-  - **标准化 (`normalizeDay`)**: 吸收多客户端原始 JSON 中的格式差异（如缺省字段、字段命名兼容）。
+  - **边界解析 (`scripts/usage/schema.ts`)**: ccusage 输出与 `~/.session-stats` 存档在读入处用 zod 校验（`DailyFileSchema`、`SessionsFileSchema`），内部函数只接收具名类型 `ArchiveDay` / `ArchiveSession`；条目保留未知字段，存档写回不丢信息。
+  - **标准化 (`normalizeDay`)**: 吸收已通过校验的 `ArchiveDay` 中的格式差异（如缺省字段、模型明细的数组/字典两种写法）。
   - **跨节点合并 (`mergeDailyRecords`)**: 支持多台工作机（如 `mio`, `sakamoto`）导出的同客户端同日数据按模型粒度深度合并与去重。
   - **时序与打卡 (`calculateStreaks`)**: 准确计算连续打卡、断签识别，鲁棒处理跨年与闰年。
   - **排行榜与过滤 (`rankModels`, `rankTopModels`, `filterLastNDays`, `filterLastMonths`)**: 模型名称前缀清洗（`cleanModelName`）与 Token 降序排行；`filterLastMonths` 以各客户端最近有记录日回溯窗口，`rankTopModels` 在窗口内模型数达到 N 个时只统计窗口，不足则直接退回全周期，两种策略均按 token 单调递减。
@@ -64,6 +65,9 @@
 - **`PalKey`**: Catppuccin Macchiato 色板键名（`pink`, `mauve`, `red`, `peach`, `yellow`, `green`, `teal`, `sky`, `sapphire`, `blue`, `lavender`, `text`, `surface0`）。
 - **`BadgeItem`**: 单个技术栈徽章元组 `[label: string, colorKey: PalKey, logo?: string | null]`。
 - **`BadgeGroup`**: 逻辑分组，包含 `slug`, `title`, `items: BadgeItem[]`。
+
+### 2.1.1 配置边界 (`scripts/badges/schema.ts`)
+- `config/tech-stack.yaml` 在 `loadBadgeConfig` 入口用 zod 校验（条目可写成数组或对象），通过后才进入 `normalizeBadgeItem` / `normalizeBadgeGroup` 做色板与非空校验。
 
 ### 2.2 资产存储 (BadgeStore, `scripts/badges/store.ts`)
 - **双适配器接缝**:

@@ -11,6 +11,7 @@ import {
   type AggregateUsage,
   UsageError,
 } from "./types";
+import { type ArchiveDay, type ModelStats, DailyFileSchema, parseJsonText } from "./schema";
 
 const __dirname = dirname(fileURLToPath(import.meta.url));
 export const SESSION_STATS_DIR = join(homedir(), ".session-stats");
@@ -38,9 +39,10 @@ export function modelTokens(m: ModelBreakdown): number {
  * 获取日记录的有效 Token 数
  */
 export function dayTokens(d: DailyRecord): number {
-  if (typeof d.totalTokens === "number" && d.totalTokens > 0) {
+  if (d.totalTokens > 0) {
     return d.totalTokens;
   }
+
   return (d.modelBreakdowns || []).reduce((acc, m) => acc + modelTokens(m), 0);
 }
 
@@ -61,6 +63,7 @@ export function filterLastNDays(days: DailyRecord[], n: number): DailyRecord[] {
   const cutoff = new Date(latest);
   cutoff.setUTCDate(cutoff.getUTCDate() - (n - 1));
   const cutoffStr = cutoff.toISOString().slice(0, 10);
+
   return sorted.filter((d) => d.date >= cutoffStr);
 }
 
@@ -71,6 +74,7 @@ export function filterLastNDays(days: DailyRecord[], n: number): DailyRecord[] {
 export function filterLastMonths(days: DailyRecord[], months: number): DailyRecord[] {
   if (days.length === 0) return [];
   const sorted = [...days].sort((a, b) => a.date.localeCompare(b.date));
+
   const anchor =
     [...sorted].reverse().find((d) => dayTokens(d) > 0)?.date ?? sorted[sorted.length - 1].date;
 
@@ -79,6 +83,7 @@ export function filterLastMonths(days: DailyRecord[], months: number): DailyReco
   const targetY = Math.floor(monthsBack / 12);
   const targetM = (monthsBack % 12) + 1;
   const lastDayOfTarget = new Date(Date.UTC(targetY, targetM, 0)).getUTCDate();
+
   const cutoff = `${targetY}-${String(targetM).padStart(2, "0")}-${String(
     Math.min(d, lastDayOfTarget)
   ).padStart(2, "0")}`;
@@ -96,6 +101,7 @@ interface ModelTotal {
  */
 function collectModelTotals(days: DailyRecord[]): Map<string, ModelTotal> {
   const totals = new Map<string, ModelTotal>();
+
   for (const d of days) {
     for (const m of d.modelBreakdowns || []) {
       const name = cleanModelName(m.modelName || "unknown");
@@ -105,6 +111,7 @@ function collectModelTotals(days: DailyRecord[]): Map<string, ModelTotal> {
       totals.set(key, entry);
     }
   }
+
   return totals;
 }
 
@@ -144,8 +151,10 @@ export function rankTopModels(days: DailyRecord[], top = 5, windowMonths = 3): M
 function formatNumberString(s: string): string {
   if (s.includes(".")) {
     const [whole, frac] = s.split(".");
+
     return `${Number(whole).toLocaleString("en-US")}.${frac}`;
   }
+
   return Number(s).toLocaleString("en-US");
 }
 
@@ -159,10 +168,12 @@ export function fmtTokens(n: number): string {
   if (m >= 1000) {
     const b = m / 1000;
     const body = b >= 100 ? b.toFixed(0) : b >= 10 ? b.toFixed(1) : b.toFixed(2);
+
     return `${formatNumberString(body)}B`;
   }
 
   let body: string;
+
   if (m >= 100) body = m.toFixed(0);
   else if (m >= 1) body = m.toFixed(1);
   else body = m.toFixed(2);
@@ -175,6 +186,7 @@ export function fmtTokens(n: number): string {
  */
 export function calculateStreaks(dailyTokens: Record<string, number>): StreakStats {
   const dates = Object.keys(dailyTokens).sort();
+
   if (dates.length === 0) return { currentStreak: 0, maxStreak: 0 };
 
   let maxStreak = 0;
@@ -183,15 +195,19 @@ export function calculateStreaks(dailyTokens: Record<string, number>): StreakSta
 
   for (const dStr of dates) {
     const count = dailyTokens[dStr];
+
     if (count > 0) {
       const curDate = new Date(`${dStr}T00:00:00Z`);
+
       if (prevDate) {
         const diffDays = Math.round((curDate.getTime() - prevDate.getTime()) / 86400000);
         tempStreak = diffDays === 1 ? tempStreak + 1 : 1;
       } else {
         tempStreak = 1;
       }
+
       prevDate = curDate;
+
       if (tempStreak > maxStreak) maxStreak = tempStreak;
     }
   }
@@ -206,8 +222,10 @@ export function calculateStreaks(dailyTokens: Record<string, number>): StreakSta
 
     if (daysSinceActive <= 1) {
       let checkDate = new Date(activeDate);
+
       while (true) {
         const iso = checkDate.toISOString().slice(0, 10);
+
         if ((dailyTokens[iso] || 0) > 0) {
           currentStreak++;
           checkDate.setUTCDate(checkDate.getUTCDate() - 1);
@@ -221,76 +239,56 @@ export function calculateStreaks(dailyTokens: Record<string, number>): StreakSta
   return { currentStreak, maxStreak };
 }
 
-/**
- * 归一化解析单日原始 JSON 数据，兼容不同客户端字段结构
- */
-export function normalizeDay(raw: Record<string, unknown>): DailyRecord {
-  const dateVal = raw.date;
-  if (!dateVal || typeof dateVal !== "string") {
-    throw new UsageError(`Record missing 'date': ${JSON.stringify(raw)}`);
-  }
+function toBreakdown(modelName: string, stats?: ModelStats | null): ModelBreakdown {
+  return {
+    modelName,
+    inputTokens: stats?.inputTokens ?? 0,
+    outputTokens: stats?.outputTokens ?? 0,
+    cacheReadTokens: stats?.cacheReadTokens ?? 0,
+    cacheCreationTokens: stats?.cacheCreationTokens ?? 0,
+    cost: stats?.cost ?? 0,
+  };
+}
 
-  const inputTokens = Number(raw.inputTokens) || 0;
-  const outputTokens = Number(raw.outputTokens) || 0;
-  const cacheReadTokens = Number(raw.cacheReadTokens) || 0;
-  const cacheCreationTokens = Number(raw.cacheCreationTokens) || 0;
-  const totalCost = Number(raw.totalCost ?? raw.cost) || 0;
+/**
+ * 归一化已通过 schema 校验的单日记录，兼容不同客户端的模型明细结构
+ */
+export function normalizeDay(raw: ArchiveDay): DailyRecord {
+  const inputTokens = raw.inputTokens ?? 0;
+  const outputTokens = raw.outputTokens ?? 0;
+  const cacheReadTokens = raw.cacheReadTokens ?? 0;
+  const cacheCreationTokens = raw.cacheCreationTokens ?? 0;
+  const totalCost = raw.totalCost ?? raw.cost ?? 0;
 
   const modelBreakdowns: ModelBreakdown[] = [];
 
-  if (Array.isArray(raw.modelBreakdowns)) {
+  if (raw.modelBreakdowns) {
     for (const m of raw.modelBreakdowns) {
-      if (m && typeof m === "object") {
-        const mObj = m as Record<string, unknown>;
-        modelBreakdowns.push({
-          modelName: String(mObj.modelName || ""),
-          inputTokens: Number(mObj.inputTokens) || 0,
-          outputTokens: Number(mObj.outputTokens) || 0,
-          cacheReadTokens: Number(mObj.cacheReadTokens) || 0,
-          cacheCreationTokens: Number(mObj.cacheCreationTokens) || 0,
-          cost: Number(mObj.cost) || 0,
-        });
-      }
+      modelBreakdowns.push(toBreakdown(m.modelName ?? "", m));
     }
-  } else if (raw.models && typeof raw.models === "object") {
-    if (Array.isArray(raw.models)) {
-      for (const name of raw.models) {
-        modelBreakdowns.push({
-          modelName: String(name),
-          inputTokens: 0,
-          outputTokens: 0,
-          cacheReadTokens: 0,
-          cacheCreationTokens: 0,
-          cost: 0,
-        });
-      }
-    } else {
-      for (const [name, stats] of Object.entries(raw.models as Record<string, Record<string, unknown>>)) {
-        modelBreakdowns.push({
-          modelName: name,
-          inputTokens: Number(stats?.inputTokens) || 0,
-          outputTokens: Number(stats?.outputTokens) || 0,
-          cacheReadTokens: Number(stats?.cacheReadTokens) || 0,
-          cacheCreationTokens: Number(stats?.cacheCreationTokens) || 0,
-          cost: Number(stats?.cost) || 0,
-        });
-      }
+  } else if (Array.isArray(raw.models)) {
+    for (const name of raw.models) {
+      modelBreakdowns.push(toBreakdown(name));
+    }
+  } else if (raw.models) {
+    for (const [name, stats] of Object.entries(raw.models)) {
+      modelBreakdowns.push(toBreakdown(name, stats));
     }
   }
 
-  let totalTokens = Number(raw.totalTokens) || 0;
+  let totalTokens = raw.totalTokens ?? 0;
+
   if (totalTokens === 0) {
     const sumBreakdowns = modelBreakdowns.reduce((acc, m) => acc + modelTokens(m), 0);
     const sumDay = inputTokens + outputTokens + cacheReadTokens + cacheCreationTokens;
     totalTokens = Math.max(sumBreakdowns, sumDay);
   }
 
-  const modelsUsed = Array.isArray(raw.modelsUsed)
-    ? raw.modelsUsed.map(String)
-    : modelBreakdowns.map((m) => m.modelName).filter(Boolean);
+  const modelsUsed =
+    raw.modelsUsed ?? modelBreakdowns.flatMap((m) => (m.modelName ? [m.modelName] : []));
 
   return {
-    date: dateVal,
+    date: raw.date,
     inputTokens,
     outputTokens,
     cacheReadTokens,
@@ -330,6 +328,7 @@ export function mergeDailyRecords(days: DailyRecord[]): DailyRecord[] {
 
   for (const d of days) {
     const dt = d.date;
+
     if (!byDate[dt]) {
       byDate[dt] = {
         date: dt,
@@ -353,6 +352,7 @@ export function mergeDailyRecords(days: DailyRecord[]): DailyRecord[] {
 
     for (const m of d.modelBreakdowns || []) {
       const mName = m.modelName || "";
+
       if (!t.models[mName]) {
         t.models[mName] = {
           inputTokens: 0,
@@ -362,6 +362,7 @@ export function mergeDailyRecords(days: DailyRecord[]): DailyRecord[] {
           cost: 0,
         };
       }
+
       const mTarget = t.models[mName];
       mTarget.inputTokens += m.inputTokens || 0;
       mTarget.outputTokens += m.outputTokens || 0;
@@ -372,6 +373,7 @@ export function mergeDailyRecords(days: DailyRecord[]): DailyRecord[] {
   }
 
   const merged: DailyRecord[] = [];
+
   for (const dt of Object.keys(byDate).sort()) {
     const item = byDate[dt];
     const breakdowns: ModelBreakdown[] = [];
@@ -411,15 +413,15 @@ export function mergeDailyRecords(days: DailyRecord[]): DailyRecord[] {
  */
 export function loadClientDays(client: Client, dataDir: string = SESSION_STATS_DIR): DailyRecord[] {
   const file = join(dataDir, client, "daily.json");
+
   if (!existsSync(file)) {
     throw new UsageError(`没有 ${file}, 先 export --client ${client}`);
   }
 
   const days: DailyRecord[] = [];
+
   try {
-    const data = JSON.parse(readFileSync(file, "utf-8"));
-    const rawDaily = Array.isArray(data.daily) ? data.daily : [];
-    for (const raw of rawDaily) {
+    for (const raw of parseJsonText(DailyFileSchema, readFileSync(file, "utf-8")).daily) {
       days.push(normalizeDay(raw));
     }
   } catch (err: unknown) {
@@ -434,14 +436,15 @@ export function loadClientDays(client: Client, dataDir: string = SESSION_STATS_D
  * 加载全量客户端数据集
  */
 export function loadUsageDataset(dataDir: string = SESSION_STATS_DIR): Record<Client, DailyRecord[]> {
+  // SAFETY: 下面的循环为 CLIENTS 的每个成员赋值，返回前 result 已覆盖全部 Client 键
   const result = {} as Record<Client, DailyRecord[]>;
+
   for (const c of CLIENTS) {
-    try {
-      result[c] = loadClientDays(c, dataDir);
-    } catch {
-      result[c] = [];
-    }
+    // 尚未导出的客户端按空处理；存档存在却无法解析时让渲染中止，
+    // 不能带着缺失的客户端往公开 README 发布不完整的卡片
+    result[c] = existsSync(join(dataDir, c, "daily.json")) ? loadClientDays(c, dataDir) : [];
   }
+
   return result;
 }
 
@@ -458,14 +461,17 @@ export function aggregateUsage(clientDays: Record<Client, DailyRecord[]>): Aggre
       if (!d.date) continue;
       const tok = dayTokens(d);
       dailyTokens[d.date] = (dailyTokens[d.date] || 0) + tok;
+
       if (!clientDailyTokens[d.date]) {
         clientDailyTokens[d.date] = {};
       }
+
       clientDailyTokens[d.date][c] = (clientDailyTokens[d.date][c] || 0) + tok;
     }
   }
 
   const allDates = Object.keys(dailyTokens).sort();
+
   if (allDates.length === 0) return null;
 
   const latestDate = new Date(`${allDates[allDates.length - 1]}T00:00:00Z`);

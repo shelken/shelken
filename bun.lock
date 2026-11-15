@@ -6,6 +6,7 @@
       "dependencies": {
         "generate-snake-animation": "^3.5.0",
         "yaml": "^2.9.1",
+        "zod": "^4.6.7",
       },
       "devDependencies": {
         "@oxlint/plugins": "1.93.0",
@@ -65,5 +66,7 @@
     "oxlint-plugin-anti-slop": ["oxlint-plugin-anti-slop@github:dmmulroy/anti-slop#13909c9", { "dependencies": { "@oxlint/plugins": "1.78.0" } }, "dmmulroy-anti-slop-13909c9", "sha512-Asn+WY5pZ67FB8P2aglhbveEH2isogxj+/r0YB3xJ8cVmLc+BGClDV6TFNJIfYQcMnNRGDzMx7aQ+Gw543hBwQ=="],
 
     "yaml": ["yaml@2.9.1", "", { "bin": { "yaml": "bin.mjs" } }, "sha512-3NxN8+78OdzbT7C/WjGsyfPAtJaN3FNDsWxv7Y7mcDsT/oOmgW8BpyQQFFBnvZE3j9Y2Sdz1ULFLezL7Eb2yFw=="],
+
+    "zod": ["zod@4.6.7", "", {}, "sha512-g8W2D2kU6a8untc053fX1uVBKzM7yqAxW/3zwk83+6RyF2+SKOuV+c0wBDhUwzV1PaGapmZH+rmcUzPf+3CGwg=="],
   }
 }

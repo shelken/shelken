@@ -95,6 +95,7 @@ describe("BadgeStore - 配置归一化与加载", () => {
       title: "Observability & Tracing",
       items: [["OpenTelemetry", "blue", "opentelemetry"]],
     };
+
     const group = normalizeBadgeGroup(raw, 0);
     expect(group.title).toBe("Observability & Tracing");
     expect(group.slug).toBe("observability-tracing");
@@ -115,6 +116,7 @@ describe("BadgeStore - 配置归一化与加载", () => {
       "automation-vision",
       "macos-agent",
     ];
+
     expect(groups.map((g) => g.slug)).toEqual(expectedSlugs);
 
     const langGroup = groups.find((g) => g.slug === "languages");
@@ -128,11 +130,47 @@ describe("BadgeStore - 配置归一化与加载", () => {
       "Badge configuration file not found"
     );
   });
+
+  it("YAML 里的空值 slug / name / items 视为未填写", () => {
+    const dir = mkdtempSync(join(tmpdir(), "badge-config-"));
+    const path = join(dir, "nulls.yaml");
+
+    try {
+      writeFileSync(
+        path,
+        "groups:\n  - title: Languages\n    slug: null\n    items:\n      - {name: null, label: Bun, color: peach}\n"
+      );
+
+      expect(loadBadgeConfig(path)).toEqual([{ slug: "languages", title: "Languages", items: [["Bun", "peach", null]] }]);
+
+      // items 为空值时回退到 badges
+      writeFileSync(path, "groups:\n  - title: Languages\n    items: null\n    badges:\n      - [Bun, peach]\n");
+      expect(loadBadgeConfig(path)[0].items).toEqual([["Bun", "peach", null]]);
+    } finally {
+      rmSync(dir, { recursive: true, force: true });
+    }
+  });
+
+  it("配置结构非法时在边界报错并带上文件路径", () => {
+    const dir = mkdtempSync(join(tmpdir(), "badge-config-"));
+    const path = join(dir, "bad.yaml");
+
+    try {
+      writeFileSync(path, "groups:\n  - title: 123\n    items: []\n");
+      expect(() => loadBadgeConfig(path)).toThrow(path);
+
+      writeFileSync(path, "groups:\n  - title: Languages\n    items:\n      - [Bun]\n");
+      expect(() => loadBadgeConfig(path)).toThrow(path);
+    } finally {
+      rmSync(dir, { recursive: true, force: true });
+    }
+  });
 });
 
 describe("BadgeStore - 资产获取与双适配器缓存", () => {
   it("优先从本地磁盘缓存读取，无需网络请求", async () => {
     const tmp = mkdtempSync(join(tmpdir(), "badges-cache-test-"));
+
     try {
       const item: BadgeItem = ["MockTool", "blue", null];
       const url = getBadgeUrl(item);
@@ -157,15 +195,18 @@ describe("BadgeStore - 资产获取与双适配器缓存", () => {
     const tmp = mkdtempSync(join(tmpdir(), "badges-dedup-test-"));
     let fetchCount = 0;
     const origFetch = globalThis.fetch;
+
     try {
       globalThis.fetch = async () => {
         fetchCount++;
+
         return new Response('<svg width="80" height="28" xmlns="http://www.w3.org/2000/svg"><g/></svg>', {
           status: 200,
         });
       };
 
       const item: BadgeItem = ["DuplicateLang", "blue", "dup"];
+
       const map = await fetchBadges([item, item, item], {
         cacheDir: tmp,
         useCache: false,
@@ -182,6 +223,7 @@ describe("BadgeStore - 资产获取与双适配器缓存", () => {
   it("当远程抓取遇到 HTTP 异常时，Worker 严格抛出 BadgeFetchError 并携带具体 URL", async () => {
     const tmp = mkdtempSync(join(tmpdir(), "badges-err-test-"));
     const origFetch = globalThis.fetch;
+
     try {
       globalThis.fetch = async () => {
         return new Response("Not Found", { status: 404 });
@@ -202,6 +244,7 @@ describe("BadgeStore - 资产获取与双适配器缓存", () => {
         await fetchBadges([item], { cacheDir: tmp, useCache: false, retries: 1 });
       } catch (err) {
         expect(err instanceof BadgeFetchError).toBeTrue();
+
         if (err instanceof BadgeFetchError) {
           expect(err.url).toBe(url);
           expect(err.message).toContain(url);

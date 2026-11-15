@@ -12,6 +12,7 @@ import { getBadgeUrl } from "./store";
  */
 export function parseSvg(svg: string): [width: number, height: number, inner: string] {
   const m = svg.match(/<svg\b([^>]*)>([\s\S]*)<\/svg\s*>/i);
+
   if (!m) throw new Error("invalid svg");
 
   const attrs = m[1];
@@ -19,6 +20,7 @@ export function parseSvg(svg: string): [width: number, height: number, inner: st
 
   const wm = attrs.match(/\bwidth="([\d.]+)"/);
   const hm = attrs.match(/\bheight="([\d.]+)"/);
+
   if (!wm || !hm) throw new Error(`missing width/height in ${attrs.slice(0, 80)}`);
 
   return [parseFloat(wm[1]), parseFloat(hm[1]), inner];
@@ -41,6 +43,7 @@ export function composeBadges(
   for (const item of items) {
     const url = getBadgeUrl(item);
     const raw = badgeMap.get(url);
+
     if (!raw) {
       throw new BadgeMissingError(url);
     }

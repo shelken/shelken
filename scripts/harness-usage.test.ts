@@ -10,6 +10,8 @@ import {
 import {
   normalizeDay,
   mergeDailyRecords,
+  loadClientDays,
+  loadUsageDataset,
   calculateStreaks,
   aggregateUsage,
   rankModels,
@@ -21,7 +23,9 @@ import {
   buildHistorySvg,
   buildHarnessSvg,
 } from "./usage/cards";
-import { readFileSync } from "node:fs";
+import { mkdirSync, mkdtempSync, readFileSync, rmSync, writeFileSync } from "node:fs";
+import { tmpdir } from "node:os";
+import { join } from "node:path";
 import {
   USAGE_ASSETS_BRANCH,
   USAGE_ASSETS_RAW_BASE,
@@ -149,9 +153,66 @@ describe("UsageStore - 跨节点与多数据源标准化及深度合并", () => 
   });
 });
 
+describe("UsageStore - 存档边界校验", () => {
+  const withArchive = (daily: object[], run: (dir: string) => void) => {
+    const dir = mkdtempSync(join(tmpdir(), "usage-archive-"));
+
+    try {
+      mkdirSync(join(dir, "omp"));
+      writeFileSync(join(dir, "omp", "daily.json"), JSON.stringify({ daily }));
+      run(dir);
+    } finally {
+      rmSync(dir, { recursive: true, force: true });
+    }
+  };
+
+  it("token 字段必须是数字：字符串被拒绝，数据集加载中止而非静默丢客户端", () => {
+    withArchive([{ date: "2026-11-01", inputTokens: "12" }], (dir) => {
+      expect(() => loadClientDays("omp", dir)).toThrow("解析");
+      expect(() => loadUsageDataset(dir)).toThrow("解析");
+    });
+  });
+
+  it("尚未导出的客户端按空数据集处理", () => {
+    withArchive([{ date: "2026-11-01", totalTokens: 5 }], (dir) => {
+      const dataset = loadUsageDataset(dir);
+      expect(dataset.omp.length).toBe(1);
+      expect(dataset.pi).toEqual([]);
+      expect(dataset.codex).toEqual([]);
+    });
+  });
+
+  it("字段为 null 视为缺省，模型明细回退到 models 字典", () => {
+    withArchive(
+      [
+        {
+          date: "2026-11-01",
+          inputTokens: null,
+          outputTokens: 4,
+          cost: null,
+          modelBreakdowns: null,
+          models: { "m-a": null, "m-b": { inputTokens: 5 } },
+          modelsUsed: null,
+        },
+      ],
+      (dir) => {
+        const [day] = loadClientDays("omp", dir);
+        expect(day.totalTokens).toBe(5);
+        expect(day.modelBreakdowns.map((m) => m.modelName).sort()).toEqual(["m-a", "m-b"]);
+      }
+    );
+  });
+
+  it("合法存档按日读入并归一化", () => {
+    withArchive([{ date: "2026-11-01", inputTokens: 12, outputTokens: 3 }, { date: "2026-11-02", totalTokens: 7 }], (dir) => {
+      expect(loadClientDays("omp", dir).map((d) => d.totalTokens)).toEqual([15, 7]);
+    });
+  });
+});
+
 describe("UsageStore - 时序连续打卡与全量聚合", () => {
   it("精准计算跨年与断签场景下的连续打卡与历史最长打卡", () => {
-    const dailyTokens: Record<string, number> = {
+    const dailyTokens = {
       // 第一段连续打卡 (3天)
       "2025-12-30": 1000,
       "2025-12-31": 2000,
@@ -165,7 +226,7 @@ describe("UsageStore - 时序连续打卡与全量聚合", () => {
       "2028-03-01": 500,
       // 尾部当天正在进行中
       "2028-03-02": 200,
-    };
+    } satisfies Record<string, number>;
 
     const streaks = calculateStreaks(dailyTokens);
     expect(streaks.maxStreak).toBe(5); // 2028-02-27 至 2028-03-02 共 5 天连续
@@ -173,11 +234,11 @@ describe("UsageStore - 时序连续打卡与全量聚合", () => {
   });
 
   it("当最新一天未产生 Token 且距离最后活跃日超过 1 天时 currentStreak 归零", () => {
-    const dailyTokens: Record<string, number> = {
+    const dailyTokens = {
       "2026-09-01": 500,
       "2026-09-02": 500,
       "2026-09-05": 0, // 最近日期，已断更 3 天
-    };
+    } satisfies Record<string, number>;
 
     const streaks = calculateStreaks(dailyTokens);
     expect(streaks.maxStreak).toBe(2);
@@ -227,6 +288,7 @@ describe("UsageStore - 时序连续打卡与全量聚合", () => {
 
     const agg = aggregateUsage(mockDataset);
     expect(agg).not.toBeNull();
+
     if (!agg) return;
 
     expect(agg.totalTokens).toBe(173_500);
@@ -403,6 +465,7 @@ describe("Card Visualizers - SVG 渲染适配器", () => {
       cacheCreationTokens: 0,
       cost: 0,
     });
+
     const days: DailyRecord[] = [
       {
         date: "2026-01-01",
@@ -463,6 +526,7 @@ describe("Card Visualizers - SVG 渲染适配器", () => {
         { modelName, inputTokens: tokens, outputTokens: 0, cacheReadTokens: 0, cacheCreationTokens: 0, cost: 0 },
       ],
     });
+
     const days = [
       rec("2026-01-01", "old-model", 100_000_000),
       rec("2026-06-01", "model-e", 50_000_000),
@@ -495,6 +559,7 @@ describe("Card Visualizers - SVG 渲染适配器", () => {
         { modelName: model, inputTokens: tokens, outputTokens: 0, cacheReadTokens: 0, cacheCreationTokens: 0, cost: 0 },
       ],
     });
+
     const data: Record<Client, DailyRecord[]> = {
       omp: [],
       pi: [],
@@ -619,6 +684,7 @@ describe("Orphan Branch & Local Preview - 孤儿分支契约与本地预览回�
 
   it("pushUsageAssets 在 commitOnly 模式下生成无父级节点的纯净孤儿提交", async () => {
     const testBranch = `test-orphan-${Date.now()}`;
+
     try {
       const commitSha = await pushUsageAssets({
         branch: testBranch,

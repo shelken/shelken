@@ -20,6 +20,9 @@ import {
   type Client,
   type DailyRecord,
 } from "./usage/types";
+
+type DrawOptions = NonNullable<Parameters<typeof generateSnakeAnimation>[1][number]>["drawOptions"];
+
 import {
   fmtTokens,
   aggregateUsage,
@@ -47,10 +50,12 @@ export async function renderVibeSnake(options?: {
   clientDays?: Record<Client, DailyRecord[]>;
 }): Promise<string | null> {
   const outFile = options?.outFile || OUT_FILE;
+
   const agg =
     options?.agg !== undefined
       ? options.agg
       : aggregateUsage(options?.clientDays || loadUsageDataset());
+
   if (!agg) return null;
 
   const {
@@ -69,6 +74,7 @@ export async function renderVibeSnake(options?: {
   const weeks: Week[] = [];
   let curWeek: Week = { contributionDays: [] };
   const cur = new Date(startDate);
+
   while (cur <= latestDate) {
     const iso = cur.toISOString().slice(0, 10);
     const weekday = cur.getUTCDay();
@@ -76,8 +82,10 @@ export async function renderVibeSnake(options?: {
 
     let level: ContributionDay["contributionLevel"] = "NONE";
     let levelNum = 0;
+
     if (count > 0) {
       const ratio = count / avgTokens;
+
       if (ratio >= 1.8) {
         level = "FOURTH_QUARTILE";
         levelNum = 4;
@@ -113,8 +121,9 @@ export async function renderVibeSnake(options?: {
   const origLog = console.log;
 
   try {
-    globalThis.fetch = async (url: string | URL | Request, opts?: unknown) => {
-      const urlStr = typeof url === "string" ? url : url instanceof URL ? url.toString() : (url as Request).url;
+    globalThis.fetch = async (url: string | URL | Request, opts?: RequestInit) => {
+      const urlStr = new Request(url).url;
+
       if (urlStr.includes("api.github.com/graphql")) {
         return new Response(
           JSON.stringify({
@@ -131,11 +140,13 @@ export async function renderVibeSnake(options?: {
           { status: 200, headers: { "Content-Type": "application/json" } }
         );
       }
-      return origFetch(url, opts as RequestInit);
+
+      return origFetch(url, opts);
     };
 
     console.log = (...args: unknown[]) => {
       const msg = String(args[0] || "");
+
       if (
         msg.includes("fetching user contribution") ||
         msg.includes("computing best route") ||
@@ -143,10 +154,11 @@ export async function renderVibeSnake(options?: {
       ) {
         return;
       }
+
       origLog(...args);
     };
 
-    const outputs = [
+    const outputs: Parameters<typeof generateSnakeAnimation>[1] = [
       {
         format: "svg",
         drawOptions: {
@@ -154,13 +166,14 @@ export async function renderVibeSnake(options?: {
           colorBackground: "#181926",
           colorDotBorder: "#363a4f",
           colorEmpty: "#24273a",
+          // SAFETY: 库的 Color 是带品牌的 1–9 类型，运行时按 0–4 五档数字键取色，键集合与此处字面量一致
           colorDots: {
             0: "#24273a",
             1: "#3e3859",
             2: "#67528c",
             3: "#9d7cd8",
             4: "#c6a0f6",
-          },
+          } as DrawOptions["colorDots"],
           sizeCell: 16,
           sizeDot: 12,
           sizeDotBorderRadius: 2,
@@ -174,12 +187,13 @@ export async function renderVibeSnake(options?: {
 
     const results = await generateSnakeAnimation(
       { platform: "github", username: "shelken", githubToken: "fake" },
-      outputs as unknown as Parameters<typeof generateSnakeAnimation>[1]
+      outputs
     );
 
     if (results[0]) {
       const rawSvg = results[0];
       const origOpen = rawSvg.match(/<svg view[bB]ox="[^"]+" width="(\d+)" height="(\d+)"[^>]*>/);
+
       if (origOpen) {
         const newSvgOpen =
           '<svg viewBox="-16 -80 880 248" width="880" height="248" ' +
@@ -204,9 +218,11 @@ export async function renderVibeSnake(options?: {
         writeFileSync(outFile, svgWithHeader, "utf-8");
         const rel = outFile.startsWith(ROOT) ? outFile.slice(ROOT.length + 1) : outFile;
         console.log(`✓ ${rel}`);
+
         return outFile;
       }
     }
+
     return null;
   } finally {
     globalThis.fetch = origFetch;
