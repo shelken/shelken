@@ -20,4 +20,4 @@ jobs:
 
       - run: bun install --frozen-lockfile
 
-      - run: bunx oxlint --format github
+      - run: bun run lint --format github

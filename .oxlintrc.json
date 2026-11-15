@@ -11,13 +11,12 @@
     ".opencode/**",
     ".pi/**",
     ".roo/**",
-    ".windsurf/**",
-    "tools/oxlint/anti-slop/**"
+    ".windsurf/**"
   ],
   "jsPlugins": [
     {
       "name": "anti-slop",
-      "specifier": "./tools/oxlint/anti-slop/index.ts"
+      "specifier": "./.cache/anti-slop/index.js"
     }
   ],
   // off = 存量违规待分批清理；清理完一条就改回 "error"

@@ -45,7 +45,7 @@ preview *args:
 
 # 静态检查 (oxlint + anti-slop，CI 同款)
 lint *args:
-	{{ bun }}x oxlint {{ args }}
+	{{ bun }} run lint {{ args }}
 
 # 运行测试 (bun test)
 test *args:

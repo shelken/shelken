@@ -1,5 +1,9 @@
 {
   "type": "module",
+  "scripts": {
+    "lint:plugin": "bun build node_modules/oxlint-plugin-anti-slop/src/index.ts --target node --external @oxlint/plugins --outfile .cache/anti-slop/index.js",
+    "lint": "bun run lint:plugin && oxlint"
+  },
   "dependencies": {
     "generate-snake-animation": "^3.5.0",
     "yaml": "^2.9.1"
@@ -7,6 +11,10 @@
   "devDependencies": {
     "@oxlint/plugins": "1.93.0",
     "ccusage": "^20.0.23",
-    "oxlint": "^1.93.0"
+    "oxlint": "^1.93.0",
+    "oxlint-plugin-anti-slop": "github:dmmulroy/anti-slop#13909c9e07590f5a85d93c62712259fe14a883f7"
+  },
+  "overrides": {
+    "@oxlint/plugins": "1.93.0"
   }
 }
