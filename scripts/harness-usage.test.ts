@@ -166,23 +166,19 @@ describe("UsageStore - 存档边界校验", () => {
     }
   };
 
-  it("token 字段必须是数字：字符串被拒绝，数据集对该客户端警告后按空渲染（缺失存档同样警告）", () => {
+  it("token 字段必须是数字：字符串被拒绝，数据集加载中止而非静默丢客户端", () => {
     withArchive([{ date: "2026-11-01", inputTokens: "12" }], (dir) => {
       expect(() => loadClientDays("omp", dir)).toThrow("解析");
+      expect(() => loadUsageDataset(dir)).toThrow("解析");
+    });
+  });
 
-      const warn = console.warn;
-      const warnings: string[] = [];
-      console.warn = (msg: string) => warnings.push(msg);
-
-      try {
-        expect(loadUsageDataset(dir).omp).toEqual([]);
-      } finally {
-        console.warn = warn;
-      }
-
-      const rejected = warnings.filter((w) => w.includes("解析"));
-      expect(rejected.length).toBe(1);
-      expect(rejected[0]).toContain("omp");
+  it("尚未导出的客户端按空数据集处理", () => {
+    withArchive([{ date: "2026-11-01", totalTokens: 5 }], (dir) => {
+      const dataset = loadUsageDataset(dir);
+      expect(dataset.omp.length).toBe(1);
+      expect(dataset.pi).toEqual([]);
+      expect(dataset.codex).toEqual([]);
     });
   });
 

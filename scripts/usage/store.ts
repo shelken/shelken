@@ -440,13 +440,9 @@ export function loadUsageDataset(dataDir: string = SESSION_STATS_DIR): Record<Cl
   const result = {} as Record<Client, DailyRecord[]>;
 
   for (const c of CLIENTS) {
-    try {
-      result[c] = loadClientDays(c, dataDir);
-    } catch (err: unknown) {
-      const msg = err instanceof Error ? err.message : String(err);
-      console.warn(`[WARN] ${c}: 存档无法读取，该客户端按空数据渲染\n${msg}`);
-      result[c] = [];
-    }
+    // 尚未导出的客户端按空处理；存档存在却无法解析时让渲染中止，
+    // 不能带着缺失的客户端往公开 README 发布不完整的卡片
+    result[c] = existsSync(join(dataDir, c, "daily.json")) ? loadClientDays(c, dataDir) : [];
   }
 
   return result;
