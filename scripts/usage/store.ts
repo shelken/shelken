@@ -11,6 +11,7 @@ import {
   type AggregateUsage,
   UsageError,
 } from "./types";
+import { type ArchiveDay, type ModelStats, DailyFileSchema, parseJsonText } from "./schema";
 
 const __dirname = dirname(fileURLToPath(import.meta.url));
 export const SESSION_STATS_DIR = join(homedir(), ".session-stats");
@@ -38,7 +39,7 @@ export function modelTokens(m: ModelBreakdown): number {
  * 获取日记录的有效 Token 数
  */
 export function dayTokens(d: DailyRecord): number {
-  if (typeof d.totalTokens === "number" && d.totalTokens > 0) {
+  if (d.totalTokens > 0) {
     return d.totalTokens;
   }
 
@@ -238,65 +239,44 @@ export function calculateStreaks(dailyTokens: Record<string, number>): StreakSta
   return { currentStreak, maxStreak };
 }
 
+function toBreakdown(modelName: string, stats?: ModelStats | null): ModelBreakdown {
+  return {
+    modelName,
+    inputTokens: stats?.inputTokens ?? 0,
+    outputTokens: stats?.outputTokens ?? 0,
+    cacheReadTokens: stats?.cacheReadTokens ?? 0,
+    cacheCreationTokens: stats?.cacheCreationTokens ?? 0,
+    cost: stats?.cost ?? 0,
+  };
+}
+
 /**
- * 归一化解析单日原始 JSON 数据，兼容不同客户端字段结构
+ * 归一化已通过 schema 校验的单日记录，兼容不同客户端的模型明细结构
  */
-export function normalizeDay(raw: Record<string, unknown>): DailyRecord {
-  const dateVal = raw.date;
-
-  if (!dateVal || typeof dateVal !== "string") {
-    throw new UsageError(`Record missing 'date': ${JSON.stringify(raw)}`);
-  }
-
-  const inputTokens = Number(raw.inputTokens) || 0;
-  const outputTokens = Number(raw.outputTokens) || 0;
-  const cacheReadTokens = Number(raw.cacheReadTokens) || 0;
-  const cacheCreationTokens = Number(raw.cacheCreationTokens) || 0;
-  const totalCost = Number(raw.totalCost ?? raw.cost) || 0;
+export function normalizeDay(raw: ArchiveDay): DailyRecord {
+  const inputTokens = raw.inputTokens ?? 0;
+  const outputTokens = raw.outputTokens ?? 0;
+  const cacheReadTokens = raw.cacheReadTokens ?? 0;
+  const cacheCreationTokens = raw.cacheCreationTokens ?? 0;
+  const totalCost = raw.totalCost ?? raw.cost ?? 0;
 
   const modelBreakdowns: ModelBreakdown[] = [];
 
-  if (Array.isArray(raw.modelBreakdowns)) {
+  if (raw.modelBreakdowns) {
     for (const m of raw.modelBreakdowns) {
-      if (m && typeof m === "object") {
-        const mObj = m as Record<string, unknown>;
-        modelBreakdowns.push({
-          modelName: String(mObj.modelName || ""),
-          inputTokens: Number(mObj.inputTokens) || 0,
-          outputTokens: Number(mObj.outputTokens) || 0,
-          cacheReadTokens: Number(mObj.cacheReadTokens) || 0,
-          cacheCreationTokens: Number(mObj.cacheCreationTokens) || 0,
-          cost: Number(mObj.cost) || 0,
-        });
-      }
+      modelBreakdowns.push(toBreakdown(m.modelName ?? "", m));
     }
-  } else if (raw.models && typeof raw.models === "object") {
-    if (Array.isArray(raw.models)) {
-      for (const name of raw.models) {
-        modelBreakdowns.push({
-          modelName: String(name),
-          inputTokens: 0,
-          outputTokens: 0,
-          cacheReadTokens: 0,
-          cacheCreationTokens: 0,
-          cost: 0,
-        });
-      }
-    } else {
-      for (const [name, stats] of Object.entries(raw.models as Record<string, Record<string, unknown>>)) {
-        modelBreakdowns.push({
-          modelName: name,
-          inputTokens: Number(stats?.inputTokens) || 0,
-          outputTokens: Number(stats?.outputTokens) || 0,
-          cacheReadTokens: Number(stats?.cacheReadTokens) || 0,
-          cacheCreationTokens: Number(stats?.cacheCreationTokens) || 0,
-          cost: Number(stats?.cost) || 0,
-        });
-      }
+  } else if (Array.isArray(raw.models)) {
+    for (const name of raw.models) {
+      modelBreakdowns.push(toBreakdown(name));
+    }
+  } else if (raw.models) {
+    for (const [name, stats] of Object.entries(raw.models)) {
+      modelBreakdowns.push(toBreakdown(name, stats));
     }
   }
 
-  let totalTokens = Number(raw.totalTokens) || 0;
+  let totalTokens = raw.totalTokens ?? 0;
 
   if (totalTokens === 0) {
     const sumBreakdowns = modelBreakdowns.reduce((acc, m) => acc + modelTokens(m), 0);
@@ -304,12 +284,11 @@ export function normalizeDay(raw: Record<string, unknown>): DailyRecord {
     totalTokens = Math.max(sumBreakdowns, sumDay);
   }
 
-  const modelsUsed = Array.isArray(raw.modelsUsed)
-    ? raw.modelsUsed.map(String)
-    : modelBreakdowns.map((m) => m.modelName).filter(Boolean);
+  const modelsUsed =
+    raw.modelsUsed ?? modelBreakdowns.flatMap((m) => (m.modelName ? [m.modelName] : []));
 
   return {
-    date: dateVal,
+    date: raw.date,
     inputTokens,
     outputTokens,
     cacheReadTokens,
@@ -442,10 +421,7 @@ export function loadClientDays(client: Client, dataDir: string = SESSION_STATS_D
   const days: DailyRecord[] = [];
 
   try {
-    const data = JSON.parse(readFileSync(file, "utf-8"));
-    const rawDaily = Array.isArray(data.daily) ? data.daily : [];
-
-    for (const raw of rawDaily) {
+    for (const raw of parseJsonText(DailyFileSchema, readFileSync(file, "utf-8")).daily) {
       days.push(normalizeDay(raw));
     }
   } catch (err: unknown) {
@@ -460,6 +436,7 @@ export function loadClientDays(client: Client, dataDir: string = SESSION_STATS_D
  * 加载全量客户端数据集
  */
 export function loadUsageDataset(dataDir: string = SESSION_STATS_DIR): Record<Client, DailyRecord[]> {
+  // SAFETY: 下面的循环为 CLIENTS 的每个成员赋值，返回前 result 已覆盖全部 Client 键
   const result = {} as Record<Client, DailyRecord[]>;
 
   for (const c of CLIENTS) {

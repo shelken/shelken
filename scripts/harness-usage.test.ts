@@ -151,7 +151,7 @@ describe("UsageStore - 跨节点与多数据源标准化及深度合并", () => 
 
 describe("UsageStore - 时序连续打卡与全量聚合", () => {
   it("精准计算跨年与断签场景下的连续打卡与历史最长打卡", () => {
-    const dailyTokens: Record<string, number> = {
+    const dailyTokens = {
       // 第一段连续打卡 (3天)
       "2025-12-30": 1000,
       "2025-12-31": 2000,
@@ -165,7 +165,7 @@ describe("UsageStore - 时序连续打卡与全量聚合", () => {
       "2028-03-01": 500,
       // 尾部当天正在进行中
       "2028-03-02": 200,
-    };
+    } satisfies Record<string, number>;
 
     const streaks = calculateStreaks(dailyTokens);
     expect(streaks.maxStreak).toBe(5); // 2028-02-27 至 2028-03-02 共 5 天连续
@@ -173,11 +173,11 @@ describe("UsageStore - 时序连续打卡与全量聚合", () => {
   });
 
   it("当最新一天未产生 Token 且距离最后活跃日超过 1 天时 currentStreak 归零", () => {
-    const dailyTokens: Record<string, number> = {
+    const dailyTokens = {
       "2026-09-01": 500,
       "2026-09-02": 500,
       "2026-09-05": 0, // 最近日期，已断更 3 天
-    };
+    } satisfies Record<string, number>;
 
     const streaks = calculateStreaks(dailyTokens);
     expect(streaks.maxStreak).toBe(2);

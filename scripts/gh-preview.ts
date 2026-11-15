@@ -34,23 +34,29 @@ function getGitHubToken(): string | null {
   return null;
 }
 
+interface MarkdownRequest {
+  text: string;
+  mode: "gfm";
+  context?: string;
+}
+
 export async function renderMarkdown(md: string, context?: string | null): Promise<string> {
-  const payload: Record<string, string> = { text: md, mode: "gfm" };
+  const payload: MarkdownRequest = { text: md, mode: "gfm" };
 
   if (context) {
     payload.context = context;
   }
 
-  const headers: Record<string, string> = {
+  const headers = new Headers({
     "User-Agent": "gh_preview/1.0",
     "Content-Type": "application/json",
     Accept: "application/vnd.github+json",
-  };
+  });
 
   const token = getGitHubToken();
 
   if (token) {
-    headers.Authorization = `Bearer ${token}`;
+    headers.set("Authorization", `Bearer ${token}`);
   }
 
   const res = await fetch("https://api.github.com/markdown", {
@@ -253,9 +259,11 @@ export async function main(): Promise<void> {
 }
 
 if (import.meta.main) {
-  main().catch((err: unknown) => {
+  try {
+    await main();
+  } catch (err: unknown) {
     const msg = err instanceof Error ? err.message : String(err);
     console.error(msg);
     process.exit(1);
-  });
+  }
 }

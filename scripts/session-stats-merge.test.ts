@@ -2,8 +2,9 @@ import { describe, expect, it } from "bun:test";
 import {
   mergeDailyScans,
   mergeSessionScans,
-  assertArchiveEntries,
+  assertUniqueKeys,
 } from "../scripts/harness-usage.ts";
+import { DailyFileSchema, SessionsFileSchema } from "../scripts/usage/schema.ts";
 
 // PR #2 审查回归：存档是唯一副本，合并与校验不得静默丢历史
 describe("session-stats 存档合并（对抗审查 B1/B2/B4 回归）", () => {
@@ -68,29 +69,24 @@ describe("session-stats 存档合并（对抗审查 B1/B2/B4 回归）", () => {
     expect(merged.map((x) => x.sessionId)).toEqual(["x", "y", "z"]);
   });
 
-  it("B2 非法键条目报错而非静默丢弃", () => {
-    expect(() =>
-      assertArchiveEntries("daily", "测试存档", [{ date: 20261012, totalTokens: 900 }], "date")
-    ).toThrow(/缺少合法 date/);
-    expect(() =>
-      assertArchiveEntries("sessions", "测试存档", [{ sessionId: 7 }], "sessionId")
-    ).toThrow(/缺少合法 sessionId/);
+  it("B2 非法键条目被 schema 拒绝而非静默丢弃", () => {
+    expect(DailyFileSchema.safeParse({ daily: [{ date: 20261012, totalTokens: 900 }] }).success).toBe(false);
+    expect(DailyFileSchema.safeParse({ daily: [{ totalTokens: 900 }] }).success).toBe(false);
+    expect(SessionsFileSchema.safeParse({ sessions: [{ sessionId: 7 }] }).success).toBe(false);
+    expect(SessionsFileSchema.safeParse({ sessions: [{ sessionId: "" }] }).success).toBe(false);
   });
 
   it("CodeReviewGpt-B 同日重复键报错而非被 Map 折叠", () => {
     expect(() =>
-      assertArchiveEntries(
-        "daily",
-        "测试存档",
-        [tok("2026-09-01", 1000), tok("2026-09-01", 2000)],
-        "date"
-      )
+      assertUniqueKeys("daily", "测试存档", ["2026-09-01", "2026-09-01"], "date")
     ).toThrow(/重复 date/);
   });
 
   it("合法条目通过校验", () => {
+    const daily = [tok("2026-09-01", 1), tok("2026-09-02", 2)];
+    expect(DailyFileSchema.safeParse({ daily }).success).toBe(true);
     expect(() =>
-      assertArchiveEntries("daily", "测试存档", [tok("2026-09-01", 1), tok("2026-09-02", 2)], "date")
+      assertUniqueKeys("daily", "测试存档", daily.map((d) => d.date), "date")
     ).not.toThrow();
   });
 });

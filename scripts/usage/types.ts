@@ -6,6 +6,10 @@ export const CLIENTS = ["omp", "pi", "claude", "codex", "opencode"] as const;
 
 export type Client = (typeof CLIENTS)[number];
 
+export function isClient(value: string): value is Client {
+  return CLIENTS.some((c) => c === value);
+}
+
 // 主力客户端各自独占一张单客户端卡片（<client>.svg）
 export const PRIMARY_CLIENTS: Client[] = ["omp", "pi"];
 export const HISTORICAL_CLIENTS: Client[] = ["codex", "opencode", "claude"];

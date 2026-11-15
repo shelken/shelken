@@ -20,6 +20,9 @@ import {
   type Client,
   type DailyRecord,
 } from "./usage/types";
+
+type DrawOptions = NonNullable<Parameters<typeof generateSnakeAnimation>[1][number]>["drawOptions"];
+
 import {
   fmtTokens,
   aggregateUsage,
@@ -118,8 +121,8 @@ export async function renderVibeSnake(options?: {
   const origLog = console.log;
 
   try {
-    globalThis.fetch = async (url: string | URL | Request, opts?: unknown) => {
-      const urlStr = typeof url === "string" ? url : url instanceof URL ? url.toString() : (url as Request).url;
+    globalThis.fetch = async (url: string | URL | Request, opts?: RequestInit) => {
+      const urlStr = new Request(url).url;
 
       if (urlStr.includes("api.github.com/graphql")) {
         return new Response(
@@ -138,7 +141,7 @@ export async function renderVibeSnake(options?: {
         );
       }
 
-      return origFetch(url, opts as RequestInit);
+      return origFetch(url, opts);
     };
 
     console.log = (...args: unknown[]) => {
@@ -155,7 +158,7 @@ export async function renderVibeSnake(options?: {
       origLog(...args);
     };
 
-    const outputs = [
+    const outputs: Parameters<typeof generateSnakeAnimation>[1] = [
       {
         format: "svg",
         drawOptions: {
@@ -163,13 +166,14 @@ export async function renderVibeSnake(options?: {
           colorBackground: "#181926",
           colorDotBorder: "#363a4f",
           colorEmpty: "#24273a",
+          // SAFETY: 库的 Color 是带品牌的 1–9 类型，运行时按 0–4 五档数字键取色，键集合与此处字面量一致
           colorDots: {
             0: "#24273a",
             1: "#3e3859",
             2: "#67528c",
             3: "#9d7cd8",
             4: "#c6a0f6",
-          },
+          } as DrawOptions["colorDots"],
           sizeCell: 16,
           sizeDot: 12,
           sizeDotBorderRadius: 2,
@@ -183,7 +187,7 @@ export async function renderVibeSnake(options?: {
 
     const results = await generateSnakeAnimation(
       { platform: "github", username: "shelken", githubToken: "fake" },
-      outputs as unknown as Parameters<typeof generateSnakeAnimation>[1]
+      outputs
     );
 
     if (results[0]) {

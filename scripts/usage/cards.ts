@@ -1,4 +1,5 @@
 import {
+  CLIENTS,
   type Client,
   type DailyRecord,
   type AggregateUsage,
@@ -434,8 +435,7 @@ export function buildHarnessSvg(
 
       const clientMap = clientDailyTokens[iso] || {};
 
-      const topClient =
-        (Object.entries(clientMap).sort((a, b) => b[1] - a[1])[0]?.[0] as Client) || "omp";
+      const topClient = [...CLIENTS].sort((a, b) => (clientMap[b] ?? 0) - (clientMap[a] ?? 0))[0];
 
       const clientLabel = TITLE[topClient] || topClient;
       const tip = `${iso}: ${tierName} · ${clientLabel}`;

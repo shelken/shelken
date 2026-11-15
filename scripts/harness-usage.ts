@@ -12,10 +12,12 @@ import { existsSync, mkdirSync, readFileSync, renameSync, rmSync, writeFileSync 
 import { homedir, tmpdir } from "node:os";
 import { dirname, join, resolve } from "node:path";
 import { fileURLToPath } from "node:url";
+import type { z } from "zod";
 
 import {
   CLIENTS,
   type Client,
+  isClient,
   HISTORICAL_CLIENTS,
   PRIMARY_CLIENTS,
   ACCENT,
@@ -57,12 +59,23 @@ import {
   buildHarnessSvg as renderHarnessSvg,
 } from "./usage/cards";
 
+import {
+  type ArchiveDay,
+  type ArchiveSession,
+  type DailyFile,
+  type SessionsFile,
+  DailyFileSchema,
+  SessionsFileSchema,
+  parseJsonText,
+} from "./usage/schema";
+
 import { renderVibeSnake } from "./vibe-snake";
 
 // 向后兼容统一导出
 export {
   CLIENTS,
   type Client,
+  isClient,
   HISTORICAL_CLIENTS,
   PRIMARY_CLIENTS,
   ACCENT,
@@ -193,7 +206,7 @@ export function ccusageCmd(client: Client, sub: "daily" | "session"): string[] {
       process.env.PI_CODING_AGENT_DIR,
       process.env.OMP_AGENT_DIR,
       join(home, ".omp", "agent"),
-    ].filter(Boolean) as string[];
+    ].flatMap((d) => (d ? [d] : []));
 
     const agentDir = candidateDirs.find((d) => existsSync(d)) || join(home, ".omp", "agent");
     const sessionsDir = join(agentDir, "sessions");
@@ -204,13 +217,8 @@ export function ccusageCmd(client: Client, sub: "daily" | "session"): string[] {
   return [...base, client, sub, "--json", "--offline"];
 }
 
-export async function runCcusage(
-  client: Client,
-  sub: "daily" | "session"
-): Promise<Record<string, unknown>> {
-  const cmd = ccusageCmd(client, sub);
-
-  const proc = Bun.spawn(cmd, {
+async function ccusageText(client: Client, sub: "daily" | "session"): Promise<string> {
+  const proc = Bun.spawn(ccusageCmd(client, sub), {
     cwd: ROOT,
     stdout: "pipe",
     stderr: "pipe",
@@ -228,84 +236,90 @@ export async function runCcusage(
     throw new UsageError(`ccusage ${client} ${sub} 输出为空`);
   }
 
+  return stdout;
+}
+
+function parseScan<S extends z.ZodType>(
+  client: Client,
+  sub: "daily" | "session",
+  schema: S,
+  text: string
+): z.infer<S> {
   try {
-    const data = JSON.parse(stdout);
-    const key = sub === "daily" ? "daily" : "sessions";
-
-    if (!data || !Array.isArray(data[key])) {
-      throw new UsageError(`ccusage ${client} ${sub}: ${key}[] 缺失`);
-    }
-
-    return data;
+    return parseJsonText(schema, text);
   } catch (err: unknown) {
-    if (err instanceof UsageError) throw err;
-    throw new UsageError(`ccusage ${client} ${sub} JSON 无效: ${err}`);
+    const msg = err instanceof Error ? err.message : String(err);
+    throw new UsageError(`ccusage ${client} ${sub} 输出无效: ${msg}`);
   }
+}
+
+export async function scanDaily(client: Client): Promise<ArchiveDay[]> {
+  return parseScan(client, "daily", DailyFileSchema, await ccusageText(client, "daily")).daily;
+}
+
+export async function scanSessions(client: Client): Promise<ArchiveSession[]> {
+  return parseScan(client, "session", SessionsFileSchema, await ccusageText(client, "session")).sessions;
 }
 
 export function dataPath(client: Client, file: "daily" | "sessions"): string {
   return join(SESSION_STATS_DIR, client, `${file}.json`);
 }
 
-function readStoredJson(path: string): Record<string, unknown> | null {
+function readStoredFile<S extends z.ZodType>(path: string, schema: S): z.infer<S> | null {
   if (!existsSync(path)) return null;
-  let data: unknown;
 
   try {
-    data = JSON.parse(readFileSync(path, "utf-8"));
+    return parseJsonText(schema, readFileSync(path, "utf-8"));
   } catch (err: unknown) {
     const msg = err instanceof Error ? err.message : String(err);
     throw new UsageError(
       `存档损坏，拒绝覆盖以免丢历史: ${path}\n${msg}\n修复或恢复该文件后重试（可从备份还原，勿直接删除）`
     );
   }
-
-  return data && typeof data === "object" && !Array.isArray(data)
-    ? (data as Record<string, unknown>)
-    : null;
 }
 
 /**
  * tmp+rename 原子替换，避免写中断留下截断文件。
  * 唯一 tmp 名，防定时任务与手工 sync 并发时互相搬走对方的临时文件。
  */
-function writeStoredJson(path: string, data: unknown): void {
+function writeStoredJson(path: string, data: DailyFile | SessionsFile): void {
   const tmp = `${path}.${process.pid}.tmp`;
   writeFileSync(tmp, JSON.stringify(data, null, 2) + "\n", "utf-8");
   renameSync(tmp, path);
 }
 
-function tokenSum(rec: Record<string, unknown>): number {
-  return (
-    ["inputTokens", "outputTokens", "cacheReadTokens", "cacheCreationTokens"].reduce(
-      (acc, k) => acc + (Number(rec[k]) || 0),
-      0
-    ) || Number(rec.totalTokens) || 0
-  );
+interface TokenFields {
+  inputTokens?: number;
+  outputTokens?: number;
+  cacheReadTokens?: number;
+  cacheCreationTokens?: number;
+  totalTokens?: number;
+}
+
+function tokenSum(rec: TokenFields): number {
+  const parts =
+    (rec.inputTokens ?? 0) +
+    (rec.outputTokens ?? 0) +
+    (rec.cacheReadTokens ?? 0) +
+    (rec.cacheCreationTokens ?? 0);
+
+  return parts || rec.totalTokens || 0;
 }
 
 /**
- * 存档与扫描条目必须完整可用：键非法或重复即中止，
+ * 存档与扫描条目的键必须唯一：重复即中止，
  * 不允许合并 Map 静默折叠掉唯一副本里的历史记录。
+ * 键缺失或类型非法已由 schema 在读入时拦截。
  */
-export function assertArchiveEntries(
+export function assertUniqueKeys(
   file: "daily" | "sessions",
   source: string,
-  entries: Record<string, unknown>[],
-  key: "date" | "sessionId"
+  keys: string[],
+  keyName: "date" | "sessionId"
 ): void {
-  const bad = entries.filter((e) => typeof e?.[key] !== "string" || !e[key]);
-
-  if (bad.length > 0) {
-    throw new UsageError(
-      `${source} 的 ${file} 有 ${bad.length} 条记录缺少合法 ${key}，拒绝写入以免丢历史`
-    );
-  }
-
   const seen = new Set<string>();
 
-  const dupes = entries.filter((e) => {
-    const k = e[key] as string;
+  const dupes = keys.filter((k) => {
     const dup = seen.has(k);
     seen.add(k);
 
@@ -314,30 +328,24 @@ export function assertArchiveEntries(
 
   if (dupes.length > 0) {
     throw new UsageError(
-      `${source} 的 ${file} 有 ${dupes.length} 条重复 ${key}（如 ${String(dupes[0][key])}），` +
+      `${source} 的 ${file} 有 ${dupes.length} 条重复 ${keyName}（如 ${dupes[0]}），` +
         `合并会静默折叠丢数据；如需导入多源存档，请先用 mergeDailyRecords 求和归并`
     );
   }
 }
 
-function readStoredArray(
-  path: string,
-  file: "daily" | "sessions",
-  key: "date" | "sessionId"
-): Record<string, unknown>[] {
-  const stored = readStoredJson(path);
+function readStoredDaily(path: string): ArchiveDay[] {
+  const daily = readStoredFile(path, DailyFileSchema)?.daily ?? [];
+  assertUniqueKeys("daily", `存档 ${path}`, daily.map((d) => d.date), "date");
 
-  if (stored === null) return [];
-  const value = stored[file];
+  return daily;
+}
 
-  if (!Array.isArray(value)) {
-    throw new UsageError(`存档 ${path} 的 ${file} 字段不是数组，拒绝写入以免丢历史`);
-  }
+function readStoredSessions(path: string): ArchiveSession[] {
+  const sessions = readStoredFile(path, SessionsFileSchema)?.sessions ?? [];
+  assertUniqueKeys("sessions", `存档 ${path}`, sessions.map((s) => s.sessionId), "sessionId");
 
-  const entries = value as Record<string, unknown>[];
-  assertArchiveEntries(file, `存档 ${path}`, entries, key);
-
-  return entries;
+  return sessions;
 }
 
 /**
@@ -346,63 +354,47 @@ function readStoredArray(
  * 但当天跑完后的次日扫描（定时任务 00:04 / 12:04）必须能补全当天缺的半天，
  * 因此不能按「是否今天」判定，否则历史日会永久冻结在 12:04 的部分快照。
  */
-export function mergeDailyScans(
-  stored: Record<string, unknown>[],
-  scanned: Record<string, unknown>[]
-): Record<string, unknown>[] {
-  const byDate = new Map<string, Record<string, unknown>>();
+export function mergeDailyScans(stored: ArchiveDay[], scanned: ArchiveDay[]): ArchiveDay[] {
+  const byDate = new Map<string, ArchiveDay>();
 
-  for (const d of stored) byDate.set(d.date as string, d);
+  for (const d of stored) byDate.set(d.date, d);
 
   for (const d of scanned) {
-    const prev = byDate.get(d.date as string);
+    const prev = byDate.get(d.date);
 
-    if (!prev || tokenSum(d) >= tokenSum(prev)) byDate.set(d.date as string, d);
+    if (!prev || tokenSum(d) >= tokenSum(prev)) byDate.set(d.date, d);
   }
 
-  return [...byDate.values()].sort((a, b) => String(a.date).localeCompare(String(b.date)));
+  return [...byDate.values()].sort((a, b) => a.date.localeCompare(b.date));
 }
 
 /**
  * session 同样单调：活跃 session 增长即刷新，已删/截断的保留存档值。
  */
-export function mergeSessionScans(
-  stored: Record<string, unknown>[],
-  scanned: Record<string, unknown>[]
-): Record<string, unknown>[] {
-  const byId = new Map<string, Record<string, unknown>>();
+export function mergeSessionScans(stored: ArchiveSession[], scanned: ArchiveSession[]): ArchiveSession[] {
+  const byId = new Map<string, ArchiveSession>();
 
-  for (const s of stored) byId.set(s.sessionId as string, s);
+  for (const s of stored) byId.set(s.sessionId, s);
 
   for (const s of scanned) {
-    const prev = byId.get(s.sessionId as string);
+    const prev = byId.get(s.sessionId);
 
-    if (!prev || tokenSum(s) >= tokenSum(prev)) byId.set(s.sessionId as string, s);
+    if (!prev || tokenSum(s) >= tokenSum(prev)) byId.set(s.sessionId, s);
   }
 
-  return [...byId.values()].sort((a, b) =>
-    String(a.lastActivity ?? "").localeCompare(String(b.lastActivity ?? ""))
-  );
+  return [...byId.values()].sort((a, b) => (a.lastActivity ?? "").localeCompare(b.lastActivity ?? ""));
 }
 
 export async function exportClient(client: Client): Promise<string | null> {
   ensureDirs();
-  const dailyData = await runCcusage(client, "daily");
-  const sessionData = await runCcusage(client, "session");
-
-  const daily = Array.isArray(dailyData.daily)
-    ? (dailyData.daily as Record<string, unknown>[])
-    : [];
-
-  const sessions = Array.isArray(sessionData.sessions)
-    ? (sessionData.sessions as Record<string, unknown>[])
-    : [];
+  const daily = await scanDaily(client);
+  const sessions = await scanSessions(client);
 
   const dailyOut = dataPath(client, "daily");
   const sessionsOut = dataPath(client, "sessions");
 
-  assertArchiveEntries("daily", `ccusage ${client} 扫描`, daily, "date");
-  assertArchiveEntries("sessions", `ccusage ${client} 扫描`, sessions, "sessionId");
+  assertUniqueKeys("daily", `ccusage ${client} 扫描`, daily.map((d) => d.date), "date");
+  assertUniqueKeys("sessions", `ccusage ${client} 扫描`, sessions.map((s) => s.sessionId), "sessionId");
 
   if (daily.length === 0 && sessions.length === 0) {
     console.warn(`[WARN] ${client}: 扫描为空，跳过写入`);
@@ -410,17 +402,13 @@ export async function exportClient(client: Client): Promise<string | null> {
     return null;
   }
 
-  const mergedDaily = mergeDailyScans(readStoredArray(dailyOut, "daily", "date"), daily);
-
-  const mergedSessions = mergeSessionScans(
-    readStoredArray(sessionsOut, "sessions", "sessionId"),
-    sessions
-  );
+  const mergedDaily = mergeDailyScans(readStoredDaily(dailyOut), daily);
+  const mergedSessions = mergeSessionScans(readStoredSessions(sessionsOut), sessions);
 
   writeStoredJson(dailyOut, { daily: mergedDaily });
   writeStoredJson(sessionsOut, { sessions: mergedSessions });
 
-  const total = mergedDaily.reduce((acc, d) => acc + (Number(d.totalTokens) || 0), 0);
+  const total = mergedDaily.reduce((acc, d) => acc + (d.totalTokens ?? 0), 0);
   console.log(
     `✓ ${client}: days=${mergedDaily.length} sessions=${mergedSessions.length} totalTokens=${total.toLocaleString("en-US")}`
   );
@@ -597,6 +585,22 @@ function parseOption(args: string[], flag: string, defaultValue?: string): strin
   return val;
 }
 
+function parseClientOption(args: string[]): Client | "all" {
+  const value = parseOption(args, "--client", "all");
+
+  if (value === "all" || isClient(value)) return value;
+
+  return die(`未知 client: ${value}`);
+}
+
+async function exportSelected(client: Client | "all"): Promise<void> {
+  if (client === "all") {
+    await exportAll();
+  } else {
+    await exportClient(client);
+  }
+}
+
 export async function main(): Promise<void> {
   const args = process.argv.slice(2);
   const cmd = args[0];
@@ -616,37 +620,19 @@ export async function main(): Promise<void> {
 
   try {
     if (cmd === "export") {
-      const client = parseOption(args, "--client", "all");
-
-      if (client !== "all" && !CLIENTS.includes(client as Client)) {
-        die(`未知 client: ${client}`);
-      }
-
-      if (client === "all") {
-        await exportAll();
-      } else {
-        await exportClient(client as Client);
-      }
+      await exportSelected(parseClientOption(args));
     } else if (cmd === "render") {
       await render();
     } else if (cmd === "sync") {
       const isPush = args.includes("--push");
       const isCommit = args.includes("--commit") || isPush;
-      const client = parseOption(args, "--client", "all");
-
-      if (client !== "all" && !CLIENTS.includes(client as Client)) {
-        die(`未知 client: ${client}`);
-      }
+      const client = parseClientOption(args);
 
       if (isPush) {
         await gitPull();
       }
 
-      if (client === "all") {
-        await exportAll();
-      } else {
-        await exportClient(client as Client);
-      }
+      await exportSelected(client);
 
       await render();
 

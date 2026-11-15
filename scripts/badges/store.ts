@@ -3,6 +3,7 @@ import { existsSync, mkdirSync, readFileSync, writeFileSync } from "node:fs";
 import { dirname, join, resolve } from "node:path";
 import { fileURLToPath } from "node:url";
 import { parse as parseYaml } from "yaml";
+import { z } from "zod";
 import {
   PAL,
   LABEL,
@@ -13,6 +14,7 @@ import {
   isPalKey,
   BadgeFetchError,
 } from "./types";
+import { type RawBadgeGroup, type RawBadgeItem, RawBadgeConfigSchema } from "./schema";
 
 const __dirname = dirname(fileURLToPath(import.meta.url));
 export const ROOT_DIR = resolve(__dirname, "../..");
@@ -55,78 +57,45 @@ export function getCacheFileName(url: string): string {
 }
 
 /**
- * 将各种 YAML item 表示归一化为标准的 BadgeItem 元组
+ * 将两种 YAML item 写法（数组 / 对象）归一化为标准的 BadgeItem 元组
  */
-export function normalizeBadgeItem(raw: unknown, index: number, groupTitle: string): BadgeItem {
-  if (Array.isArray(raw)) {
-    const [label, color, logo] = raw;
+export function normalizeBadgeItem(raw: RawBadgeItem, index: number, groupTitle: string): BadgeItem {
+  const [label, color, logo] = Array.isArray(raw)
+    ? raw
+    : [raw.name ?? raw.label, raw.color, raw.logo];
 
-    if (typeof label !== "string" || !label.trim()) {
-      throw new Error(`Group "${groupTitle}" item #${index}: label must be a non-empty string`);
-    }
-
-    if (typeof color !== "string" || !isPalKey(color)) {
-      throw new Error(
-        `Group "${groupTitle}" item "${label}": invalid color "${color}". Allowed colors: ${Object.keys(PAL).join(", ")}`
-      );
-    }
-
-    const cleanLogo = typeof logo === "string" && logo.trim() ? logo.trim() : null;
-
-    return [label.trim(), color, cleanLogo];
+  if (!label?.trim()) {
+    throw new Error(`Group "${groupTitle}" item #${index}: missing or invalid "name" string`);
   }
 
-  if (raw && typeof raw === "object") {
-    const obj = raw as Record<string, unknown>;
-    const rawLabel = obj.name ?? obj.label;
-
-    if (typeof rawLabel !== "string" || !rawLabel.trim()) {
-      throw new Error(`Group "${groupTitle}" item #${index}: missing or invalid "name" string`);
-    }
-
-    const color = obj.color;
-
-    if (typeof color !== "string" || !isPalKey(color)) {
-      throw new Error(
-        `Group "${groupTitle}" item "${rawLabel}": invalid color "${color}". Allowed colors: ${Object.keys(PAL).join(", ")}`
-      );
-    }
-
-    const cleanLogo = typeof obj.logo === "string" && obj.logo.trim() ? obj.logo.trim() : null;
-
-    return [rawLabel.trim(), color, cleanLogo];
+  if (!isPalKey(color)) {
+    throw new Error(
+      `Group "${groupTitle}" item "${label}": invalid color "${color}". Allowed colors: ${Object.keys(PAL).join(", ")}`
+    );
   }
 
-  throw new Error(`Group "${groupTitle}" item #${index}: expected an object or array item, got ${typeof raw}`);
+  return [label.trim(), color, logo?.trim() || null];
 }
 
 /**
  * 校验并归一化分组定义
  */
-export function normalizeBadgeGroup(raw: unknown, groupIndex: number): BadgeGroup {
-  if (!raw || typeof raw !== "object") {
-    throw new Error(`Invalid group definition at index ${groupIndex}: expected an object`);
-  }
+export function normalizeBadgeGroup(raw: RawBadgeGroup, groupIndex: number): BadgeGroup {
+  const title = raw.title.trim();
 
-  const obj = raw as Record<string, unknown>;
-
-  if (typeof obj.title !== "string" || !obj.title.trim()) {
+  if (!title) {
     throw new Error(`Group at index ${groupIndex} is missing a valid "title" string`);
   }
 
-  const title = obj.title.trim();
-
-  const slug = typeof obj.slug === "string" && obj.slug.trim()
-    ? obj.slug.trim()
-    : slugify(title);
+  const slug = raw.slug?.trim() || slugify(title);
 
   if (!slug) {
     throw new Error(`Unable to determine slug for group "${title}"`);
   }
 
-  const rawItems = obj.items ?? obj.badges;
+  const rawItems = raw.items ?? raw.badges;
 
-  if (!Array.isArray(rawItems)) {
+  if (!rawItems) {
     throw new Error(`Group "${title}" is missing an "items" array`);
   }
 
@@ -143,22 +112,21 @@ export function loadBadgeConfig(configPath: string = DEFAULT_CONFIG_PATH): Badge
     throw new Error(`Badge configuration file not found at: ${configPath}`);
   }
 
-  const content = readFileSync(configPath, "utf-8");
-  const parsed = parseYaml(content);
+  const parsed = parseYaml(readFileSync(configPath, "utf-8"));
 
   if (!parsed) {
     throw new Error(`Empty or invalid YAML file at: ${configPath}`);
   }
 
-  const rawGroups = Array.isArray(parsed)
-    ? parsed
-    : Array.isArray((parsed as Record<string, unknown>).groups)
-      ? (parsed as Record<string, unknown>).groups
-      : null;
+  const result = RawBadgeConfigSchema.safeParse(parsed);
 
-  if (!rawGroups || !Array.isArray(rawGroups)) {
-    throw new Error(`Configuration in "${configPath}" must contain a top-level "groups" array or be an array of groups`);
+  if (!result.success) {
+    throw new Error(
+      `Configuration in "${configPath}" must be a "groups" array or an array of groups:\n${z.prettifyError(result.error)}`
+    );
   }
+
+  const rawGroups = Array.isArray(result.data) ? result.data : result.data.groups;
 
   return rawGroups.map((g, idx) => normalizeBadgeGroup(g, idx));
 }

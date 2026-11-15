@@ -130,6 +130,21 @@ describe("BadgeStore - 配置归一化与加载", () => {
       "Badge configuration file not found"
     );
   });
+
+  it("配置结构非法时在边界报错并带上文件路径", () => {
+    const dir = mkdtempSync(join(tmpdir(), "badge-config-"));
+    const path = join(dir, "bad.yaml");
+
+    try {
+      writeFileSync(path, "groups:\n  - title: 123\n    items: []\n");
+      expect(() => loadBadgeConfig(path)).toThrow(path);
+
+      writeFileSync(path, "groups:\n  - title: Languages\n    items:\n      - [Bun]\n");
+      expect(() => loadBadgeConfig(path)).toThrow(path);
+    } finally {
+      rmSync(dir, { recursive: true, force: true });
+    }
+  });
 });
 
 describe("BadgeStore - 资产获取与双适配器缓存", () => {
