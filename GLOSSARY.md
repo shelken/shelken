@@ -1,4 +1,4 @@
-# 领域模型与架构契约 (CONTEXT.md)
+# 领域模型与架构契约 (GLOSSARY.md)
 
 本文档显式固化核心架构与领域概念，作为用量管线（Harness Usage）与技术栈徽章（Tech Stack Badges）的代码实现、类型命名与测试基准。
 
@@ -8,11 +8,12 @@
 
 ### 1.1 客户端模型 (Harness Client)
 - **`Client`**: 支持的 AI 编码助手客户端标识，严格限定为：
-  - 主力客户端 (Primary): `omp` (Oh My Pi)
-  - 历史生态 (Historical): `pi`, `claude` (Claude Code), `codex`, `opencode`
+  - 主力客户端 (Primary): `omp` (Oh My Pi), `pi`
+  - 历史生态 (Historical): `claude` (Claude Code), `codex`, `opencode`
 - **常量定义**:
   - `CLIENTS`: 全量客户端元组 `["omp", "pi", "claude", "codex", "opencode"]`
-  - `HISTORICAL_CLIENTS`: 归档客户端列表 `["pi", "codex", "opencode", "claude"]`
+  - `PRIMARY_CLIENTS`: 主力客户端列表 `["omp", "pi"]`，各自独占一张单客户端卡片
+  - `HISTORICAL_CLIENTS`: 归档客户端列表 `["codex", "opencode", "claude"]`
   - `ACCENT`: 对应 Catppuccin Macchiato 强调色（`omp`: mauve, `pi`: pink, `claude`: peach, `codex`: blue, `opencode`: teal）
   - `TITLE`: 客户端展示名称映射
 
@@ -48,8 +49,8 @@
   - 纯函数渲染器：接受不可变数据，输出符合 W3C 标准的 SVG 字符串。
   - 视觉规范：严格使用 Catppuccin Macchiato 主题配色体系与 `USAGE_CONFIG` 布局度量。
   - 卡片族：
-    - `buildClientSvg`: 单客户端综合卡片（如 `omp.svg`），展示统计指标、模型排名前 5（窗口见 `USAGE_CONFIG.topModelsWindowMonths`，只有此栏用窗口数据，其余指标与日期均为全周期）与最近 30 天迷你热力走势。
-    - `buildHistorySvg`: 2×2 历史生态归档卡片（`history.svg`），按象限排版历史客户端用量。
+    - `buildClientSvg`: 单客户端综合卡片（`omp.svg`、`pi.svg`），展示统计指标、模型排名前 5（窗口见 `USAGE_CONFIG.topModelsWindowMonths`，只有此栏用窗口数据，其余指标与日期均为全周期）与最近 30 天迷你热力走势。
+    - `buildHistorySvg`: 1×3 历史生态归档卡片（`history.svg`），每个历史客户端一列。
     - `buildHarnessSvg`: 全周期 GitHub 风格年度热力图（`harness.svg`）。
 - **`Vibe Snake` (`scripts/vibe-snake.ts`)**:
   - 动态贪吃蛇动画适配器，单向依赖 `UsageStore`。

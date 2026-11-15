@@ -4,7 +4,9 @@
 
 export const CLIENTS = ["omp", "pi", "claude", "codex", "opencode"] as const;
 export type Client = (typeof CLIENTS)[number];
-export const HISTORICAL_CLIENTS: Client[] = ["pi", "codex", "opencode", "claude"];
+// 主力客户端各自独占一张单客户端卡片（<client>.svg）
+export const PRIMARY_CLIENTS: Client[] = ["omp", "pi"];
+export const HISTORICAL_CLIENTS: Client[] = ["codex", "opencode", "claude"];
 
 /**
  * Catppuccin Macchiato 主题配色与客户端强调色
@@ -39,30 +41,25 @@ export const PALETTE = {
 export const USAGE_CONFIG = {
   // 模型排行窗口（月）：以各客户端最近有记录的日期为终点向前回溯；窗口内模型不足 N 个时退回全周期
   topModelsWindowMonths: 3,
-  // 单客户端卡片（如 omp.svg）
+  // 单客户端卡片（omp.svg / pi.svg）
   clientCard: {
     width: 846,
     height: 230,
     topModels: 5,
   },
-  // 2×2 历史归档卡片（history.svg）
+  // 1×3 历史归档卡片（history.svg）：每个历史客户端一列
   historyCard: {
     title: "History",
     user: "@shelken",
     width: 846,
-    height: 425,
+    height: 420,
     topModels: 5,
-    clients: ["pi", "codex", "opencode", "claude"] as Client[],
-    coordinates: [
-      { client: "pi" as Client, x: 30, y: 76 },
-      { client: "codex" as Client, x: 441, y: 76 },
-      { client: "opencode" as Client, x: 30, y: 252 },
-      { client: "claude" as Client, x: 441, y: 252 },
-    ],
-    dividerX: 423,
-    dividerY: 240,
+    clients: HISTORICAL_CLIENTS,
+    columnXs: [30, 308, 586],
+    columnWidth: 230,
+    dividerXs: [284, 562],
+    columnY: 76,
     headerLineY: 64,
-    quadrantWidth: 375,
   },
   // 全周期热力图卡片（harness.svg）
   harnessCard: {

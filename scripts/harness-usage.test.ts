@@ -484,7 +484,7 @@ describe("Card Visualizers - SVG 渲染适配器", () => {
     expect(svg).toContain("2026-01-01 · 2026-11-05");
   });
 
-  it("buildHistorySvg 退回全周期后的柱子按显示项最大值归一化，不溢出象限", () => {
+  it("buildHistorySvg 退回全周期后的柱子按显示项最大值归一化，不溢出列", () => {
     const day = (date: string, tokens: number, model: string): DailyRecord => ({
       date,
       inputTokens: tokens,
@@ -499,8 +499,8 @@ describe("Card Visualizers - SVG 渲染适配器", () => {
     });
     const data: Record<Client, DailyRecord[]> = {
       omp: [],
-      pi: [day("2026-01-01", 5_000_000_000, "legacy-model"), day("2026-11-01", 100, "fresh-model")],
-      codex: [],
+      pi: [],
+      codex: [day("2026-01-01", 5_000_000_000, "legacy-model"), day("2026-11-01", 100, "fresh-model")],
       opencode: [],
       claude: [],
     };
@@ -516,21 +516,10 @@ describe("Card Visualizers - SVG 渲染适配器", () => {
     expect(Math.max(...barWidths)).toBeLessThanOrEqual(46);
   });
 
-  it("buildHistorySvg 正确渲染 4 象限历史生态归档", () => {
+  it("buildHistorySvg 正确渲染 3 列历史生态归档", () => {
     const historyData: Record<Client, DailyRecord[]> = {
       omp: [],
-      pi: [
-        {
-          date: "2026-08-01",
-          totalTokens: 10_000_000,
-          inputTokens: 1_000_000,
-          outputTokens: 500_000,
-          cacheReadTokens: 8_500_000,
-          cacheCreationTokens: 0,
-          totalCost: 1.0,
-          modelBreakdowns: [{ modelName: "gpt-5.6-sol", inputTokens: 1000, outputTokens: 500, cacheReadTokens: 8500, cacheCreationTokens: 0, cost: 0.1 }],
-        },
-      ],
+      pi: [],
       codex: [
         {
           date: "2026-05-01",
@@ -573,11 +562,11 @@ describe("Card Visualizers - SVG 渲染适配器", () => {
     expect(svg.startsWith('<?xml version="1.0" encoding="UTF-8"?>')).toBeTrue();
     expect(svg.trim().endsWith("</svg>")).toBeTrue();
     expect(svg).toContain(`viewBox="0 0 ${USAGE_CONFIG.historyCard.width} ${USAGE_CONFIG.historyCard.height}"`);
-    expect(svg).toContain("Pi");
+    expect(svg).not.toContain(">Pi<");
+    expect(svg).toContain("3</tspan>");
     expect(svg).toContain("Codex");
     expect(svg).toContain("OpenCode");
     expect(svg).toContain("Claude Code");
-    expect(svg).toContain("gpt-5.6-sol");
     expect(svg).toContain("gpt-5.2-codex");
     expect(svg).toContain("deepseek-v3.2");
     expect(svg).toContain("claude-3-5-sonnet");
@@ -625,6 +614,7 @@ describe("Orphan Branch & Local Preview - 孤儿分支契约与本地预览回�
     expect(readme).toContain(`${USAGE_ASSETS_RAW_BASE}/vibe-snake.svg`);
     expect(readme).toContain(`${USAGE_ASSETS_RAW_BASE}/harness.svg`);
     expect(readme).toContain(`${USAGE_ASSETS_RAW_BASE}/omp.svg`);
+    expect(readme).toContain(`${USAGE_ASSETS_RAW_BASE}/pi.svg`);
     expect(readme).toContain(`${USAGE_ASSETS_RAW_BASE}/history.svg`);
     expect(readme).not.toContain('src="./assets/usage/');
   });
@@ -647,6 +637,7 @@ describe("Orphan Branch & Local Preview - 孤儿分支契约与本地预览回�
       const showStat = await runGit(["show", "--stat", "--oneline", commitSha]);
       expect(showStat).toContain("assets/usage/harness.svg");
       expect(showStat).toContain("assets/usage/omp.svg");
+      expect(showStat).toContain("assets/usage/pi.svg");
       expect(showStat).not.toContain("README.md");
       expect(showStat).not.toContain("package.json");
     } finally {

@@ -18,6 +18,8 @@
 
 <a href="https://raw.githubusercontent.com/shelken/shelken/assets/assets/usage/omp.svg"><img class="usage-card" width="100%" src="https://raw.githubusercontent.com/shelken/shelken/assets/assets/usage/omp.svg" alt="OMP" /></a>
 
+<a href="https://raw.githubusercontent.com/shelken/shelken/assets/assets/usage/pi.svg"><img class="usage-card" width="100%" src="https://raw.githubusercontent.com/shelken/shelken/assets/assets/usage/pi.svg" alt="Pi" /></a>
+
 <a href="https://raw.githubusercontent.com/shelken/shelken/assets/assets/usage/history.svg"><img class="usage-card" width="100%" src="https://raw.githubusercontent.com/shelken/shelken/assets/assets/usage/history.svg" alt="History" /></a>
 
 <!-- HARNESS-USAGE:END -->

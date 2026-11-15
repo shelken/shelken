@@ -187,7 +187,7 @@ export function buildClientSvg(days: DailyRecord[], client: Client): string {
 }
 
 /**
- * 构造 2×2 历史生态归档卡片 SVG（history.svg）
+ * 构造 1×3 历史生态归档卡片 SVG（history.svg）
  */
 export function buildHistorySvg(allClientDays: Record<Client, DailyRecord[]>): string {
   const daysMap = allClientDays;
@@ -222,15 +222,21 @@ export function buildHistorySvg(allClientDays: Record<Client, DailyRecord[]>): s
     `  ${svgText(816, 47, `${minDate} · ${maxDate}`, { fill: PALETTE.foot, size: 11, anchor: "end" })}`,
     `  <text x="30" y="52" font-size="12" font-family="${PALETTE.font}">`,
     `    <tspan fill="${PALETTE.text}" font-weight="700">${fmtTokens(totalTokensAll)}</tspan><tspan fill="${PALETTE.foot}"> tokens · </tspan>`,
-    `    <tspan fill="${PALETTE.text}" font-weight="700">4</tspan><tspan fill="${PALETTE.foot}"> clients · </tspan>`,
+    `    <tspan fill="${PALETTE.text}" font-weight="700">${cfg.clients.length}</tspan><tspan fill="${PALETTE.foot}"> clients · </tspan>`,
     `    <tspan fill="${PALETTE.text}" font-weight="700">${totalActiveDays}</tspan><tspan fill="${PALETTE.foot}"> active days</tspan>`,
     `  </text>`,
     `  <line x1="30" y1="${cfg.headerLineY}" x2="816" y2="${cfg.headerLineY}" stroke="${PALETTE.stroke}" stroke-width="1"/>`,
-    `  <line x1="${cfg.dividerX}" y1="${cfg.headerLineY}" x2="${cfg.dividerX}" y2="${height - 16}" stroke="${PALETTE.stroke}" stroke-width="1"/>`,
-    `  <line x1="30" y1="${cfg.dividerY}" x2="816" y2="${cfg.dividerY}" stroke="${PALETTE.stroke}" stroke-width="1"/>`,
+    ...cfg.dividerXs.map(
+      (x) =>
+        `  <line x1="${x}" y1="${cfg.headerLineY}" x2="${x}" y2="${height - 16}" stroke="${PALETTE.stroke}" stroke-width="1"/>`
+    ),
   ];
 
-  for (const { client: c, x: qx, y: qy } of cfg.coordinates) {
+  const colW = cfg.columnWidth;
+  const qy = cfg.columnY;
+
+  cfg.clients.forEach((c, i) => {
+    const qx = cfg.columnXs[i];
     const days = daysMap[c] || [];
     const total = sumTokens(days);
     const nDays = days.length || 1;
@@ -257,8 +263,9 @@ export function buildHistorySvg(allClientDays: Record<Client, DailyRecord[]>): s
 
     const accent = ACCENT[c];
     const title = TITLE[c];
+    const right = qx + colW;
 
-    // --- 左子栏：核心指标与用量 ---
+    // --- 上半：核心指标与用量 ---
     lines.push(
       `  <circle cx="${qx + 5}" cy="${qy + 8}" r="4.5" fill="${accent}"/>`,
       `  ${svgText(qx + 16, qy + 12, title, { fill: accent, size: 13, weight: "700" })}`,
@@ -266,37 +273,37 @@ export function buildHistorySvg(allClientDays: Record<Client, DailyRecord[]>): s
       `  <rect x="${qx}" y="${qy + 54}" width="135" height="18" rx="4" fill="${PALETTE.barBg}"/>`,
       `  ${svgText(qx + 6, qy + 67, "tokens · ", { fill: PALETTE.sub, size: 10 })}`,
       `  ${svgText(qx + 46, qy + 67, `${cacheHit} cache-hit`, { fill: accent, size: 10, weight: "700" })}`,
-      `  <line x1="${qx}" y1="${qy + 84}" x2="${qx + 135}" y2="${qy + 84}" stroke="${PALETTE.stroke}" stroke-dasharray="2 2"/>`,
+      `  <line x1="${qx}" y1="${qy + 84}" x2="${right}" y2="${qy + 84}" stroke="${PALETTE.stroke}" stroke-dasharray="2 2"/>`,
       `  ${svgText(qx, qy + 106, "Active days", { fill: PALETTE.sub, size: 11 })}`,
-      `  ${svgText(qx + 135, qy + 106, String(activeDays), { fill: accent, size: 11, weight: "700", anchor: "end" })}`,
+      `  ${svgText(right, qy + 106, String(activeDays), { fill: accent, size: 11, weight: "700", anchor: "end" })}`,
       `  ${svgText(qx, qy + 127, "Avg / day", { fill: PALETTE.sub, size: 11 })}`,
-      `  ${svgText(qx + 135, qy + 127, fmtTokens(avgDay), { fill: accent, size: 11, weight: "700", anchor: "end" })}`,
+      `  ${svgText(right, qy + 127, fmtTokens(avgDay), { fill: accent, size: 11, weight: "700", anchor: "end" })}`,
       `  ${svgText(qx, qy + 148, "Peak day", { fill: PALETTE.sub, size: 11 })}`,
-      `  ${svgText(qx + 135, qy + 148, fmtTokens(peakDay), { fill: accent, size: 11, weight: "700", anchor: "end" })}`,
-      `  <line x1="${qx + 146}" y1="${qy + 16}" x2="${qx + 146}" y2="${qy + 152}" stroke="${PALETTE.stroke}" stroke-dasharray="2 2" opacity="0.6"/>`
+      `  ${svgText(right, qy + 148, fmtTokens(peakDay), { fill: accent, size: 11, weight: "700", anchor: "end" })}`,
+      `  <line x1="${qx}" y1="${qy + 164}" x2="${right}" y2="${qy + 164}" stroke="${PALETTE.stroke}" stroke-dasharray="2 2"/>`
     );
 
-    // --- 右子栏：TOP 5 MODELS + 日期区间 ---
-    const mx = qx + 158;
+    // --- 下半：TOP 5 MODELS + 日期区间 ---
     lines.push(
-      `  ${svgText(mx, qy + 12, modelRankLabel(windowed), { fill: PALETTE.foot, size: 10, weight: "700", spacing: "1.1" })}`,
-      `  ${svgText(qx + cfg.quadrantWidth, qy + 12, dSpan, { fill: PALETTE.foot, size: 10, anchor: "end" })}`
+      `  ${svgText(qx, qy + 184, modelRankLabel(windowed), { fill: PALETTE.foot, size: 10, weight: "700", spacing: "1.1" })}`,
+      `  ${svgText(right, qy + 184, dSpan, { fill: PALETTE.foot, size: 10, anchor: "end" })}`
     );
 
-    let my = qy + 36;
+    let my = qy + 198;
     const barMaxW = 46;
+    const barX = qx + 128;
     for (const [mName, mTok] of topModels) {
-      const displayName = mName.length <= 17 ? mName : `${mName.slice(0, 16)}…`;
+      const displayName = mName.length <= 20 ? mName : `${mName.slice(0, 19)}…`;
       const barW = Math.max(2, Math.round(barMaxW * (mTok / maxModelTok)));
       lines.push(
-        `  ${svgText(mx, my + 8, displayName, { fill: PALETTE.user, size: 11, weight: "500" })}`,
-        `  <rect x="${mx + 114}" y="${my}" width="${barMaxW}" height="6" rx="3" fill="${PALETTE.barBg}"/>`,
-        `  <rect x="${mx + 114}" y="${my}" width="${barW}" height="6" rx="3" fill="${accent}"/>`,
-        `  ${svgText(qx + cfg.quadrantWidth, my + 8, fmtTokens(mTok), { fill: accent, size: 11, weight: "700", anchor: "end" })}`
+        `  ${svgText(qx, my + 8, displayName, { fill: PALETTE.user, size: 11, weight: "500" })}`,
+        `  <rect x="${barX}" y="${my}" width="${barMaxW}" height="6" rx="3" fill="${PALETTE.barBg}"/>`,
+        `  <rect x="${barX}" y="${my}" width="${barW}" height="6" rx="3" fill="${accent}"/>`,
+        `  ${svgText(right, my + 8, fmtTokens(mTok), { fill: accent, size: 11, weight: "700", anchor: "end" })}`
       );
       my += 26;
     }
-  }
+  });
 
   lines.push("</svg>\n");
   return lines.join("\n");
