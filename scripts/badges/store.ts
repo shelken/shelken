@@ -5,7 +5,6 @@ import { fileURLToPath } from "node:url";
 import { parse as parseYaml } from "yaml";
 import {
   PAL,
-  type PalKey,
   LABEL,
   LOGO,
   DEFAULT_CONCURRENCY,

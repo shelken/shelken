@@ -8,6 +8,7 @@ GitHub 个人主页 README：用脚本生成用量卡片、技术栈徽章与博
 - `GLOSSARY.md`: 领域模型与架构契约
 - `justfile`: 常用命令
 - `config/`: 静态配置 (如技术栈 tech-stack.yaml)
+- `.oxlintrc.json`: lint 规则；anti-slop 以 git 依赖（锁 sha）引入，`bun run lint` 先编译到 `.cache/` 再运行 oxlint
 - `assets/`: 生成的 SVG（`usage/` 不进主分支，见规范）
 
 ## 偏好指引
