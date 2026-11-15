@@ -7,7 +7,7 @@ GitHub 个人主页 README：用脚本生成用量卡片、技术栈徽章与博
 - `scripts/`: 脚本
 - `GLOSSARY.md`: 领域模型与架构契约
 - `justfile`: 常用命令
-- `mise.toml`: 系统没有的 CLI 在此声明（如 ccusage），统一经 `mise exec` 调用，不用 `bunx`
+- `mise.toml`: 系统没有的 CLI 声明（如 ccusage）
 - `config/`: 静态配置 (如技术栈 tech-stack.yaml)
 - `.oxlintrc.json`: lint 规则；anti-slop 以 git 依赖（锁 sha）引入，`bun run lint` 先编译到 `.cache/` 再运行 oxlint
 - `assets/`: 生成的 SVG（`usage/` 不进主分支，见规范）
@@ -26,3 +26,4 @@ GitHub 个人主页 README：用脚本生成用量卡片、技术栈徽章与博
 - 每日细致数据使用范围映射(离散档位), 不公开
 - 所有readme中的svg卡片必须统一视觉与设计, 做出UI变更时和用户确定变更范围
 - 高频用量卡片等构建产物（assets/usage/*.svg）统一推送至孤儿分支（assets），禁止直接提交进主分支以防止仓库历史膨胀
+- 系统没有的 CLI 在 `mise.toml` 声明，经 `mise exec` 调用；禁止 `bunx`/`npx` 临时执行
