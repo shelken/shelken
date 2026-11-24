@@ -1,2 +1,5 @@
 [tools]
+bun = "1.4.5"
+just = "1.56.0"
+node = "24.21.0"
 "npm:ccusage" = "20.0.23"
